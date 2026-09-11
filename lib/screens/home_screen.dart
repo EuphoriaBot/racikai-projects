@@ -3,16 +3,12 @@ import 'package:flutter/material.dart';
 import '../widgets/recipe_card.dart';
 import '../data/dummy_recipes.dart';
 import 'recipe_detail_screen.dart';
+import 'ingredient_finder_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   final VoidCallback onSearchTap;
-  final VoidCallback onAiTap;
 
-  const HomeScreen({
-    super.key,
-    required this.onSearchTap,
-    required this.onAiTap,
-  });
+  const HomeScreen({super.key, required this.onSearchTap});
 
   @override
   Widget build(BuildContext context) {
@@ -147,9 +143,16 @@ class HomeScreen extends StatelessWidget {
                   const SizedBox(height: 18),
 
                   FilledButton.icon(
-                    onPressed: onAiTap,
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const IngredientFinderScreen(),
+                        ),
+                      );
+                    },
                     icon: const Icon(Icons.auto_awesome, size: 18),
-                    label: const Text('Tanya RacikAI'),
+                    label: const Text('Cari dari Bahan'),
                     style: FilledButton.styleFrom(
                       backgroundColor: const Color(0xFFE8752E),
                       foregroundColor: Colors.white,

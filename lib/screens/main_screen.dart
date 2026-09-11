@@ -25,10 +25,7 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     final pages = [
-      HomeScreen(
-        onSearchTap: () => changePage(1),
-        onAiTap: () => changePage(2),
-      ),
+      HomeScreen(onSearchTap: () => changePage(1)),
       const SearchScreen(),
       const AiScreen(),
       const SavedScreen(),
