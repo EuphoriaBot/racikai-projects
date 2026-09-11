@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../data/dummy_recipes.dart';
 import '../models/recipe.dart';
 import 'recipe_detail_screen.dart';
+import '../controllers/favorite_controller.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -243,10 +244,31 @@ class _SearchRecipeCard extends StatelessWidget {
                             ),
                           ),
 
-                          const Icon(
-                            Icons.favorite_border,
-                            size: 20,
-                            color: Color(0xFF888888),
+                          AnimatedBuilder(
+                            animation: FavoriteController.instance,
+                            builder: (context, _) {
+                              final isFavorite = FavoriteController.instance
+                                  .isFavorite(recipe.id);
+
+                              return IconButton(
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(),
+                                onPressed: () {
+                                  FavoriteController.instance.toggleFavorite(
+                                    recipe.id,
+                                  );
+                                },
+                                icon: Icon(
+                                  isFavorite
+                                      ? Icons.favorite
+                                      : Icons.favorite_border,
+                                  size: 21,
+                                  color: isFavorite
+                                      ? const Color(0xFFE8752E)
+                                      : const Color(0xFF888888),
+                                ),
+                              );
+                            },
                           ),
                         ],
                       ),

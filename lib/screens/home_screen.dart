@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../widgets/recipe_card.dart';
+import '../data/dummy_recipes.dart';
+import 'recipe_detail_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   final VoidCallback onSearchTap;
@@ -238,30 +240,48 @@ class HomeScreen extends StatelessWidget {
               height: 255,
               child: ListView(
                 scrollDirection: Axis.horizontal,
-                children: const [
+                children: [
                   RecipeCard(
-                    title: 'Garlic Soy Chicken',
-                    category: 'Ayam',
-                    duration: '25 menit',
-                    emoji: '🍗',
+                    recipe: dummyRecipes[0],
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              RecipeDetailScreen(recipe: dummyRecipes[0]),
+                        ),
+                      );
+                    },
                   ),
 
-                  SizedBox(width: 16),
+                  const SizedBox(width: 16),
 
                   RecipeCard(
-                    title: 'Nasi Goreng Spesial',
-                    category: 'Nasi',
-                    duration: '20 menit',
-                    emoji: '🍚',
+                    recipe: dummyRecipes[1],
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              RecipeDetailScreen(recipe: dummyRecipes[1]),
+                        ),
+                      );
+                    },
                   ),
 
-                  SizedBox(width: 16),
+                  const SizedBox(width: 16),
 
                   RecipeCard(
-                    title: 'Creamy Pasta',
-                    category: 'Pasta',
-                    duration: '30 menit',
-                    emoji: '🍝',
+                    recipe: dummyRecipes[2],
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              RecipeDetailScreen(recipe: dummyRecipes[2]),
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),

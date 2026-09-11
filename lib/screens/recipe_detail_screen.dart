@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/recipe.dart';
+import '../controllers/favorite_controller.dart';
 
 class RecipeDetailScreen extends StatelessWidget {
   final Recipe recipe;
@@ -13,7 +14,6 @@ class RecipeDetailScreen extends StatelessWidget {
       backgroundColor: const Color(0xFFFFFBF7),
       body: CustomScrollView(
         slivers: [
-          // HERO
           SliverAppBar(
             expandedHeight: 280,
             pinned: true,
@@ -43,9 +43,38 @@ class RecipeDetailScreen extends StatelessWidget {
                     color: Colors.white.withValues(alpha: 0.9),
                     shape: BoxShape.circle,
                   ),
-                  child: IconButton(
-                    onPressed: () {},
-                    icon: const Icon(Icons.favorite_border),
+                  child: AnimatedBuilder(
+                    animation: FavoriteController.instance,
+                    builder: (context, _) {
+                      final isFavorite = FavoriteController.instance.isFavorite(
+                        recipe.id,
+                      );
+
+                      return IconButton(
+                        onPressed: () {
+                          FavoriteController.instance.toggleFavorite(recipe.id);
+
+                          ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              duration: const Duration(milliseconds: 900),
+                              content: Text(
+                                isFavorite
+                                    ? 'Resep dihapus dari favorit'
+                                    : 'Resep disimpan ke favorit',
+                              ),
+                            ),
+                          );
+                        },
+                        icon: Icon(
+                          isFavorite ? Icons.favorite : Icons.favorite_border,
+                          color: isFavorite
+                              ? const Color(0xFFE8752E)
+                              : const Color(0xFF444444),
+                        ),
+                      );
+                    },
                   ),
                 ),
               ),
@@ -68,7 +97,6 @@ class RecipeDetailScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // CATEGORY
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 12,
@@ -90,7 +118,6 @@ class RecipeDetailScreen extends StatelessWidget {
 
                   const SizedBox(height: 14),
 
-                  // TITLE
                   Text(
                     recipe.title,
                     style: const TextStyle(
@@ -103,7 +130,6 @@ class RecipeDetailScreen extends StatelessWidget {
 
                   const SizedBox(height: 12),
 
-                  // DESCRIPTION
                   Text(
                     recipe.description,
                     style: const TextStyle(
@@ -114,8 +140,6 @@ class RecipeDetailScreen extends StatelessWidget {
                   ),
 
                   const SizedBox(height: 24),
-
-                  // RECIPE INFO
                   Row(
                     children: [
                       Expanded(
@@ -138,7 +162,6 @@ class RecipeDetailScreen extends StatelessWidget {
 
                   const SizedBox(height: 32),
 
-                  // INGREDIENTS
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -168,7 +191,6 @@ class RecipeDetailScreen extends StatelessWidget {
 
                   const SizedBox(height: 32),
 
-                  // INSTRUCTIONS
                   const Text(
                     'Cara Membuat',
                     style: TextStyle(
