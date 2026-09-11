@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../data/dummy_recipes.dart';
 import '../models/recipe.dart';
+import 'recipe_detail_screen.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -187,101 +188,115 @@ class _SearchRecipeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 120,
-      decoration: BoxDecoration(
-        color: Colors.white,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFEEEEEE)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 115,
-            height: double.infinity,
-            decoration: const BoxDecoration(
-              color: Color(0xFFFFE8D5),
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(20),
-                bottomLeft: Radius.circular(20),
-              ),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => RecipeDetailScreen(recipe: recipe),
             ),
-            alignment: Alignment.center,
-            child: Text(recipe.emoji, style: const TextStyle(fontSize: 48)),
+          );
+        },
+        child: Container(
+          height: 120,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: const Color(0xFFEEEEEE)),
           ),
+          child: Row(
+            children: [
+              Container(
+                width: 115,
+                height: double.infinity,
+                decoration: const BoxDecoration(
+                  color: Color(0xFFFFE8D5),
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(20),
+                    bottomLeft: Radius.circular(20),
+                  ),
+                ),
+                alignment: Alignment.center,
+                child: Text(recipe.emoji, style: const TextStyle(fontSize: 48)),
+              ),
 
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(14),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(14),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
-                        child: Text(
-                          recipe.title,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              recipe.title,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
                           ),
-                        ),
+
+                          const Icon(
+                            Icons.favorite_border,
+                            size: 20,
+                            color: Color(0xFF888888),
+                          ),
+                        ],
                       ),
 
-                      const Icon(
-                        Icons.favorite_border,
-                        size: 20,
-                        color: Color(0xFF888888),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 7),
-
-                  Text(
-                    recipe.category,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      color: Color(0xFF888888),
-                    ),
-                  ),
-
-                  const Spacer(),
-
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.schedule,
-                        size: 16,
-                        color: Color(0xFFE8752E),
-                      ),
-
-                      const SizedBox(width: 5),
+                      const SizedBox(height: 7),
 
                       Text(
-                        recipe.duration,
+                        recipe.category,
                         style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
+                          fontSize: 13,
+                          color: Color(0xFF888888),
                         ),
                       ),
 
                       const Spacer(),
 
-                      const Icon(
-                        Icons.arrow_forward_ios,
-                        size: 14,
-                        color: Color(0xFFAAAAAA),
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.schedule,
+                            size: 16,
+                            color: Color(0xFFE8752E),
+                          ),
+
+                          const SizedBox(width: 5),
+
+                          Text(
+                            recipe.duration,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+
+                          const Spacer(),
+
+                          const Icon(
+                            Icons.arrow_forward_ios,
+                            size: 14,
+                            color: Color(0xFFAAAAAA),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                ],
+                ),
               ),
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
