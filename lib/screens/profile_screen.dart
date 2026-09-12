@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'premium_screen.dart';
+
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
@@ -146,11 +148,10 @@ class ProfileScreen extends StatelessWidget {
                     width: double.infinity,
                     child: FilledButton.icon(
                       onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              'Halaman Premium akan dibuat pada step berikutnya.',
-                            ),
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const PremiumScreen(),
                           ),
                         );
                       },
