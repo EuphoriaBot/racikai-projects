@@ -25,6 +25,7 @@ class ProfileScreen extends StatelessWidget {
 
             const SizedBox(height: 28),
 
+            // PROFILE HEADER
             const Center(
               child: Column(
                 children: [
@@ -61,6 +62,7 @@ class ProfileScreen extends StatelessWidget {
 
             const SizedBox(height: 30),
 
+            // FREE PLAN CARD
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(20),
