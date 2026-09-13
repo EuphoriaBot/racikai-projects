@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../controllers/subscription_controller.dart';
+
 class PremiumScreen extends StatefulWidget {
   const PremiumScreen({super.key});
 
@@ -204,15 +206,23 @@ class _PremiumScreenState extends State<PremiumScreen> {
           ),
           child: FilledButton(
             onPressed: () {
-              final selectedPlan = isYearlySelected
-                  ? 'Tahunan - Rp120.000'
-                  : 'Bulanan - Rp15.000';
+              final plan = isYearlySelected
+                  ? SubscriptionPlan.yearly
+                  : SubscriptionPlan.monthly;
 
-              ScaffoldMessenger.of(context).showSnackBar(
+              SubscriptionController.instance.activatePremium(plan);
+
+              final planName = isYearlySelected
+                  ? 'Premium Tahunan'
+                  : 'Premium Bulanan';
+
+              final messenger = ScaffoldMessenger.of(context);
+
+              Navigator.pop(context);
+
+              messenger.showSnackBar(
                 SnackBar(
-                  content: Text(
-                    'Paket dipilih: $selectedPlan. Pembayaran akan ditambahkan pada tahap berikutnya.',
-                  ),
+                  content: Text('$planName berhasil diaktifkan (mode demo).'),
                 ),
               );
             },
