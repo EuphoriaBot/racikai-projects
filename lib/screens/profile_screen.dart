@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'premium_screen.dart';
 import '../controllers/subscription_controller.dart';
 import 'premium_screen.dart';
+import '../controllers/usage_controller.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -209,6 +210,54 @@ class _PlanOverviewCard extends StatelessWidget {
                         color: Color(0xFF777777),
                       ),
                     ),
+                    if (!isPremium) ...[
+                      const SizedBox(height: 18),
+
+                      AnimatedBuilder(
+                        animation: UsageController.instance,
+                        builder: (context, _) {
+                          final usage = UsageController.instance.aiUsage;
+
+                          return Column(
+                            children: [
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  const Text(
+                                    'Pertanyaan AI hari ini',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Color(0xFF666666),
+                                    ),
+                                  ),
+                                  Text(
+                                    '$usage / ${UsageController.freeAiLimit}',
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w700,
+                                      color: Color(0xFFE8752E),
+                                    ),
+                                  ),
+                                ],
+                              ),
+
+                              const SizedBox(height: 8),
+
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(20),
+                                child: LinearProgressIndicator(
+                                  value: usage / UsageController.freeAiLimit,
+                                  minHeight: 7,
+                                  backgroundColor: Colors.white,
+                                  color: const Color(0xFFE8752E),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                    ],
                   ],
                 ),
               ),

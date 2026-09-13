@@ -4,6 +4,9 @@ import '../data/dummy_recipes.dart';
 import '../models/chat_message.dart';
 import '../models/recipe.dart';
 import 'recipe_detail_screen.dart';
+import '../controllers/subscription_controller.dart';
+import '../controllers/usage_controller.dart';
+import 'premium_screen.dart';
 
 class AiScreen extends StatefulWidget {
   const AiScreen({super.key});
@@ -46,12 +49,21 @@ class _AiScreenState extends State<AiScreen> {
       return;
     }
 
+    final usage = UsageController.instance;
+
+    if (!usage.canAskAI) {
+      showAiLimitDialog();
+      return;
+    }
+
     setState(() {
       messages.add(ChatMessage(role: ChatRole.user, text: question));
 
       messageController.clear();
       isTyping = true;
     });
+
+    usage.recordAiQuestion();
 
     scrollToBottom();
 
@@ -67,6 +79,54 @@ class _AiScreenState extends State<AiScreen> {
     });
 
     scrollToBottom();
+  }
+
+  void showAiLimitDialog() {
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(22),
+          ),
+          icon: const Icon(
+            Icons.auto_awesome,
+            size: 42,
+            color: Color(0xFFE8752E),
+          ),
+          title: const Text('Batas AI Tercapai', textAlign: TextAlign.center),
+          content: const Text(
+            'Kamu sudah menggunakan 5 pertanyaan AI gratis hari ini. Upgrade ke Premium untuk menggunakan RacikAI tanpa batas.',
+            textAlign: TextAlign.center,
+          ),
+          actionsAlignment: MainAxisAlignment.center,
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(dialogContext);
+              },
+              child: const Text('Nanti'),
+            ),
+            FilledButton(
+              onPressed: () {
+                Navigator.pop(dialogContext);
+
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const PremiumScreen(),
+                  ),
+                );
+              },
+              style: FilledButton.styleFrom(
+                backgroundColor: const Color(0xFFE8752E),
+              ),
+              child: const Text('Upgrade Premium'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   ChatMessage generateDummyResponse(String question) {
@@ -179,24 +239,45 @@ class _AiScreenState extends State<AiScreen> {
 
                 const SizedBox(width: 12),
 
-                const Expanded(
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
+                      const Text(
                         'RacikAI Assistant',
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w800,
                         ),
                       ),
-                      SizedBox(height: 2),
-                      Text(
-                        'Asisten resep pintarmu ✨',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Color(0xFF777777),
-                        ),
+                      const SizedBox(height: 2),
+
+                      AnimatedBuilder(
+                        animation: UsageController.instance,
+                        builder: (context, _) {
+                          final isPremium =
+                              SubscriptionController.instance.isPremium;
+
+                          if (isPremium) {
+                            return const Text(
+                              'Premium • AI tanpa batas ✨',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Color(0xFFE8752E),
+                              ),
+                            );
+                          }
+
+                          final usage = UsageController.instance.aiUsage;
+
+                          return Text(
+                            '$usage / ${UsageController.freeAiLimit} pertanyaan hari ini',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Color(0xFF777777),
+                            ),
+                          );
+                        },
                       ),
                     ],
                   ),

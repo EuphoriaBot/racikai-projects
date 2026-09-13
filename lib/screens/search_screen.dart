@@ -254,9 +254,18 @@ class _SearchRecipeCard extends StatelessWidget {
                                 padding: EdgeInsets.zero,
                                 constraints: const BoxConstraints(),
                                 onPressed: () {
-                                  FavoriteController.instance.toggleFavorite(
-                                    recipe.id,
-                                  );
+                                  final result = FavoriteController.instance
+                                      .toggleFavorite(recipe.id);
+
+                                  if (result == FavoriteResult.limitReached) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          'Batas 10 resep favorit tercapai.',
+                                        ),
+                                      ),
+                                    );
+                                  }
                                 },
                                 icon: Icon(
                                   isFavorite

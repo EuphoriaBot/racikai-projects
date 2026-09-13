@@ -64,9 +64,18 @@ class RecipeCard extends StatelessWidget {
                             child: IconButton(
                               padding: EdgeInsets.zero,
                               onPressed: () {
-                                FavoriteController.instance.toggleFavorite(
-                                  recipe.id,
-                                );
+                                final result = FavoriteController.instance
+                                    .toggleFavorite(recipe.id);
+
+                                if (result == FavoriteResult.limitReached) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        'Batas 10 resep favorit tercapai. Upgrade ke Premium untuk menyimpan tanpa batas.',
+                                      ),
+                                    ),
+                                  );
+                                }
                               },
                               icon: Icon(
                                 isFavorite

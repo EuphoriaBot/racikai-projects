@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/recipe.dart';
 import '../controllers/favorite_controller.dart';
+import 'premium_screen.dart';
 
 class RecipeDetailScreen extends StatelessWidget {
   final Recipe recipe;
@@ -52,7 +53,14 @@ class RecipeDetailScreen extends StatelessWidget {
 
                       return IconButton(
                         onPressed: () {
-                          FavoriteController.instance.toggleFavorite(recipe.id);
+                          final result = FavoriteController.instance
+                              .toggleFavorite(recipe.id);
+
+                          if (result == FavoriteResult.limitReached) {
+                            _showFavoriteLimitDialog(context);
+
+                            return;
+                          }
 
                           ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
@@ -60,9 +68,9 @@ class RecipeDetailScreen extends StatelessWidget {
                             SnackBar(
                               duration: const Duration(milliseconds: 900),
                               content: Text(
-                                isFavorite
-                                    ? 'Resep dihapus dari favorit'
-                                    : 'Resep disimpan ke favorit',
+                                result == FavoriteResult.added
+                                    ? 'Resep disimpan ke favorit'
+                                    : 'Resep dihapus dari favorit',
                               ),
                             ),
                           );
@@ -253,6 +261,53 @@ class RecipeDetailScreen extends StatelessWidget {
       ),
     );
   }
+}
+
+void _showFavoriteLimitDialog(BuildContext context) {
+  showDialog(
+    context: context,
+    builder: (dialogContext) {
+      return AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+        icon: const Icon(
+          Icons.favorite_rounded,
+          size: 42,
+          color: Color(0xFFE8752E),
+        ),
+        title: const Text(
+          'Batas Favorit Tercapai',
+          textAlign: TextAlign.center,
+        ),
+        content: const Text(
+          'Akun Free dapat menyimpan maksimal 10 resep. Upgrade ke Premium untuk menyimpan resep tanpa batas.',
+          textAlign: TextAlign.center,
+        ),
+        actionsAlignment: MainAxisAlignment.center,
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(dialogContext);
+            },
+            child: const Text('Nanti'),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.pop(dialogContext);
+
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const PremiumScreen()),
+              );
+            },
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFFE8752E),
+            ),
+            child: const Text('Upgrade Premium'),
+          ),
+        ],
+      );
+    },
+  );
 }
 
 class _InfoCard extends StatelessWidget {
