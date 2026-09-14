@@ -55,7 +55,7 @@ class SavedScreen extends StatelessWidget {
                     : ListView.separated(
                         padding: const EdgeInsets.fromLTRB(20, 0, 20, 30),
                         itemCount: favorites.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 14),
+                        separatorBuilder: (_, _) => const SizedBox(height: 14),
                         itemBuilder: (context, index) {
                           return _SavedRecipeCard(recipe: favorites[index]);
                         },
