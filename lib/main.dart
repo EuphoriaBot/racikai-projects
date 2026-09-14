@@ -6,6 +6,7 @@ import 'controllers/subscription_controller.dart';
 import 'controllers/usage_controller.dart';
 import 'services/local_storage_service.dart';
 import 'controllers/meal_planner_controller.dart';
+import 'core/theme/app_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -31,14 +32,7 @@ class RacikAIApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'RacikAI',
-      theme: ThemeData(
-        useMaterial3: true,
-        scaffoldBackgroundColor: const Color(0xFFFFFBF7),
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFFE8752E),
-          brightness: Brightness.light,
-        ),
-      ),
+      theme: AppTheme.lightTheme,
       home: const MainScreen(),
     );
   }
