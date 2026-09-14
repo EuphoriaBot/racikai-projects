@@ -5,6 +5,7 @@ import 'controllers/favorite_controller.dart';
 import 'controllers/subscription_controller.dart';
 import 'controllers/usage_controller.dart';
 import 'services/local_storage_service.dart';
+import 'controllers/meal_planner_controller.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,6 +17,8 @@ Future<void> main() async {
   await FavoriteController.instance.loadFromStorage();
 
   await UsageController.instance.loadFromStorage();
+
+  await MealPlannerController.instance.loadFromStorage();
 
   runApp(const RacikAIApp());
 }

@@ -4,6 +4,9 @@ import '../widgets/recipe_card.dart';
 import '../data/dummy_recipes.dart';
 import 'recipe_detail_screen.dart';
 import 'ingredient_finder_screen.dart';
+import '../controllers/subscription_controller.dart';
+import 'meal_planner_screen.dart';
+import 'premium_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   final VoidCallback onSearchTap;
@@ -126,6 +129,133 @@ class HomeScreen extends StatelessWidget {
                       fontSize: 20,
                       fontWeight: FontWeight.w700,
                       color: Color(0xFF242424),
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(20),
+                      onTap: () {
+                        final isPremium =
+                            SubscriptionController.instance.isPremium;
+
+                        if (isPremium) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const MealPlannerScreen(),
+                            ),
+                          );
+                        } else {
+                          showDialog(
+                            context: context,
+                            builder: (dialogContext) {
+                              return AlertDialog(
+                                icon: const Icon(
+                                  Icons.calendar_month,
+                                  size: 42,
+                                  color: Color(0xFFE8752E),
+                                ),
+                                title: const Text('Fitur Premium'),
+                                content: const Text(
+                                  'Meal Planner tersedia untuk pengguna RacikAI Premium.',
+                                  textAlign: TextAlign.center,
+                                ),
+                                actionsAlignment: MainAxisAlignment.center,
+                                actions: [
+                                  TextButton(
+                                    onPressed: () {
+                                      Navigator.pop(dialogContext);
+                                    },
+                                    child: const Text('Nanti'),
+                                  ),
+                                  FilledButton(
+                                    onPressed: () {
+                                      Navigator.pop(dialogContext);
+
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              const PremiumScreen(),
+                                        ),
+                                      );
+                                    },
+                                    style: FilledButton.styleFrom(
+                                      backgroundColor: const Color(0xFFE8752E),
+                                    ),
+                                    child: const Text('Lihat Premium'),
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                        }
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(18),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: const Color(0xFFEEEEEE)),
+                        ),
+                        child: const Row(
+                          children: [
+                            SizedBox(
+                              width: 48,
+                              height: 48,
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(
+                                  color: Color(0xFFFFE8D5),
+                                  borderRadius: BorderRadius.all(
+                                    Radius.circular(14),
+                                  ),
+                                ),
+                                child: Icon(
+                                  Icons.calendar_month_rounded,
+                                  color: Color(0xFFE8752E),
+                                ),
+                              ),
+                            ),
+
+                            SizedBox(width: 14),
+
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Meal Planner',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+
+                                  SizedBox(height: 4),
+
+                                  Text(
+                                    'Rencanakan menu untuk 7 hari',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Color(0xFF777777),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                            Icon(
+                              Icons.arrow_forward_ios,
+                              size: 15,
+                              color: Color(0xFFAAAAAA),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
 

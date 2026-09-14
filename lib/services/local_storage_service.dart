@@ -1,5 +1,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'dart:convert';
+
 class LocalStorageService {
   static late SharedPreferences _preferences;
 
@@ -11,6 +13,8 @@ class LocalStorageService {
   static const String _aiUsageKey = 'ai_usage';
 
   static const String _lastUsageDateKey = 'last_usage_date';
+
+  static const String _mealPlanKey = 'meal_plan';
 
   static Future<void> init() async {
     _preferences = await SharedPreferences.getInstance();
@@ -70,5 +74,33 @@ class LocalStorageService {
     await _preferences.setInt(_aiUsageKey, usage);
 
     await _preferences.setString(_lastUsageDateKey, date.toIso8601String());
+  }
+
+  // =========================
+  // MEAL PLAN
+  // =========================
+
+  static Map<String, int> get mealPlan {
+    final storedData = _preferences.getString(_mealPlanKey);
+
+    if (storedData == null) {
+      return {};
+    }
+
+    try {
+      final decoded = jsonDecode(storedData) as Map<String, dynamic>;
+
+      return decoded.map((key, value) => MapEntry(key, value as int));
+    } catch (_) {
+      return {};
+    }
+  }
+
+  static Future<void> saveMealPlan(Map<String, int> mealPlan) async {
+    await _preferences.setString(_mealPlanKey, jsonEncode(mealPlan));
+  }
+
+  static Future<void> clearMealPlan() async {
+    await _preferences.remove(_mealPlanKey);
   }
 }
