@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../services/local_storage_service.dart';
+
 enum SubscriptionPlan { monthly, yearly }
 
 class SubscriptionController extends ChangeNotifier {
@@ -39,12 +41,32 @@ class SubscriptionController extends ChangeNotifier {
     _isPremium = true;
     _selectedPlan = plan;
 
+    LocalStorageService.saveSubscription(isPremium: true, plan: plan.name);
+
     notifyListeners();
   }
 
   void resetToFree() {
     _isPremium = false;
     _selectedPlan = null;
+
+    LocalStorageService.saveSubscription(isPremium: false);
+
+    notifyListeners();
+  }
+
+  Future<void> loadFromStorage() async {
+    _isPremium = LocalStorageService.isPremium;
+
+    final savedPlan = LocalStorageService.subscriptionPlan;
+
+    if (savedPlan == 'monthly') {
+      _selectedPlan = SubscriptionPlan.monthly;
+    } else if (savedPlan == 'yearly') {
+      _selectedPlan = SubscriptionPlan.yearly;
+    } else {
+      _selectedPlan = null;
+    }
 
     notifyListeners();
   }

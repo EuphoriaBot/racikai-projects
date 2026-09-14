@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import 'premium_screen.dart';
 import '../controllers/subscription_controller.dart';
-import 'premium_screen.dart';
 import '../controllers/usage_controller.dart';
 
 class ProfileScreen extends StatelessWidget {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'subscription_controller.dart';
+import '../services/local_storage_service.dart';
 
 class UsageController extends ChangeNotifier {
   UsageController._();
@@ -46,6 +47,9 @@ class UsageController extends ChangeNotifier {
 
     if (_aiUsage < freeAiLimit) {
       _aiUsage++;
+
+      _saveUsage();
+
       notifyListeners();
     }
   }
@@ -61,12 +65,30 @@ class UsageController extends ChangeNotifier {
     if (!isSameDay) {
       _aiUsage = 0;
       _lastUsageDate = now;
+
+      _saveUsage();
     }
   }
 
   void resetUsageForTesting() {
     _aiUsage = 0;
     _lastUsageDate = DateTime.now();
+
+    _saveUsage();
+
+    notifyListeners();
+  }
+
+  void _saveUsage() {
+    LocalStorageService.saveAiUsage(usage: _aiUsage, date: _lastUsageDate);
+  }
+
+  Future<void> loadFromStorage() async {
+    _aiUsage = LocalStorageService.aiUsage;
+
+    _lastUsageDate = LocalStorageService.lastUsageDate ?? DateTime.now();
+
+    _resetIfNewDay();
 
     notifyListeners();
   }
