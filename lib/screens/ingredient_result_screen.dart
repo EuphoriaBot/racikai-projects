@@ -46,6 +46,10 @@ class IngredientResultScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    final backgroundColor = Theme.of(context).scaffoldBackgroundColor;
+
     final matchedRecipes = dummyRecipes
         .where((recipe) => calculateMatchedIngredients(recipe) > 0)
         .toList();
@@ -55,36 +59,43 @@ class IngredientResultScreen extends StatelessWidget {
     });
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFFFBF7),
+      backgroundColor: backgroundColor,
+
       appBar: AppBar(
-        backgroundColor: const Color(0xFFFFFBF7),
+        backgroundColor: backgroundColor,
+        foregroundColor: colors.onSurface,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
-        title: const Text(
+        title: Text(
           'Resep yang Cocok',
-          style: TextStyle(fontWeight: FontWeight.w700),
+          style: TextStyle(
+            fontWeight: FontWeight.w700,
+            color: colors.onSurface,
+          ),
         ),
       ),
+
       body: matchedRecipes.isEmpty
           ? const _NoResult()
           : ListView(
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
               children: [
-                const Text(
+                Text(
                   'Berdasarkan bahanmu',
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.w800,
-                    color: Color(0xFF222222),
+                    color: colors.onSurface,
                   ),
                 ),
 
                 const SizedBox(height: 8),
 
                 Text(
-                  '${selectedIngredients.length} bahan dipilih • ${matchedRecipes.length} resep ditemukan',
-                  style: const TextStyle(
-                    color: Color(0xFF777777),
+                  '${selectedIngredients.length} bahan dipilih • '
+                  '${matchedRecipes.length} resep ditemukan',
+                  style: TextStyle(
+                    color: colors.onSurfaceVariant,
                     fontSize: 14,
                   ),
                 ),
@@ -97,10 +108,10 @@ class IngredientResultScreen extends StatelessWidget {
                   children: selectedIngredients.map((ingredient) {
                     return Chip(
                       label: Text(ingredient),
-                      backgroundColor: const Color(0xFFFFE8D5),
+                      backgroundColor: colors.primaryContainer,
                       side: BorderSide.none,
-                      labelStyle: const TextStyle(
-                        color: Color(0xFFE8752E),
+                      labelStyle: TextStyle(
+                        color: colors.onPrimaryContainer,
                         fontWeight: FontWeight.w600,
                         fontSize: 12,
                       ),
@@ -141,21 +152,23 @@ class _IngredientRecipeCard extends StatelessWidget {
     required this.matchedIngredients,
   });
 
-  Color getMatchColor() {
+  Color getMatchColor(ColorScheme colors) {
     if (matchPercentage >= 70) {
-      return const Color(0xFF2E9B64);
+      return colors.tertiary;
     }
 
     if (matchPercentage >= 40) {
-      return const Color(0xFFE8752E);
+      return colors.primary;
     }
 
-    return const Color(0xFF888888);
+    return colors.onSurfaceVariant;
   }
 
   @override
   Widget build(BuildContext context) {
-    final matchColor = getMatchColor();
+    final colors = Theme.of(context).colorScheme;
+
+    final matchColor = getMatchColor(colors);
 
     return Material(
       color: Colors.transparent,
@@ -172,9 +185,9 @@ class _IngredientRecipeCard extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: colors.surface,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: const Color(0xFFEEEEEE)),
+            border: Border.all(color: colors.outlineVariant),
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -184,7 +197,7 @@ class _IngredientRecipeCard extends StatelessWidget {
                 height: 100,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFFE8D5),
+                  color: colors.primaryContainer,
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Text(recipe.emoji, style: const TextStyle(fontSize: 44)),
@@ -204,7 +217,7 @@ class _IngredientRecipeCard extends StatelessWidget {
                             vertical: 5,
                           ),
                           decoration: BoxDecoration(
-                            color: matchColor.withValues(alpha: 0.12),
+                            color: matchColor.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(30),
                           ),
                           child: Text(
@@ -225,19 +238,21 @@ class _IngredientRecipeCard extends StatelessWidget {
                       recipe.title,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
+                        color: colors.onSurface,
                       ),
                     ),
 
                     const SizedBox(height: 5),
 
                     Text(
-                      '$matchedIngredients dari ${recipe.ingredients.length} bahan tersedia',
-                      style: const TextStyle(
+                      '$matchedIngredients dari '
+                      '${recipe.ingredients.length} bahan tersedia',
+                      style: TextStyle(
                         fontSize: 12,
-                        color: Color(0xFF777777),
+                        color: colors.onSurfaceVariant,
                       ),
                     ),
 
@@ -245,24 +260,25 @@ class _IngredientRecipeCard extends StatelessWidget {
 
                     Row(
                       children: [
-                        const Icon(
-                          Icons.schedule,
-                          size: 15,
-                          color: Color(0xFFE8752E),
-                        ),
+                        Icon(Icons.schedule, size: 15, color: colors.primary),
+
                         const SizedBox(width: 5),
+
                         Text(
                           recipe.duration,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w500,
+                            color: colors.onSurface,
                           ),
                         ),
+
                         const Spacer(),
-                        const Icon(
+
+                        Icon(
                           Icons.arrow_forward_ios,
                           size: 13,
-                          color: Color(0xFFAAAAAA),
+                          color: colors.onSurfaceVariant,
                         ),
                       ],
                     ),
@@ -282,27 +298,37 @@ class _NoResult extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
+    final colors = Theme.of(context).colorScheme;
+
+    return Center(
       child: Padding(
-        padding: EdgeInsets.all(32),
+        padding: const EdgeInsets.all(32),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
               Icons.restaurant_menu_rounded,
               size: 68,
-              color: Color(0xFFCCCCCC),
+              color: colors.onSurfaceVariant.withValues(alpha: 0.55),
             ),
-            SizedBox(height: 18),
+
+            const SizedBox(height: 18),
+
             Text(
               'Belum ada resep yang cocok',
-              style: TextStyle(fontSize: 19, fontWeight: FontWeight.w700),
+              style: TextStyle(
+                fontSize: 19,
+                fontWeight: FontWeight.w700,
+                color: colors.onSurface,
+              ),
             ),
-            SizedBox(height: 8),
+
+            const SizedBox(height: 8),
+
             Text(
               'Coba pilih bahan lain atau tambahkan lebih banyak bahan.',
               textAlign: TextAlign.center,
-              style: TextStyle(color: Color(0xFF888888), height: 1.5),
+              style: TextStyle(color: colors.onSurfaceVariant, height: 1.5),
             ),
           ],
         ),

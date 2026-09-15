@@ -16,6 +16,8 @@ class LocalStorageService {
 
   static const String _mealPlanKey = 'meal_plan';
 
+  static const String _themeModeKey = 'theme_mode';
+
   static Future<void> init() async {
     _preferences = await SharedPreferences.getInstance();
   }
@@ -76,10 +78,6 @@ class LocalStorageService {
     await _preferences.setString(_lastUsageDateKey, date.toIso8601String());
   }
 
-  // =========================
-  // MEAL PLAN
-  // =========================
-
   static Map<String, int> get mealPlan {
     final storedData = _preferences.getString(_mealPlanKey);
 
@@ -102,5 +100,13 @@ class LocalStorageService {
 
   static Future<void> clearMealPlan() async {
     await _preferences.remove(_mealPlanKey);
+  }
+
+  static String? get themeMode {
+    return _preferences.getString(_themeModeKey);
+  }
+
+  static Future<void> saveThemeMode(String mode) async {
+    await _preferences.setString(_themeModeKey, mode);
   }
 }

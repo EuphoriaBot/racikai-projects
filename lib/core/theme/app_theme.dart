@@ -9,50 +9,71 @@ class AppTheme {
     final colorScheme = ColorScheme.fromSeed(
       seedColor: AppColors.primary,
       brightness: Brightness.light,
-      surface: AppColors.surface,
-    );
+    ).copyWith(surface: AppColors.surface);
 
+    return _buildTheme(
+      colorScheme: colorScheme,
+      scaffoldBackground: AppColors.background,
+    );
+  }
+
+  static ThemeData get darkTheme {
+    final colorScheme = ColorScheme.fromSeed(
+      seedColor: AppColors.primary,
+      brightness: Brightness.dark,
+    ).copyWith(surface: AppColors.darkSurface);
+
+    return _buildTheme(
+      colorScheme: colorScheme,
+      scaffoldBackground: AppColors.darkBackground,
+    );
+  }
+
+  static ThemeData _buildTheme({
+    required ColorScheme colorScheme,
+    required Color scaffoldBackground,
+  }) {
     return ThemeData(
       useMaterial3: true,
       colorScheme: colorScheme,
-      scaffoldBackgroundColor: AppColors.background,
+      scaffoldBackgroundColor: scaffoldBackground,
 
-      appBarTheme: const AppBarTheme(
-        backgroundColor: AppColors.background,
+      appBarTheme: AppBarTheme(
+        backgroundColor: scaffoldBackground,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
-        foregroundColor: AppColors.textPrimary,
+        foregroundColor: colorScheme.onSurface,
       ),
 
       navigationBarTheme: NavigationBarThemeData(
-        backgroundColor: AppColors.background,
-        indicatorColor: AppColors.primarySoft,
+        backgroundColor: scaffoldBackground,
+        indicatorColor: colorScheme.primaryContainer,
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
-            return const TextStyle(
+            return TextStyle(
               fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary,
+              color: colorScheme.primary,
             );
           }
 
-          return const TextStyle(color: AppColors.textSecondary);
+          return TextStyle(color: colorScheme.onSurfaceVariant);
         }),
       ),
 
-      navigationRailTheme: const NavigationRailThemeData(
-        backgroundColor: AppColors.background,
-        indicatorColor: AppColors.primarySoft,
-        selectedIconTheme: IconThemeData(color: AppColors.primary),
+      navigationRailTheme: NavigationRailThemeData(
+        backgroundColor: scaffoldBackground,
+        indicatorColor: colorScheme.primaryContainer,
+        selectedIconTheme: IconThemeData(color: colorScheme.primary),
         selectedLabelTextStyle: TextStyle(
-          color: AppColors.primary,
+          color: colorScheme.primary,
           fontWeight: FontWeight.w700,
         ),
       ),
 
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          backgroundColor: AppColors.primary,
-          foregroundColor: Colors.white,
+          backgroundColor: colorScheme.primary,
+          foregroundColor: colorScheme.onPrimary,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
           ),
@@ -61,27 +82,27 @@ class AppTheme {
 
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: Colors.white,
+        fillColor: colorScheme.surface,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: AppColors.border),
+          borderSide: BorderSide(color: colorScheme.outlineVariant),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: AppColors.border),
+          borderSide: BorderSide(color: colorScheme.outlineVariant),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+          borderSide: BorderSide(color: colorScheme.primary, width: 1.5),
         ),
       ),
 
       cardTheme: CardThemeData(
-        color: Colors.white,
+        color: colorScheme.surface,
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(18),
-          side: const BorderSide(color: AppColors.border),
+          side: BorderSide(color: colorScheme.outlineVariant),
         ),
       ),
     );

@@ -9,6 +9,8 @@ class SavedScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
     return SafeArea(
       child: AnimatedBuilder(
         animation: FavoriteController.instance,
@@ -23,12 +25,12 @@ class SavedScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Resep Tersimpan',
                       style: TextStyle(
                         fontSize: 26,
                         fontWeight: FontWeight.w800,
-                        color: Color(0xFF222222),
+                        color: colors.onSurface,
                       ),
                     ),
 
@@ -38,9 +40,9 @@ class SavedScreen extends StatelessWidget {
                       favorites.isEmpty
                           ? 'Belum ada resep yang disimpan.'
                           : '${favorites.length} resep tersimpan',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 14,
-                        color: Color(0xFF777777),
+                        color: colors.onSurfaceVariant,
                       ),
                     ),
                   ],
@@ -76,6 +78,8 @@ class _SavedRecipeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -91,18 +95,19 @@ class _SavedRecipeCard extends StatelessWidget {
         child: Container(
           height: 120,
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: colors.surface,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: const Color(0xFFEEEEEE)),
+            border: Border.all(color: colors.outlineVariant),
           ),
           child: Row(
             children: [
+              // IMAGE / EMOJI AREA
               Container(
                 width: 115,
                 height: double.infinity,
-                decoration: const BoxDecoration(
-                  color: Color(0xFFFFE8D5),
-                  borderRadius: BorderRadius.only(
+                decoration: BoxDecoration(
+                  color: colors.primaryContainer,
+                  borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(20),
                     bottomLeft: Radius.circular(20),
                   ),
@@ -124,9 +129,10 @@ class _SavedRecipeCard extends StatelessWidget {
                               recipe.title,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w700,
+                                color: colors.onSurface,
                               ),
                             ),
                           ),
@@ -139,10 +145,10 @@ class _SavedRecipeCard extends StatelessWidget {
                                 recipe.id,
                               );
                             },
-                            icon: const Icon(
+                            icon: Icon(
                               Icons.favorite,
                               size: 21,
-                              color: Color(0xFFE8752E),
+                              color: colors.primary,
                             ),
                           ),
                         ],
@@ -152,9 +158,9 @@ class _SavedRecipeCard extends StatelessWidget {
 
                       Text(
                         recipe.category,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 13,
-                          color: Color(0xFF888888),
+                          color: colors.onSurfaceVariant,
                         ),
                       ),
 
@@ -162,28 +168,25 @@ class _SavedRecipeCard extends StatelessWidget {
 
                       Row(
                         children: [
-                          const Icon(
-                            Icons.schedule,
-                            size: 16,
-                            color: Color(0xFFE8752E),
-                          ),
+                          Icon(Icons.schedule, size: 16, color: colors.primary),
 
                           const SizedBox(width: 5),
 
                           Text(
                             recipe.duration,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
+                              color: colors.onSurface,
                             ),
                           ),
 
                           const Spacer(),
 
-                          const Icon(
+                          Icon(
                             Icons.arrow_forward_ios,
                             size: 14,
-                            color: Color(0xFFAAAAAA),
+                            color: colors.onSurfaceVariant,
                           ),
                         ],
                       ),
@@ -204,26 +207,32 @@ class _EmptySaved extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
+    final colors = Theme.of(context).colorScheme;
+
+    return Center(
       child: Padding(
-        padding: EdgeInsets.all(32),
+        padding: const EdgeInsets.all(32),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
               Icons.favorite_border_rounded,
               size: 70,
-              color: Color(0xFFCCCCCC),
+              color: colors.onSurfaceVariant.withValues(alpha: 0.55),
             ),
 
-            SizedBox(height: 18),
+            const SizedBox(height: 18),
 
             Text(
               'Belum ada resep favorit',
-              style: TextStyle(fontSize: 19, fontWeight: FontWeight.w700),
+              style: TextStyle(
+                fontSize: 19,
+                fontWeight: FontWeight.w700,
+                color: colors.onSurface,
+              ),
             ),
 
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
 
             Text(
               'Tekan ikon hati pada resep yang kamu suka dan resep akan muncul di sini.',
@@ -231,7 +240,7 @@ class _EmptySaved extends StatelessWidget {
               style: TextStyle(
                 fontSize: 14,
                 height: 1.5,
-                color: Color(0xFF888888),
+                color: colors.onSurfaceVariant,
               ),
             ),
           ],

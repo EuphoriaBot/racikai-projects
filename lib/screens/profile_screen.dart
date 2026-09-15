@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 
-import 'premium_screen.dart';
 import '../controllers/subscription_controller.dart';
+import '../controllers/theme_controller.dart';
 import '../controllers/usage_controller.dart';
+import 'premium_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -10,6 +11,7 @@ class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final subscription = SubscriptionController.instance;
+    final colors = Theme.of(context).colorScheme;
 
     return AnimatedBuilder(
       animation: subscription,
@@ -20,40 +22,41 @@ class ProfileScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'Profile',
                   style: TextStyle(
                     fontSize: 26,
                     fontWeight: FontWeight.w800,
-                    color: Color(0xFF222222),
+                    color: colors.onSurface,
                   ),
                 ),
 
                 const SizedBox(height: 28),
 
+                // USER PROFILE
                 Center(
                   child: Column(
                     children: [
                       CircleAvatar(
                         radius: 45,
-                        backgroundColor: const Color(0xFFFFE8D5),
+                        backgroundColor: colors.primaryContainer,
                         child: Icon(
                           subscription.isPremium
                               ? Icons.workspace_premium_rounded
                               : Icons.person_rounded,
                           size: 46,
-                          color: const Color(0xFFE8752E),
+                          color: colors.primary,
                         ),
                       ),
 
                       const SizedBox(height: 14),
 
-                      const Text(
+                      Text(
                         'Guest User',
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.w800,
-                          color: Color(0xFF222222),
+                          color: colors.onSurface,
                         ),
                       ),
 
@@ -63,9 +66,9 @@ class ProfileScreen extends StatelessWidget {
                         subscription.isPremium
                             ? 'RacikAI Premium Member ✨'
                             : 'Cook smarter with RacikAI ✨',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 13,
-                          color: Color(0xFF888888),
+                          color: colors.onSurfaceVariant,
                         ),
                       ),
                     ],
@@ -74,16 +77,18 @@ class ProfileScreen extends StatelessWidget {
 
                 const SizedBox(height: 30),
 
+                // PLAN
                 _PlanOverviewCard(subscription: subscription),
 
                 const SizedBox(height: 30),
 
-                const Text(
+                // PREFERENCES
+                Text(
                   'Preferensi',
                   style: TextStyle(
                     fontSize: 17,
                     fontWeight: FontWeight.w800,
-                    color: Color(0xFF222222),
+                    color: colors.onSurface,
                   ),
                 ),
 
@@ -105,17 +110,21 @@ class ProfileScreen extends StatelessWidget {
                 _ProfileMenuItem(
                   icon: Icons.palette_outlined,
                   title: 'Tampilan',
-                  onTap: () {},
+                  trailingText: ThemeController.instance.modeLabel,
+                  onTap: () {
+                    _showThemePicker(context);
+                  },
                 ),
 
                 const SizedBox(height: 26),
 
-                const Text(
+                // ABOUT
+                Text(
                   'Tentang',
                   style: TextStyle(
                     fontSize: 17,
                     fontWeight: FontWeight.w800,
-                    color: Color(0xFF222222),
+                    color: colors.onSurface,
                   ),
                 ),
 
@@ -131,7 +140,9 @@ class ProfileScreen extends StatelessWidget {
                       applicationVersion: '1.0.0',
                       children: const [
                         Text(
-                          'RacikAI membantu pengguna menemukan resep berdasarkan bahan yang dimiliki dan mendapatkan rekomendasi resep dengan bantuan AI.',
+                          'RacikAI membantu pengguna menemukan resep '
+                          'berdasarkan bahan yang dimiliki dan mendapatkan '
+                          'rekomendasi resep dengan bantuan AI.',
                         ),
                       ],
                     );
@@ -146,10 +157,13 @@ class ProfileScreen extends StatelessWidget {
 
                 const SizedBox(height: 28),
 
-                const Center(
+                Center(
                   child: Text(
                     'RacikAI v1.0.0',
-                    style: TextStyle(fontSize: 12, color: Color(0xFFAAAAAA)),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: colors.onSurfaceVariant,
+                    ),
                   ),
                 ),
               ],
@@ -161,6 +175,79 @@ class ProfileScreen extends StatelessWidget {
   }
 }
 
+void _showThemePicker(BuildContext context) {
+  final themeController = ThemeController.instance;
+
+  showModalBottomSheet(
+    context: context,
+    showDragHandle: true,
+    builder: (sheetContext) {
+      return AnimatedBuilder(
+        animation: themeController,
+        builder: (context, _) {
+          final colors = Theme.of(context).colorScheme;
+
+          return SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Pilih Tampilan',
+                    style: TextStyle(
+                      fontSize: 21,
+                      fontWeight: FontWeight.w800,
+                      color: colors.onSurface,
+                    ),
+                  ),
+
+                  const SizedBox(height: 6),
+
+                  Text(
+                    'Sesuaikan tema RacikAI dengan kenyamananmu.',
+                    style: TextStyle(color: colors.onSurfaceVariant),
+                  ),
+
+                  const SizedBox(height: 22),
+
+                  SizedBox(
+                    width: double.infinity,
+                    child: SegmentedButton<ThemeMode>(
+                      segments: const [
+                        ButtonSegment(
+                          value: ThemeMode.light,
+                          icon: Icon(Icons.light_mode_outlined),
+                          label: Text('Terang'),
+                        ),
+                        ButtonSegment(
+                          value: ThemeMode.dark,
+                          icon: Icon(Icons.dark_mode_outlined),
+                          label: Text('Gelap'),
+                        ),
+                        ButtonSegment(
+                          value: ThemeMode.system,
+                          icon: Icon(Icons.settings_suggest_outlined),
+                          label: Text('Sistem'),
+                        ),
+                      ],
+                      selected: {themeController.themeMode},
+                      onSelectionChanged: (selection) {
+                        themeController.setThemeMode(selection.first);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      );
+    },
+  );
+}
+
 class _PlanOverviewCard extends StatelessWidget {
   final SubscriptionController subscription;
 
@@ -169,15 +256,16 @@ class _PlanOverviewCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isPremium = subscription.isPremium;
+    final colors = Theme.of(context).colorScheme;
 
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFE8D5),
+        color: colors.primaryContainer,
         borderRadius: BorderRadius.circular(22),
         border: isPremium
-            ? Border.all(color: const Color(0xFFE8752E), width: 1.5)
+            ? Border.all(color: colors.primary, width: 1.5)
             : null,
       ),
       child: Column(
@@ -191,10 +279,10 @@ class _PlanOverviewCard extends StatelessWidget {
                   children: [
                     Text(
                       subscription.planName,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 19,
                         fontWeight: FontWeight.w800,
-                        color: Color(0xFF222222),
+                        color: colors.onPrimaryContainer,
                       ),
                     ),
 
@@ -204,11 +292,14 @@ class _PlanOverviewCard extends StatelessWidget {
                       isPremium
                           ? 'Paket ${subscription.planPeriod}'
                           : 'Paket kamu saat ini',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
-                        color: Color(0xFF777777),
+                        color: colors.onPrimaryContainer.withValues(
+                          alpha: 0.75,
+                        ),
                       ),
                     ),
+
                     if (!isPremium) ...[
                       const SizedBox(height: 18),
 
@@ -223,19 +314,20 @@ class _PlanOverviewCard extends StatelessWidget {
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
                                 children: [
-                                  const Text(
+                                  Text(
                                     'Pertanyaan AI hari ini',
                                     style: TextStyle(
                                       fontSize: 12,
-                                      color: Color(0xFF666666),
+                                      color: colors.onPrimaryContainer
+                                          .withValues(alpha: 0.8),
                                     ),
                                   ),
                                   Text(
                                     '$usage / ${UsageController.freeAiLimit}',
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w700,
-                                      color: Color(0xFFE8752E),
+                                      color: colors.primary,
                                     ),
                                   ),
                                 ],
@@ -248,8 +340,10 @@ class _PlanOverviewCard extends StatelessWidget {
                                 child: LinearProgressIndicator(
                                   value: usage / UsageController.freeAiLimit,
                                   minHeight: 7,
-                                  backgroundColor: Colors.white,
-                                  color: const Color(0xFFE8752E),
+                                  backgroundColor: colors.surface.withValues(
+                                    alpha: 0.65,
+                                  ),
+                                  color: colors.primary,
                                 ),
                               ),
                             ],
@@ -265,7 +359,7 @@ class _PlanOverviewCard extends StatelessWidget {
                 isPremium
                     ? Icons.workspace_premium_rounded
                     : Icons.auto_awesome,
-                color: const Color(0xFFE8752E),
+                color: colors.primary,
               ),
             ],
           ),
@@ -305,8 +399,8 @@ class _PlanOverviewCard extends StatelessWidget {
                 icon: const Icon(Icons.workspace_premium_rounded),
                 label: const Text('Upgrade ke Premium'),
                 style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFFE8752E),
-                  foregroundColor: Colors.white,
+                  backgroundColor: colors.primary,
+                  foregroundColor: colors.onPrimary,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14),
@@ -321,19 +415,19 @@ class _PlanOverviewCard extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 11, horizontal: 14),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.7),
+                color: colors.surface.withValues(alpha: 0.7),
                 borderRadius: BorderRadius.circular(13),
               ),
-              child: const Row(
+              child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.check_circle, size: 18, color: Color(0xFFE8752E)),
-                  SizedBox(width: 7),
+                  Icon(Icons.check_circle, size: 18, color: colors.primary),
+                  const SizedBox(width: 7),
                   Text(
                     'Premium aktif',
                     style: TextStyle(
                       fontWeight: FontWeight.w700,
-                      color: Color(0xFFE8752E),
+                      color: colors.primary,
                     ),
                   ),
                 ],
@@ -354,16 +448,20 @@ class _PlanFeatureRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
     return Row(
       children: [
-        Icon(icon, size: 18, color: const Color(0xFFE8752E)),
+        Icon(icon, size: 18, color: colors.primary),
+
         const SizedBox(width: 9),
+
         Expanded(
           child: Text(
             text,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 13,
-              color: Color(0xFF555555),
+              color: colors.onPrimaryContainer,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -388,6 +486,8 @@ class _ProfileMenuItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: Material(
@@ -398,9 +498,9 @@ class _ProfileMenuItem extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: colors.surface,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFFEEEEEE)),
+              border: Border.all(color: colors.outlineVariant),
             ),
             child: Row(
               children: [
@@ -408,10 +508,10 @@ class _ProfileMenuItem extends StatelessWidget {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFFF3E9),
+                    color: colors.primaryContainer,
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Icon(icon, size: 20, color: const Color(0xFFE8752E)),
+                  child: Icon(icon, size: 20, color: colors.primary),
                 ),
 
                 const SizedBox(width: 13),
@@ -419,10 +519,10 @@ class _ProfileMenuItem extends StatelessWidget {
                 Expanded(
                   child: Text(
                     title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: Color(0xFF444444),
+                      color: colors.onSurface,
                     ),
                   ),
                 ),
@@ -430,18 +530,18 @@ class _ProfileMenuItem extends StatelessWidget {
                 if (trailingText != null) ...[
                   Text(
                     trailingText!,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
-                      color: Color(0xFF888888),
+                      color: colors.onSurfaceVariant,
                     ),
                   ),
                   const SizedBox(width: 8),
                 ],
 
-                const Icon(
+                Icon(
                   Icons.arrow_forward_ios_rounded,
                   size: 14,
-                  color: Color(0xFFAAAAAA),
+                  color: colors.onSurfaceVariant,
                 ),
               ],
             ),

@@ -70,17 +70,27 @@ class _IngredientFinderScreenState extends State<IngredientFinderScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    final backgroundColor = Theme.of(context).scaffoldBackgroundColor;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFFFFBF7),
+      backgroundColor: backgroundColor,
+
       appBar: AppBar(
-        backgroundColor: const Color(0xFFFFFBF7),
+        backgroundColor: backgroundColor,
+        foregroundColor: colors.onSurface,
         elevation: 0,
         surfaceTintColor: Colors.transparent,
-        title: const Text(
+        title: Text(
           'Bahan Saya',
-          style: TextStyle(fontWeight: FontWeight.w700),
+          style: TextStyle(
+            fontWeight: FontWeight.w700,
+            color: colors.onSurface,
+          ),
         ),
       ),
+
       body: SafeArea(
         child: Column(
           children: [
@@ -90,28 +100,32 @@ class _IngredientFinderScreenState extends State<IngredientFinderScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    // TITLE
+                    Text(
                       'Apa yang ada di dapurmu?',
                       style: TextStyle(
                         fontSize: 26,
                         fontWeight: FontWeight.w800,
-                        color: Color(0xFF222222),
+                        color: colors.onSurface,
                       ),
                     ),
 
                     const SizedBox(height: 8),
 
-                    const Text(
-                      'Pilih bahan yang kamu punya. RacikAI akan mencari resep yang paling cocok.',
+                    Text(
+                      'Pilih bahan yang kamu punya. '
+                      'RacikAI akan mencari resep '
+                      'yang paling cocok.',
                       style: TextStyle(
                         fontSize: 14,
                         height: 1.5,
-                        color: Color(0xFF777777),
+                        color: colors.onSurfaceVariant,
                       ),
                     ),
 
                     const SizedBox(height: 24),
 
+                    // SEARCH FIELD
                     TextField(
                       controller: searchController,
                       onChanged: (value) {
@@ -121,7 +135,12 @@ class _IngredientFinderScreenState extends State<IngredientFinderScreen> {
                       },
                       decoration: InputDecoration(
                         hintText: 'Cari bahan...',
-                        prefixIcon: const Icon(Icons.search),
+
+                        prefixIcon: Icon(
+                          Icons.search,
+                          color: colors.onSurfaceVariant,
+                        ),
+
                         suffixIcon: searchQuery.isNotEmpty
                             ? IconButton(
                                 onPressed: () {
@@ -131,44 +150,52 @@ class _IngredientFinderScreenState extends State<IngredientFinderScreen> {
                                     searchQuery = '';
                                   });
                                 },
-                                icon: const Icon(Icons.close),
+                                icon: Icon(
+                                  Icons.close,
+                                  color: colors.onSurfaceVariant,
+                                ),
                               )
                             : null,
+
                         filled: true,
-                        fillColor: Colors.white,
+                        fillColor: colors.surface,
+
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16),
                           borderSide: BorderSide.none,
                         ),
+
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16),
-                          borderSide: const BorderSide(
-                            color: Color(0xFFEEEEEE),
-                          ),
+                          borderSide: BorderSide(color: colors.outlineVariant),
                         ),
+
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16),
-                          borderSide: const BorderSide(
-                            color: Color(0xFFE8752E),
+                          borderSide: BorderSide(
+                            color: colors.primary,
                             width: 1.5,
                           ),
                         ),
                       ),
                     ),
 
+                    // SELECTED INGREDIENTS
                     if (selectedIngredients.isNotEmpty) ...[
                       const SizedBox(height: 28),
 
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text(
+                          Text(
                             'Bahan dipilih',
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.w700,
+                              color: colors.onSurface,
                             ),
                           ),
+
                           TextButton(
                             onPressed: () {
                               setState(() {
@@ -192,11 +219,15 @@ class _IngredientFinderScreenState extends State<IngredientFinderScreen> {
                             onDeleted: () {
                               toggleIngredient(ingredient);
                             },
-                            deleteIcon: const Icon(Icons.close, size: 17),
-                            selectedColor: const Color(0xFFFFE8D5),
+                            deleteIcon: Icon(
+                              Icons.close,
+                              size: 17,
+                              color: colors.onPrimaryContainer,
+                            ),
+                            selectedColor: colors.primaryContainer,
                             side: BorderSide.none,
-                            labelStyle: const TextStyle(
-                              color: Color(0xFFE8752E),
+                            labelStyle: TextStyle(
+                              color: colors.onPrimaryContainer,
                               fontWeight: FontWeight.w600,
                             ),
                           );
@@ -206,24 +237,25 @@ class _IngredientFinderScreenState extends State<IngredientFinderScreen> {
 
                     const SizedBox(height: 30),
 
-                    const Text(
+                    // AVAILABLE INGREDIENTS
+                    Text(
                       'Pilih bahan',
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w800,
-                        color: Color(0xFF222222),
+                        color: colors.onSurface,
                       ),
                     ),
 
                     const SizedBox(height: 14),
 
                     if (filteredIngredients.isEmpty)
-                      const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 40),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 40),
                         child: Center(
                           child: Text(
                             'Bahan tidak ditemukan.',
-                            style: TextStyle(color: Color(0xFF888888)),
+                            style: TextStyle(color: colors.onSurfaceVariant),
                           ),
                         ),
                       )
@@ -238,23 +270,31 @@ class _IngredientFinderScreenState extends State<IngredientFinderScreen> {
 
                           return FilterChip(
                             label: Text(ingredient),
+
                             selected: isSelected,
+
                             onSelected: (_) {
                               toggleIngredient(ingredient);
                             },
+
                             showCheckmark: true,
-                            selectedColor: const Color(0xFFE8752E),
-                            backgroundColor: Colors.white,
-                            checkmarkColor: Colors.white,
+
+                            selectedColor: colors.primary,
+
+                            backgroundColor: colors.surface,
+
+                            checkmarkColor: colors.onPrimary,
+
                             side: BorderSide(
                               color: isSelected
-                                  ? const Color(0xFFE8752E)
-                                  : const Color(0xFFEEEEEE),
+                                  ? colors.primary
+                                  : colors.outlineVariant,
                             ),
+
                             labelStyle: TextStyle(
                               color: isSelected
-                                  ? Colors.white
-                                  : const Color(0xFF555555),
+                                  ? colors.onPrimary
+                                  : colors.onSurface,
                               fontWeight: FontWeight.w600,
                             ),
                           );
@@ -265,11 +305,12 @@ class _IngredientFinderScreenState extends State<IngredientFinderScreen> {
               ),
             ),
 
+            // BOTTOM BUTTON
             Container(
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
-              decoration: const BoxDecoration(
-                color: Color(0xFFFFFBF7),
-                border: Border(top: BorderSide(color: Color(0xFFEEEEEE))),
+              decoration: BoxDecoration(
+                color: backgroundColor,
+                border: Border(top: BorderSide(color: colors.outlineVariant)),
               ),
               child: FilledButton(
                 onPressed: selectedIngredients.isEmpty
@@ -285,10 +326,16 @@ class _IngredientFinderScreenState extends State<IngredientFinderScreen> {
                         );
                       },
                 style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFFE8752E),
-                  foregroundColor: Colors.white,
-                  disabledBackgroundColor: const Color(0xFFE0E0E0),
+                  backgroundColor: colors.primary,
+
+                  foregroundColor: colors.onPrimary,
+
+                  disabledBackgroundColor: colors.surfaceContainerHighest,
+
+                  disabledForegroundColor: colors.onSurfaceVariant,
+
                   minimumSize: const Size(double.infinity, 56),
+
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),

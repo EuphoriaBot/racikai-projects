@@ -15,6 +15,8 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
     final categories = [
       {'name': 'Ayam', 'icon': Icons.set_meal},
       {'name': 'Daging', 'icon': Icons.restaurant},
@@ -32,24 +34,28 @@ class HomeScreen extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
+                Text(
                   'RacikAI',
                   style: TextStyle(
                     fontSize: 26,
                     fontWeight: FontWeight.w800,
-                    color: Color(0xFF222222),
+                    color: colors.onSurface,
                   ),
                 ),
                 Container(
                   width: 44,
                   height: 44,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: colors.surface,
                     borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: colors.outlineVariant),
                   ),
                   child: IconButton(
                     onPressed: () {},
-                    icon: const Icon(Icons.notifications_none_rounded),
+                    icon: Icon(
+                      Icons.notifications_none_rounded,
+                      color: colors.onSurfaceVariant,
+                    ),
                   ),
                 ),
               ],
@@ -57,24 +63,25 @@ class HomeScreen extends StatelessWidget {
 
             const SizedBox(height: 28),
 
-            const Text(
+            Text(
               'Selamat datang 👋',
-              style: TextStyle(fontSize: 14, color: Color(0xFF777777)),
+              style: TextStyle(fontSize: 14, color: colors.onSurfaceVariant),
             ),
 
             const SizedBox(height: 4),
 
-            const Text(
+            Text(
               'Mau masak apa hari ini?',
               style: TextStyle(
                 fontSize: 25,
                 fontWeight: FontWeight.w700,
-                color: Color(0xFF222222),
+                color: colors.onSurface,
               ),
             ),
 
             const SizedBox(height: 22),
 
+            // SEARCH BAR
             InkWell(
               onTap: onSearchTap,
               borderRadius: BorderRadius.circular(16),
@@ -82,17 +89,20 @@ class HomeScreen extends StatelessWidget {
                 height: 56,
                 padding: const EdgeInsets.symmetric(horizontal: 18),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: colors.surface,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFFEEEEEE)),
+                  border: Border.all(color: colors.outlineVariant),
                 ),
-                child: const Row(
+                child: Row(
                   children: [
-                    Icon(Icons.search, color: Color(0xFF888888)),
-                    SizedBox(width: 12),
+                    Icon(Icons.search, color: colors.onSurfaceVariant),
+                    const SizedBox(width: 12),
                     Text(
                       'Cari resep...',
-                      style: TextStyle(color: Color(0xFF999999), fontSize: 15),
+                      style: TextStyle(
+                        color: colors.onSurfaceVariant,
+                        fontSize: 15,
+                      ),
                     ),
                   ],
                 ),
@@ -101,11 +111,12 @@ class HomeScreen extends StatelessWidget {
 
             const SizedBox(height: 24),
 
+            // INGREDIENT FINDER CARD
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(22),
               decoration: BoxDecoration(
-                color: const Color(0xFFFFE8D5),
+                color: colors.primaryContainer,
                 borderRadius: BorderRadius.circular(24),
               ),
               child: Column(
@@ -115,25 +126,26 @@ class HomeScreen extends StatelessWidget {
                     width: 45,
                     height: 45,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFE8752E),
+                      color: colors.primary,
                       borderRadius: BorderRadius.circular(14),
                     ),
-                    child: const Icon(Icons.auto_awesome, color: Colors.white),
+                    child: Icon(Icons.auto_awesome, color: colors.onPrimary),
                   ),
 
                   const SizedBox(height: 18),
 
-                  const Text(
+                  Text(
                     'Punya bahan di rumah?',
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.w700,
-                      color: Color(0xFF242424),
+                      color: colors.onPrimaryContainer,
                     ),
                   ),
 
                   const SizedBox(height: 16),
 
+                  // MEAL PLANNER
                   Material(
                     color: Colors.transparent,
                     child: InkWell(
@@ -154,10 +166,10 @@ class HomeScreen extends StatelessWidget {
                             context: context,
                             builder: (dialogContext) {
                               return AlertDialog(
-                                icon: const Icon(
+                                icon: Icon(
                                   Icons.calendar_month,
                                   size: 42,
-                                  color: Color(0xFFE8752E),
+                                  color: colors.primary,
                                 ),
                                 title: const Text('Fitur Premium'),
                                 content: const Text(
@@ -185,7 +197,8 @@ class HomeScreen extends StatelessWidget {
                                       );
                                     },
                                     style: FilledButton.styleFrom(
-                                      backgroundColor: const Color(0xFFE8752E),
+                                      backgroundColor: colors.primary,
+                                      foregroundColor: colors.onPrimary,
                                     ),
                                     child: const Text('Lihat Premium'),
                                   ),
@@ -198,30 +211,30 @@ class HomeScreen extends StatelessWidget {
                       child: Container(
                         padding: const EdgeInsets.all(18),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: colors.surface,
                           borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: const Color(0xFFEEEEEE)),
+                          border: Border.all(color: colors.outlineVariant),
                         ),
-                        child: const Row(
+                        child: Row(
                           children: [
                             SizedBox(
                               width: 48,
                               height: 48,
                               child: DecoratedBox(
                                 decoration: BoxDecoration(
-                                  color: Color(0xFFFFE8D5),
-                                  borderRadius: BorderRadius.all(
+                                  color: colors.primaryContainer,
+                                  borderRadius: const BorderRadius.all(
                                     Radius.circular(14),
                                   ),
                                 ),
                                 child: Icon(
                                   Icons.calendar_month_rounded,
-                                  color: Color(0xFFE8752E),
+                                  color: colors.primary,
                                 ),
                               ),
                             ),
 
-                            SizedBox(width: 14),
+                            const SizedBox(width: 14),
 
                             Expanded(
                               child: Column(
@@ -232,16 +245,17 @@ class HomeScreen extends StatelessWidget {
                                     style: TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w700,
+                                      color: colors.onSurface,
                                     ),
                                   ),
 
-                                  SizedBox(height: 4),
+                                  const SizedBox(height: 4),
 
                                   Text(
                                     'Rencanakan menu untuk 7 hari',
                                     style: TextStyle(
                                       fontSize: 12,
-                                      color: Color(0xFF777777),
+                                      color: colors.onSurfaceVariant,
                                     ),
                                   ),
                                 ],
@@ -251,7 +265,7 @@ class HomeScreen extends StatelessWidget {
                             Icon(
                               Icons.arrow_forward_ios,
                               size: 15,
-                              color: Color(0xFFAAAAAA),
+                              color: colors.onSurfaceVariant,
                             ),
                           ],
                         ),
@@ -261,12 +275,12 @@ class HomeScreen extends StatelessWidget {
 
                   const SizedBox(height: 8),
 
-                  const Text(
+                  Text(
                     'Beritahu RacikAI bahan yang kamu punya dan temukan resep yang cocok untuk dibuat.',
                     style: TextStyle(
                       fontSize: 14,
                       height: 1.5,
-                      color: Color(0xFF666666),
+                      color: colors.onPrimaryContainer.withValues(alpha: 0.75),
                     ),
                   ),
 
@@ -284,8 +298,8 @@ class HomeScreen extends StatelessWidget {
                     icon: const Icon(Icons.auto_awesome, size: 18),
                     label: const Text('Cari dari Bahan'),
                     style: FilledButton.styleFrom(
-                      backgroundColor: const Color(0xFFE8752E),
-                      foregroundColor: Colors.white,
+                      backgroundColor: colors.primary,
+                      foregroundColor: colors.onPrimary,
                       padding: const EdgeInsets.symmetric(
                         horizontal: 18,
                         vertical: 14,
@@ -298,12 +312,17 @@ class HomeScreen extends StatelessWidget {
 
             const SizedBox(height: 30),
 
+            // CATEGORY TITLE
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
+                Text(
                   'Kategori',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: colors.onSurface,
+                  ),
                 ),
                 TextButton(
                   onPressed: onSearchTap,
@@ -314,6 +333,7 @@ class HomeScreen extends StatelessWidget {
 
             const SizedBox(height: 12),
 
+            // CATEGORY LIST
             SizedBox(
               height: 92,
               child: ListView.separated(
@@ -328,21 +348,25 @@ class HomeScreen extends StatelessWidget {
                       Container(
                         width: 58,
                         height: 58,
-                        decoration: const BoxDecoration(
-                          color: Colors.white,
+                        decoration: BoxDecoration(
+                          color: colors.surface,
                           shape: BoxShape.circle,
+                          border: Border.all(color: colors.outlineVariant),
                         ),
                         child: Icon(
                           category['icon'] as IconData,
-                          color: const Color(0xFFE8752E),
+                          color: colors.primary,
                         ),
                       ),
+
                       const SizedBox(height: 7),
+
                       Text(
                         category['name'] as String,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w500,
+                          color: colors.onSurface,
                         ),
                       ),
                     ],
@@ -353,12 +377,17 @@ class HomeScreen extends StatelessWidget {
 
             const SizedBox(height: 24),
 
+            // RECOMMENDATION TITLE
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
+                Text(
                   'Rekomendasi untukmu',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: colors.onSurface,
+                  ),
                 ),
                 TextButton(
                   onPressed: onSearchTap,
@@ -369,6 +398,7 @@ class HomeScreen extends StatelessWidget {
 
             const SizedBox(height: 14),
 
+            // RECOMMENDATION RECIPES
             SizedBox(
               height: 255,
               child: ListView(

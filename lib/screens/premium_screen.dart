@@ -14,17 +14,26 @@ class _PremiumScreenState extends State<PremiumScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final backgroundColor = Theme.of(context).scaffoldBackgroundColor;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFFFFBF7),
+      backgroundColor: backgroundColor,
+
       appBar: AppBar(
-        backgroundColor: const Color(0xFFFFFBF7),
+        backgroundColor: backgroundColor,
+        foregroundColor: colors.onSurface,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
-        title: const Text(
+        title: Text(
           'RacikAI Premium',
-          style: TextStyle(fontWeight: FontWeight.w700),
+          style: TextStyle(
+            fontWeight: FontWeight.w700,
+            color: colors.onSurface,
+          ),
         ),
       ),
+
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(20, 10, 20, 120),
@@ -38,39 +47,39 @@ class _PremiumScreenState extends State<PremiumScreen> {
                     Container(
                       width: 82,
                       height: 82,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFFFE8D5),
+                      decoration: BoxDecoration(
+                        color: colors.primaryContainer,
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.workspace_premium_rounded,
                         size: 42,
-                        color: Color(0xFFE8752E),
+                        color: colors.primary,
                       ),
                     ),
 
                     const SizedBox(height: 20),
 
-                    const Text(
+                    Text(
                       'Masak lebih pintar\ntanpa batas',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 28,
                         height: 1.2,
                         fontWeight: FontWeight.w800,
-                        color: Color(0xFF222222),
+                        color: colors.onSurface,
                       ),
                     ),
 
                     const SizedBox(height: 10),
 
-                    const Text(
+                    Text(
                       'Dapatkan pengalaman RacikAI lengkap dengan fitur Premium.',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 14,
                         height: 1.5,
-                        color: Color(0xFF777777),
+                        color: colors.onSurfaceVariant,
                       ),
                     ),
                   ],
@@ -79,12 +88,12 @@ class _PremiumScreenState extends State<PremiumScreen> {
 
               const SizedBox(height: 32),
 
-              const Text(
+              Text(
                 'Yang kamu dapatkan',
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w800,
-                  color: Color(0xFF222222),
+                  color: colors.onSurface,
                 ),
               ),
 
@@ -126,12 +135,12 @@ class _PremiumScreenState extends State<PremiumScreen> {
 
               const SizedBox(height: 32),
 
-              const Text(
+              Text(
                 'Pilih paket',
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w800,
-                  color: Color(0xFF222222),
+                  color: colors.onSurface,
                 ),
               ),
 
@@ -170,12 +179,12 @@ class _PremiumScreenState extends State<PremiumScreen> {
 
               const SizedBox(height: 34),
 
-              const Text(
+              Text(
                 'Free vs Premium',
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w800,
-                  color: Color(0xFF222222),
+                  color: colors.onSurface,
                 ),
               ),
 
@@ -185,10 +194,13 @@ class _PremiumScreenState extends State<PremiumScreen> {
 
               const SizedBox(height: 24),
 
-              const Center(
+              Center(
                 child: Text(
                   'Batalkan kapan saja.',
-                  style: TextStyle(fontSize: 12, color: Color(0xFF999999)),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: colors.onSurfaceVariant,
+                  ),
                 ),
               ),
             ],
@@ -200,9 +212,9 @@ class _PremiumScreenState extends State<PremiumScreen> {
       bottomNavigationBar: SafeArea(
         child: Container(
           padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
-          decoration: const BoxDecoration(
-            color: Color(0xFFFFFBF7),
-            border: Border(top: BorderSide(color: Color(0xFFEEEEEE))),
+          decoration: BoxDecoration(
+            color: backgroundColor,
+            border: Border(top: BorderSide(color: colors.outlineVariant)),
           ),
           child: FilledButton(
             onPressed: () {
@@ -227,8 +239,8 @@ class _PremiumScreenState extends State<PremiumScreen> {
               );
             },
             style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFFE8752E),
-              foregroundColor: Colors.white,
+              backgroundColor: colors.primary,
+              foregroundColor: colors.onPrimary,
               minimumSize: const Size(double.infinity, 56),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
@@ -260,13 +272,15 @@ class _PremiumFeature extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colors.surface,
         borderRadius: BorderRadius.circular(17),
-        border: Border.all(color: const Color(0xFFEEEEEE)),
+        border: Border.all(color: colors.outlineVariant),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -275,10 +289,10 @@ class _PremiumFeature extends StatelessWidget {
             width: 42,
             height: 42,
             decoration: BoxDecoration(
-              color: const Color(0xFFFFE8D5),
+              color: colors.primaryContainer,
               borderRadius: BorderRadius.circular(13),
             ),
-            child: Icon(icon, size: 21, color: const Color(0xFFE8752E)),
+            child: Icon(icon, size: 21, color: colors.primary),
           ),
 
           const SizedBox(width: 13),
@@ -289,10 +303,10 @@ class _PremiumFeature extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFF333333),
+                    color: colors.onSurface,
                   ),
                 ),
 
@@ -300,10 +314,10 @@ class _PremiumFeature extends StatelessWidget {
 
                 Text(
                   description,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
                     height: 1.4,
-                    color: Color(0xFF777777),
+                    color: colors.onSurfaceVariant,
                   ),
                 ),
               ],
@@ -336,6 +350,20 @@ class _PlanCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    final cardBackground = isSelected
+        ? colors.primaryContainer
+        : colors.surface;
+
+    final mainTextColor = isSelected
+        ? colors.onPrimaryContainer
+        : colors.onSurface;
+
+    final secondaryTextColor = isSelected
+        ? colors.onPrimaryContainer.withValues(alpha: 0.75)
+        : colors.onSurfaceVariant;
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -344,26 +372,23 @@ class _PlanCard extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
-            color: isSelected ? const Color(0xFFFFF3E9) : Colors.white,
+            color: cardBackground,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: isSelected
-                  ? const Color(0xFFE8752E)
-                  : const Color(0xFFEEEEEE),
+              color: isSelected ? colors.primary : colors.outlineVariant,
               width: isSelected ? 2 : 1,
             ),
           ),
           child: Row(
             children: [
+              // CUSTOM RADIO
               Container(
                 width: 24,
                 height: 24,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: isSelected
-                        ? const Color(0xFFE8752E)
-                        : const Color(0xFFCCCCCC),
+                    color: isSelected ? colors.primary : colors.outline,
                     width: 2,
                   ),
                 ),
@@ -372,8 +397,8 @@ class _PlanCard extends StatelessWidget {
                         child: Container(
                           width: 12,
                           height: 12,
-                          decoration: const BoxDecoration(
-                            color: Color(0xFFE8752E),
+                          decoration: BoxDecoration(
+                            color: colors.primary,
                             shape: BoxShape.circle,
                           ),
                         ),
@@ -389,11 +414,14 @@ class _PlanCard extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        Text(
-                          title,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w800,
+                        Flexible(
+                          child: Text(
+                            title,
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w800,
+                              color: mainTextColor,
+                            ),
                           ),
                         ),
 
@@ -406,13 +434,13 @@ class _PlanCard extends StatelessWidget {
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFE8752E),
+                              color: colors.primary,
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: Text(
                               badge!,
-                              style: const TextStyle(
-                                color: Colors.white,
+                              style: TextStyle(
+                                color: colors.onPrimary,
                                 fontSize: 9,
                                 fontWeight: FontWeight.w800,
                               ),
@@ -426,33 +454,29 @@ class _PlanCard extends StatelessWidget {
 
                     Text(
                       description,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Color(0xFF777777),
-                      ),
+                      style: TextStyle(fontSize: 12, color: secondaryTextColor),
                     ),
                   ],
                 ),
               ),
+
+              const SizedBox(width: 10),
 
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
                     price,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 17,
                       fontWeight: FontWeight.w800,
-                      color: Color(0xFF222222),
+                      color: mainTextColor,
                     ),
                   ),
 
                   Text(
                     period,
-                    style: const TextStyle(
-                      fontSize: 11,
-                      color: Color(0xFF888888),
-                    ),
+                    style: TextStyle(fontSize: 11, color: secondaryTextColor),
                   ),
                 ],
               ),
@@ -469,36 +493,42 @@ class _ComparisonCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colors.surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFEEEEEE)),
+        border: Border.all(color: colors.outlineVariant),
       ),
-      child: const Column(
+      child: Column(
         children: [
-          _ComparisonHeader(),
+          const _ComparisonHeader(),
 
-          Divider(height: 28, color: Color(0xFFEEEEEE)),
+          Divider(height: 28, color: colors.outlineVariant),
 
-          _ComparisonRow(feature: 'Cari resep', free: '✓', premium: '✓'),
+          const _ComparisonRow(feature: 'Cari resep', free: '✓', premium: '✓'),
 
-          _ComparisonRow(
+          const _ComparisonRow(
             feature: 'Pertanyaan AI',
             free: '5 / hari',
             premium: 'Unlimited',
           ),
 
-          _ComparisonRow(
+          const _ComparisonRow(
             feature: 'Resep favorit',
             free: '10',
             premium: 'Unlimited',
           ),
 
-          _ComparisonRow(feature: 'Meal Planner', free: '—', premium: '✓'),
+          const _ComparisonRow(
+            feature: 'Meal Planner',
+            free: '—',
+            premium: '✓',
+          ),
 
-          _ComparisonRow(
+          const _ComparisonRow(
             feature: 'Tanpa iklan',
             free: '—',
             premium: '✓',
@@ -515,26 +545,39 @@ class _ComparisonHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Row(
+    final colors = Theme.of(context).colorScheme;
+
+    return Row(
       children: [
         Expanded(
           flex: 2,
-          child: Text('Fitur', style: TextStyle(fontWeight: FontWeight.w700)),
+          child: Text(
+            'Fitur',
+            style: TextStyle(
+              fontWeight: FontWeight.w700,
+              color: colors.onSurface,
+            ),
+          ),
         ),
+
         Expanded(
           child: Text(
             'Free',
             textAlign: TextAlign.center,
-            style: TextStyle(fontWeight: FontWeight.w700),
+            style: TextStyle(
+              fontWeight: FontWeight.w700,
+              color: colors.onSurface,
+            ),
           ),
         ),
+
         Expanded(
           child: Text(
             'Premium',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontWeight: FontWeight.w700,
-              color: Color(0xFFE8752E),
+              color: colors.primary,
             ),
           ),
         ),
@@ -558,13 +601,15 @@ class _ComparisonRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
     return Container(
       padding: EdgeInsets.only(bottom: isLast ? 0 : 14),
       margin: EdgeInsets.only(bottom: isLast ? 0 : 14),
       decoration: BoxDecoration(
         border: isLast
             ? null
-            : const Border(bottom: BorderSide(color: Color(0xFFF2F2F2))),
+            : Border(bottom: BorderSide(color: colors.outlineVariant)),
       ),
       child: Row(
         children: [
@@ -572,7 +617,7 @@ class _ComparisonRow extends StatelessWidget {
             flex: 2,
             child: Text(
               feature,
-              style: const TextStyle(fontSize: 12, color: Color(0xFF555555)),
+              style: TextStyle(fontSize: 12, color: colors.onSurfaceVariant),
             ),
           ),
 
@@ -580,7 +625,7 @@ class _ComparisonRow extends StatelessWidget {
             child: Text(
               free,
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 12, color: Color(0xFF777777)),
+              style: TextStyle(fontSize: 12, color: colors.onSurfaceVariant),
             ),
           ),
 
@@ -588,10 +633,10 @@ class _ComparisonRow extends StatelessWidget {
             child: Text(
               premium,
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
-                color: Color(0xFFE8752E),
+                color: colors.primary,
               ),
             ),
           ),

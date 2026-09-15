@@ -11,16 +11,23 @@ class MealPlannerScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final planner = MealPlannerController.instance;
+    final colors = Theme.of(context).colorScheme;
+    final backgroundColor = Theme.of(context).scaffoldBackgroundColor;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFFFBF7),
+      backgroundColor: backgroundColor,
+
       appBar: AppBar(
-        backgroundColor: const Color(0xFFFFFBF7),
+        backgroundColor: backgroundColor,
+        foregroundColor: colors.onSurface,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
-        title: const Text(
+        title: Text(
           'Meal Planner',
-          style: TextStyle(fontWeight: FontWeight.w700),
+          style: TextStyle(
+            fontWeight: FontWeight.w700,
+            color: colors.onSurface,
+          ),
         ),
         actions: [
           IconButton(
@@ -28,31 +35,33 @@ class MealPlannerScreen extends StatelessWidget {
             onPressed: () {
               _showClearDialog(context);
             },
-            icon: const Icon(Icons.delete_outline),
+            icon: Icon(Icons.delete_outline, color: colors.onSurfaceVariant),
           ),
         ],
       ),
+
       body: AnimatedBuilder(
         animation: planner,
         builder: (context, _) {
           return ListView(
             padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
             children: [
+              // HEADER CARD
               Container(
                 padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFFE8D5),
+                  color: colors.primaryContainer,
                   borderRadius: BorderRadius.circular(20),
                 ),
-                child: const Row(
+                child: Row(
                   children: [
                     Icon(
                       Icons.calendar_month_rounded,
                       size: 34,
-                      color: Color(0xFFE8752E),
+                      color: colors.primary,
                     ),
 
-                    SizedBox(width: 14),
+                    const SizedBox(width: 14),
 
                     Expanded(
                       child: Column(
@@ -63,17 +72,20 @@ class MealPlannerScreen extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 17,
                               fontWeight: FontWeight.w800,
+                              color: colors.onPrimaryContainer,
                             ),
                           ),
 
-                          SizedBox(height: 4),
+                          const SizedBox(height: 4),
 
                           Text(
                             'Pilih satu resep untuk setiap hari agar menu mingguan lebih teratur.',
                             style: TextStyle(
                               fontSize: 12,
                               height: 1.4,
-                              color: Color(0xFF666666),
+                              color: colors.onPrimaryContainer.withValues(
+                                alpha: 0.75,
+                              ),
                             ),
                           ),
                         ],
@@ -85,6 +97,7 @@ class MealPlannerScreen extends StatelessWidget {
 
               const SizedBox(height: 26),
 
+              // DAYS
               ...planner.days.map((day) {
                 final recipe = planner.recipeForDay(day);
 
@@ -104,6 +117,8 @@ class MealPlannerScreen extends StatelessWidget {
     showDialog(
       context: context,
       builder: (dialogContext) {
+        final colors = Theme.of(dialogContext).colorScheme;
+
         return AlertDialog(
           title: const Text('Hapus Meal Plan?'),
           content: const Text(
@@ -116,6 +131,7 @@ class MealPlannerScreen extends StatelessWidget {
               },
               child: const Text('Batal'),
             ),
+
             FilledButton(
               onPressed: () {
                 MealPlannerController.instance.clearPlan();
@@ -123,7 +139,8 @@ class MealPlannerScreen extends StatelessWidget {
                 Navigator.pop(dialogContext);
               },
               style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFFE8752E),
+                backgroundColor: colors.primary,
+                foregroundColor: colors.onPrimary,
               ),
               child: const Text('Hapus'),
             ),
@@ -142,11 +159,13 @@ class _MealDayCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colors.surface,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFEEEEEE)),
+        border: Border.all(color: colors.outlineVariant),
       ),
       child: recipe == null
           ? _EmptyDay(day: day)
@@ -162,6 +181,8 @@ class _EmptyDay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
     return InkWell(
       borderRadius: BorderRadius.circular(18),
       onTap: () {
@@ -175,9 +196,10 @@ class _EmptyDay extends StatelessWidget {
               width: 70,
               child: Text(
                 day,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w700,
+                  color: colors.onSurface,
                 ),
               ),
             ),
@@ -191,19 +213,19 @@ class _EmptyDay extends StatelessWidget {
                   horizontal: 14,
                 ),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFFF7F0),
+                  color: colors.primaryContainer,
                   borderRadius: BorderRadius.circular(13),
                 ),
-                child: const Row(
+                child: Row(
                   children: [
-                    Icon(Icons.add, size: 19, color: Color(0xFFE8752E)),
+                    Icon(Icons.add, size: 19, color: colors.primary),
 
-                    SizedBox(width: 7),
+                    const SizedBox(width: 7),
 
                     Text(
                       'Pilih resep',
                       style: TextStyle(
-                        color: Color(0xFFE8752E),
+                        color: colors.onPrimaryContainer,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -226,6 +248,8 @@ class _FilledDay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
     return Padding(
       padding: const EdgeInsets.all(15),
       child: Row(
@@ -234,7 +258,11 @@ class _FilledDay extends StatelessWidget {
             width: 70,
             child: Text(
               day,
-              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: colors.onSurface,
+              ),
             ),
           ),
 
@@ -243,7 +271,7 @@ class _FilledDay extends StatelessWidget {
             height: 54,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: const Color(0xFFFFE8D5),
+              color: colors.primaryContainer,
               borderRadius: BorderRadius.circular(14),
             ),
             child: Text(recipe.emoji, style: const TextStyle(fontSize: 28)),
@@ -268,9 +296,10 @@ class _FilledDay extends StatelessWidget {
                     recipe.title,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
+                      color: colors.onSurface,
                     ),
                   ),
 
@@ -278,9 +307,9 @@ class _FilledDay extends StatelessWidget {
 
                   Text(
                     recipe.duration,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 11,
-                      color: Color(0xFF888888),
+                      color: colors.onSurfaceVariant,
                     ),
                   ),
                 ],
@@ -289,6 +318,7 @@ class _FilledDay extends StatelessWidget {
           ),
 
           PopupMenuButton<String>(
+            iconColor: colors.onSurfaceVariant,
             onSelected: (value) {
               if (value == 'change') {
                 _showRecipePicker(context, day);
@@ -313,11 +343,14 @@ void _showRecipePicker(BuildContext context, String day) {
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
-    backgroundColor: const Color(0xFFFFFBF7),
+    showDragHandle: false,
+    backgroundColor: Theme.of(context).colorScheme.surface,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
     ),
     builder: (sheetContext) {
+      final colors = Theme.of(sheetContext).colorScheme;
+
       return SafeArea(
         child: SizedBox(
           height: MediaQuery.sizeOf(sheetContext).height * 0.72,
@@ -329,7 +362,7 @@ void _showRecipePicker(BuildContext context, String day) {
                 width: 42,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFD0D0D0),
+                  color: colors.onSurfaceVariant.withValues(alpha: 0.35),
                   borderRadius: BorderRadius.circular(20),
                 ),
               ),
@@ -341,9 +374,10 @@ void _showRecipePicker(BuildContext context, String day) {
                     Expanded(
                       child: Text(
                         'Pilih menu $day',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 21,
                           fontWeight: FontWeight.w800,
+                          color: colors.onSurface,
                         ),
                       ),
                     ),
@@ -368,17 +402,20 @@ void _showRecipePicker(BuildContext context, String day) {
 
                         Navigator.pop(sheetContext);
                       },
-                      tileColor: Colors.white,
+
+                      tileColor: colors.surface,
+
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
-                        side: const BorderSide(color: Color(0xFFEEEEEE)),
+                        side: BorderSide(color: colors.outlineVariant),
                       ),
+
                       leading: Container(
                         width: 48,
                         height: 48,
                         alignment: Alignment.center,
                         decoration: BoxDecoration(
-                          color: const Color(0xFFFFE8D5),
+                          color: colors.primaryContainer,
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
@@ -386,14 +423,23 @@ void _showRecipePicker(BuildContext context, String day) {
                           style: const TextStyle(fontSize: 25),
                         ),
                       ),
+
                       title: Text(
                         recipe.title,
-                        style: const TextStyle(fontWeight: FontWeight.w700),
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          color: colors.onSurface,
+                        ),
                       ),
-                      subtitle: Text('${recipe.category} • ${recipe.duration}'),
-                      trailing: const Icon(
+
+                      subtitle: Text(
+                        '${recipe.category} • ${recipe.duration}',
+                        style: TextStyle(color: colors.onSurfaceVariant),
+                      ),
+
+                      trailing: Icon(
                         Icons.add_circle_outline,
-                        color: Color(0xFFE8752E),
+                        color: colors.primary,
                       ),
                     );
                   },

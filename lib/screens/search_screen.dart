@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../controllers/favorite_controller.dart';
 import '../data/dummy_recipes.dart';
 import '../models/recipe.dart';
 import 'recipe_detail_screen.dart';
-import '../controllers/favorite_controller.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -13,12 +13,6 @@ class SearchScreen extends StatefulWidget {
 }
 
 class _SearchScreenState extends State<SearchScreen> {
-  @override
-  void dispose() {
-    searchController.dispose();
-    super.dispose();
-  }
-
   String searchQuery = '';
   String selectedCategory = 'Semua';
 
@@ -33,6 +27,12 @@ class _SearchScreenState extends State<SearchScreen> {
     'Sayur',
     'Dessert',
   ];
+
+  @override
+  void dispose() {
+    searchController.dispose();
+    super.dispose();
+  }
 
   List<Recipe> get filteredRecipes {
     return dummyRecipes.where((recipe) {
@@ -49,6 +49,8 @@ class _SearchScreenState extends State<SearchScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
     return SafeArea(
       child: Column(
         children: [
@@ -57,20 +59,23 @@ class _SearchScreenState extends State<SearchScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'Cari Resep',
                   style: TextStyle(
                     fontSize: 26,
                     fontWeight: FontWeight.w800,
-                    color: Color(0xFF222222),
+                    color: colors.onSurface,
                   ),
                 ),
 
                 const SizedBox(height: 6),
 
-                const Text(
+                Text(
                   'Temukan resep yang ingin kamu masak.',
-                  style: TextStyle(color: Color(0xFF777777), fontSize: 14),
+                  style: TextStyle(
+                    color: colors.onSurfaceVariant,
+                    fontSize: 14,
+                  ),
                 ),
 
                 const SizedBox(height: 22),
@@ -84,7 +89,10 @@ class _SearchScreenState extends State<SearchScreen> {
                   },
                   decoration: InputDecoration(
                     hintText: 'Cari ayam, pasta, nasi...',
-                    prefixIcon: const Icon(Icons.search),
+                    prefixIcon: Icon(
+                      Icons.search,
+                      color: colors.onSurfaceVariant,
+                    ),
                     suffixIcon: searchQuery.isNotEmpty
                         ? IconButton(
                             onPressed: () {
@@ -94,11 +102,14 @@ class _SearchScreenState extends State<SearchScreen> {
                                 searchQuery = '';
                               });
                             },
-                            icon: const Icon(Icons.close),
+                            icon: Icon(
+                              Icons.close,
+                              color: colors.onSurfaceVariant,
+                            ),
                           )
                         : null,
                     filled: true,
-                    fillColor: Colors.white,
+                    fillColor: colors.surface,
                     contentPadding: const EdgeInsets.symmetric(vertical: 17),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
@@ -106,14 +117,11 @@ class _SearchScreenState extends State<SearchScreen> {
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
-                      borderSide: const BorderSide(color: Color(0xFFEEEEEE)),
+                      borderSide: BorderSide(color: colors.outlineVariant),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
-                      borderSide: const BorderSide(
-                        color: Color(0xFFE8752E),
-                        width: 1.5,
-                      ),
+                      borderSide: BorderSide(color: colors.primary, width: 1.5),
                     ),
                   ),
                 ),
@@ -144,16 +152,14 @@ class _SearchScreenState extends State<SearchScreen> {
                     });
                   },
                   showCheckmark: false,
-                  selectedColor: const Color(0xFFE8752E),
-                  backgroundColor: Colors.white,
+                  selectedColor: colors.primary,
+                  backgroundColor: colors.surface,
                   labelStyle: TextStyle(
-                    color: isSelected ? Colors.white : const Color(0xFF555555),
+                    color: isSelected ? colors.onPrimary : colors.onSurface,
                     fontWeight: FontWeight.w600,
                   ),
                   side: BorderSide(
-                    color: isSelected
-                        ? const Color(0xFFE8752E)
-                        : const Color(0xFFEEEEEE),
+                    color: isSelected ? colors.primary : colors.outlineVariant,
                   ),
                 );
               },
@@ -248,7 +254,6 @@ class _SearchRecipeGridCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // GAMBAR / EMOJI
               Expanded(
                 child: Container(
                   width: double.infinity,
@@ -328,9 +333,10 @@ class _SearchRecipeGridCard extends StatelessWidget {
                       recipe.title,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
+                        color: colors.onSurface,
                       ),
                     ),
 
@@ -363,9 +369,10 @@ class _SearchRecipeGridCard extends StatelessWidget {
                             recipe.duration,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w500,
+                              color: colors.onSurface,
                             ),
                           ),
                         ),
@@ -393,27 +400,37 @@ class _EmptySearch extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
+    final colors = Theme.of(context).colorScheme;
+
+    return Center(
       child: Padding(
-        padding: EdgeInsets.all(32),
+        padding: const EdgeInsets.all(32),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.search_off_rounded, size: 64, color: Color(0xFFCCCCCC)),
+            Icon(
+              Icons.search_off_rounded,
+              size: 64,
+              color: colors.onSurfaceVariant.withValues(alpha: 0.55),
+            ),
 
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
 
             Text(
               'Resep tidak ditemukan',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: colors.onSurface,
+              ),
             ),
 
-            SizedBox(height: 6),
+            const SizedBox(height: 6),
 
             Text(
               'Coba gunakan kata kunci atau kategori lain.',
               textAlign: TextAlign.center,
-              style: TextStyle(color: Color(0xFF888888)),
+              style: TextStyle(color: colors.onSurfaceVariant),
             ),
           ],
         ),

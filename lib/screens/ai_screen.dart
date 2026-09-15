@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 
+import '../controllers/subscription_controller.dart';
+import '../controllers/usage_controller.dart';
 import '../data/dummy_recipes.dart';
 import '../models/chat_message.dart';
 import '../models/recipe.dart';
-import 'recipe_detail_screen.dart';
-import '../controllers/subscription_controller.dart';
-import '../controllers/usage_controller.dart';
 import 'premium_screen.dart';
+import 'recipe_detail_screen.dart';
 
 class AiScreen extends StatefulWidget {
   const AiScreen({super.key});
@@ -85,18 +85,17 @@ class _AiScreenState extends State<AiScreen> {
     showDialog(
       context: context,
       builder: (dialogContext) {
+        final colors = Theme.of(dialogContext).colorScheme;
+
         return AlertDialog(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(22),
           ),
-          icon: const Icon(
-            Icons.auto_awesome,
-            size: 42,
-            color: Color(0xFFE8752E),
-          ),
+          icon: Icon(Icons.auto_awesome, size: 42, color: colors.primary),
           title: const Text('Batas AI Tercapai', textAlign: TextAlign.center),
           content: const Text(
-            'Kamu sudah menggunakan 5 pertanyaan AI gratis hari ini. Upgrade ke Premium untuk menggunakan RacikAI tanpa batas.',
+            'Kamu sudah menggunakan 5 pertanyaan AI gratis hari ini. '
+            'Upgrade ke Premium untuk menggunakan RacikAI tanpa batas.',
             textAlign: TextAlign.center,
           ),
           actionsAlignment: MainAxisAlignment.center,
@@ -119,7 +118,8 @@ class _AiScreenState extends State<AiScreen> {
                 );
               },
               style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFFE8752E),
+                backgroundColor: colors.primary,
+                foregroundColor: colors.onPrimary,
               ),
               child: const Text('Upgrade Premium'),
             ),
@@ -137,7 +137,10 @@ class _AiScreenState extends State<AiScreen> {
         text.contains('kecap')) {
       return const ChatMessage(
         role: ChatRole.assistant,
-        text: 'Dari bahan yang kamu sebutkan, kamu bisa mencoba Garlic Soy Chicken 🍗.\n\nResep ini menggunakan ayam, bawang putih, kecap, minyak, dan sedikit garam. Proses memasaknya juga cukup sederhana dan cocok untuk menu sehari-hari.',
+        text:
+            'Dari bahan yang kamu sebutkan, kamu bisa mencoba Garlic Soy Chicken 🍗.\n\n'
+            'Resep ini menggunakan ayam, bawang putih, kecap, minyak, dan sedikit garam. '
+            'Proses memasaknya juga cukup sederhana dan cocok untuk menu sehari-hari.',
         sourceRecipeIds: [1, 6],
       );
     }
@@ -145,7 +148,9 @@ class _AiScreenState extends State<AiScreen> {
     if (text.contains('nasi') || text.contains('rice')) {
       return const ChatMessage(
         role: ChatRole.assistant,
-        text: 'Kalau kamu punya nasi, salah satu pilihan paling sederhana adalah Nasi Goreng Spesial 🍚.\n\nKamu bisa mengombinasikannya dengan telur, bawang putih, dan kecap.',
+        text:
+            'Kalau kamu punya nasi, salah satu pilihan paling sederhana adalah Nasi Goreng Spesial 🍚.\n\n'
+            'Kamu bisa mengombinasikannya dengan telur, bawang putih, dan kecap.',
         sourceRecipeIds: [2, 8],
       );
     }
@@ -153,7 +158,9 @@ class _AiScreenState extends State<AiScreen> {
     if (text.contains('pasta')) {
       return const ChatMessage(
         role: ChatRole.assistant,
-        text: 'Kamu bisa mencoba Creamy Chicken Pasta 🍝. Resep ini cocok kalau kamu punya pasta, ayam, susu, bawang putih, dan keju.',
+        text:
+            'Kamu bisa mencoba Creamy Chicken Pasta 🍝. '
+            'Resep ini cocok kalau kamu punya pasta, ayam, susu, bawang putih, dan keju.',
         sourceRecipeIds: [3],
       );
     }
@@ -161,7 +168,9 @@ class _AiScreenState extends State<AiScreen> {
     if (text.contains('daging') || text.contains('beef')) {
       return const ChatMessage(
         role: ChatRole.assistant,
-        text: 'Untuk bahan daging sapi, Beef Teriyaki bisa menjadi pilihan yang praktis 🥩. Rasanya manis dan gurih serta proses memasaknya cukup sederhana.',
+        text:
+            'Untuk bahan daging sapi, Beef Teriyaki bisa menjadi pilihan yang praktis 🥩. '
+            'Rasanya manis dan gurih serta proses memasaknya cukup sederhana.',
         sourceRecipeIds: [4],
       );
     }
@@ -171,7 +180,9 @@ class _AiScreenState extends State<AiScreen> {
         text.contains('brokoli')) {
       return const ChatMessage(
         role: ChatRole.assistant,
-        text: 'Kamu bisa membuat Vegetable Stir Fry 🥬. Cukup gunakan beberapa sayuran yang tersedia lalu tumis bersama bawang putih dan sedikit saus.',
+        text:
+            'Kamu bisa membuat Vegetable Stir Fry 🥬. '
+            'Cukup gunakan beberapa sayuran yang tersedia lalu tumis bersama bawang putih dan sedikit saus.',
         sourceRecipeIds: [5],
       );
     }
@@ -179,7 +190,9 @@ class _AiScreenState extends State<AiScreen> {
     if (text.contains('telur')) {
       return const ChatMessage(
         role: ChatRole.assistant,
-        text: 'Telur bisa digunakan untuk banyak menu sederhana. Dari resep yang tersedia, kamu bisa mencoba Nasi Goreng Spesial atau Beef Fried Rice.',
+        text:
+            'Telur bisa digunakan untuk banyak menu sederhana. '
+            'Dari resep yang tersedia, kamu bisa mencoba Nasi Goreng Spesial atau Beef Fried Rice.',
         sourceRecipeIds: [2, 8],
       );
     }
@@ -189,20 +202,26 @@ class _AiScreenState extends State<AiScreen> {
         text.contains('pancake')) {
       return const ChatMessage(
         role: ChatRole.assistant,
-        text: 'Kalau ingin sesuatu yang manis, coba Chocolate Pancake 🥞. Bahannya sederhana seperti tepung, telur, susu, cokelat bubuk, dan gula.',
+        text:
+            'Kalau ingin sesuatu yang manis, coba Chocolate Pancake 🥞. '
+            'Bahannya sederhana seperti tepung, telur, susu, cokelat bubuk, dan gula.',
         sourceRecipeIds: [7],
       );
     }
 
     return const ChatMessage(
       role: ChatRole.assistant,
-      text: 'Aku belum menemukan kecocokan yang sangat spesifik dari pertanyaan itu. Coba sebutkan bahan utama yang kamu punya, misalnya ayam, nasi, telur, pasta, daging, atau sayuran.',
+      text:
+          'Aku belum menemukan kecocokan yang sangat spesifik dari pertanyaan itu. '
+          'Coba sebutkan bahan utama yang kamu punya, misalnya ayam, nasi, telur, pasta, daging, atau sayuran.',
     );
   }
 
   void scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!scrollController.hasClients) return;
+      if (!scrollController.hasClients) {
+        return;
+      }
 
       scrollController.animateTo(
         scrollController.position.maxScrollExtent,
@@ -214,13 +233,15 @@ class _AiScreenState extends State<AiScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
     return SafeArea(
       child: Column(
         children: [
           Container(
             padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
-            decoration: const BoxDecoration(
-              border: Border(bottom: BorderSide(color: Color(0xFFEEEEEE))),
+            decoration: BoxDecoration(
+              border: Border(bottom: BorderSide(color: colors.outlineVariant)),
             ),
             child: Row(
               children: [
@@ -228,13 +249,10 @@ class _AiScreenState extends State<AiScreen> {
                   width: 46,
                   height: 46,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFFE8D5),
+                    color: colors.primaryContainer,
                     borderRadius: BorderRadius.circular(15),
                   ),
-                  child: const Icon(
-                    Icons.auto_awesome,
-                    color: Color(0xFFE8752E),
-                  ),
+                  child: Icon(Icons.auto_awesome, color: colors.primary),
                 ),
 
                 const SizedBox(width: 12),
@@ -243,13 +261,15 @@ class _AiScreenState extends State<AiScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'RacikAI Assistant',
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w800,
+                          color: colors.onSurface,
                         ),
                       ),
+
                       const SizedBox(height: 2),
 
                       AnimatedBuilder(
@@ -259,11 +279,11 @@ class _AiScreenState extends State<AiScreen> {
                               SubscriptionController.instance.isPremium;
 
                           if (isPremium) {
-                            return const Text(
+                            return Text(
                               'Premium • AI tanpa batas ✨',
                               style: TextStyle(
                                 fontSize: 12,
-                                color: Color(0xFFE8752E),
+                                color: colors.primary,
                               ),
                             );
                           }
@@ -272,9 +292,9 @@ class _AiScreenState extends State<AiScreen> {
 
                           return Text(
                             '$usage / ${UsageController.freeAiLimit} pertanyaan hari ini',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 12,
-                              color: Color(0xFF777777),
+                              color: colors.onSurfaceVariant,
                             ),
                           );
                         },
@@ -298,11 +318,11 @@ class _AiScreenState extends State<AiScreen> {
                 if (messages.length == 1) ...[
                   const SizedBox(height: 12),
 
-                  const Text(
+                  Text(
                     'Coba tanyakan',
                     style: TextStyle(
                       fontSize: 13,
-                      color: Color(0xFF888888),
+                      color: colors.onSurfaceVariant,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -314,10 +334,17 @@ class _AiScreenState extends State<AiScreen> {
                     runSpacing: 8,
                     children: suggestions.map((suggestion) {
                       return ActionChip(
-                        label: Text(suggestion),
-                        avatar: const Icon(Icons.auto_awesome, size: 16),
-                        backgroundColor: Colors.white,
-                        side: const BorderSide(color: Color(0xFFEEEEEE)),
+                        label: Text(
+                          suggestion,
+                          style: TextStyle(color: colors.onSurface),
+                        ),
+                        avatar: Icon(
+                          Icons.auto_awesome,
+                          size: 16,
+                          color: colors.primary,
+                        ),
+                        backgroundColor: colors.surfaceContainerHighest,
+                        side: BorderSide(color: colors.outlineVariant),
                         onPressed: () {
                           sendMessage(suggestion: suggestion);
                         },
@@ -336,9 +363,9 @@ class _AiScreenState extends State<AiScreen> {
 
           Container(
             padding: const EdgeInsets.fromLTRB(16, 10, 16, 14),
-            decoration: const BoxDecoration(
-              color: Color(0xFFFFFBF7),
-              border: Border(top: BorderSide(color: Color(0xFFEEEEEE))),
+            decoration: BoxDecoration(
+              color: Theme.of(context).scaffoldBackgroundColor,
+              border: Border(top: BorderSide(color: colors.outlineVariant)),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.end,
@@ -355,7 +382,7 @@ class _AiScreenState extends State<AiScreen> {
                     decoration: InputDecoration(
                       hintText: 'Tanya RacikAI...',
                       filled: true,
-                      fillColor: Colors.white,
+                      fillColor: colors.surfaceContainerHighest,
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: 16,
                         vertical: 14,
@@ -366,11 +393,11 @@ class _AiScreenState extends State<AiScreen> {
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(20),
-                        borderSide: const BorderSide(color: Color(0xFFEEEEEE)),
+                        borderSide: BorderSide(color: colors.outlineVariant),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(20),
-                        borderSide: const BorderSide(color: Color(0xFFE8752E)),
+                        borderSide: BorderSide(color: colors.primary),
                       ),
                     ),
                   ),
@@ -383,8 +410,8 @@ class _AiScreenState extends State<AiScreen> {
                   height: 50,
                   decoration: BoxDecoration(
                     color: messageController.text.trim().isNotEmpty && !isTyping
-                        ? const Color(0xFFE8752E)
-                        : const Color(0xFFDADADA),
+                        ? colors.primary
+                        : colors.surfaceContainerHighest,
                     shape: BoxShape.circle,
                   ),
                   child: IconButton(
@@ -393,9 +420,12 @@ class _AiScreenState extends State<AiScreen> {
                         : () {
                             sendMessage();
                           },
-                    icon: const Icon(
+                    icon: Icon(
                       Icons.arrow_upward_rounded,
-                      color: Colors.white,
+                      color:
+                          messageController.text.trim().isNotEmpty && !isTyping
+                          ? colors.onPrimary
+                          : colors.onSurfaceVariant,
                     ),
                   ),
                 ),
@@ -417,6 +447,8 @@ class _ChatMessageBubble extends StatelessWidget {
   Widget build(BuildContext context) {
     final isUser = message.role == ChatRole.user;
 
+    final colors = Theme.of(context).colorScheme;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Column(
@@ -434,14 +466,14 @@ class _ChatMessageBubble extends StatelessWidget {
                 Container(
                   width: 32,
                   height: 32,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFFFE8D5),
+                  decoration: BoxDecoration(
+                    color: colors.primaryContainer,
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.auto_awesome,
                     size: 17,
-                    color: Color(0xFFE8752E),
+                    color: colors.primary,
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -451,7 +483,9 @@ class _ChatMessageBubble extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: isUser ? const Color(0xFFE8752E) : Colors.white,
+                    color: isUser
+                        ? colors.primary
+                        : colors.surfaceContainerHighest,
                     borderRadius: BorderRadius.only(
                       topLeft: const Radius.circular(18),
                       topRight: const Radius.circular(18),
@@ -460,14 +494,14 @@ class _ChatMessageBubble extends StatelessWidget {
                     ),
                     border: isUser
                         ? null
-                        : Border.all(color: const Color(0xFFEEEEEE)),
+                        : Border.all(color: colors.outlineVariant),
                   ),
                   child: Text(
                     message.text,
                     style: TextStyle(
                       fontSize: 14,
                       height: 1.55,
-                      color: isUser ? Colors.white : const Color(0xFF444444),
+                      color: isUser ? colors.onPrimary : colors.onSurface,
                     ),
                   ),
                 ),
@@ -496,6 +530,8 @@ class _RecipeSources extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
     final List<Recipe> recipes = dummyRecipes.where((recipe) {
       return recipeIds.contains(recipe.id);
     }).toList();
@@ -507,16 +543,20 @@ class _RecipeSources extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Row(
+        Row(
           children: [
-            Icon(Icons.menu_book_outlined, size: 15, color: Color(0xFF888888)),
-            SizedBox(width: 5),
+            Icon(
+              Icons.menu_book_outlined,
+              size: 15,
+              color: colors.onSurfaceVariant,
+            ),
+            const SizedBox(width: 5),
             Text(
               'Sumber resep',
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: Color(0xFF777777),
+                color: colors.onSurfaceVariant,
               ),
             ),
           ],
@@ -542,7 +582,7 @@ class _RecipeSources extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFFF3E9),
+                    color: colors.primaryContainer,
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: Row(
@@ -559,9 +599,10 @@ class _RecipeSources extends StatelessWidget {
                               recipe.title,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w700,
+                                color: colors.onPrimaryContainer,
                               ),
                             ),
 
@@ -569,19 +610,23 @@ class _RecipeSources extends StatelessWidget {
 
                             Text(
                               recipe.duration,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 11,
-                                color: Color(0xFF777777),
+                                color: colors.onPrimaryContainer.withValues(
+                                  alpha: 0.75,
+                                ),
                               ),
                             ),
                           ],
                         ),
                       ),
 
-                      const Icon(
+                      Icon(
                         Icons.arrow_forward_ios,
                         size: 13,
-                        color: Color(0xFFAAAAAA),
+                        color: colors.onPrimaryContainer.withValues(
+                          alpha: 0.65,
+                        ),
                       ),
                     ],
                   ),
@@ -600,21 +645,19 @@ class _TypingBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
           width: 32,
           height: 32,
-          decoration: const BoxDecoration(
-            color: Color(0xFFFFE8D5),
+          decoration: BoxDecoration(
+            color: colors.primaryContainer,
             shape: BoxShape.circle,
           ),
-          child: const Icon(
-            Icons.auto_awesome,
-            size: 17,
-            color: Color(0xFFE8752E),
-          ),
+          child: Icon(Icons.auto_awesome, size: 17, color: colors.primary),
         ),
 
         const SizedBox(width: 8),
@@ -622,11 +665,11 @@ class _TypingBubble extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 13),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: colors.surfaceContainerHighest,
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: const Color(0xFFEEEEEE)),
+            border: Border.all(color: colors.outlineVariant),
           ),
-          child: const Row(
+          child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               SizedBox(
@@ -634,13 +677,15 @@ class _TypingBubble extends StatelessWidget {
                 height: 14,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  color: Color(0xFFE8752E),
+                  color: colors.primary,
                 ),
               ),
-              SizedBox(width: 9),
+
+              const SizedBox(width: 9),
+
               Text(
                 'RacikAI sedang meracik...',
-                style: TextStyle(fontSize: 12, color: Color(0xFF777777)),
+                style: TextStyle(fontSize: 12, color: colors.onSurfaceVariant),
               ),
             ],
           ),

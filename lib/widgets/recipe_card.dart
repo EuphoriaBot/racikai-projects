@@ -11,6 +11,8 @@ class RecipeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -19,9 +21,9 @@ class RecipeCard extends StatelessWidget {
         child: Container(
           width: 190,
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: colors.surface,
             borderRadius: BorderRadius.circular(22),
-            border: Border.all(color: const Color(0xFFEEEEEE)),
+            border: Border.all(color: colors.outlineVariant),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -29,9 +31,9 @@ class RecipeCard extends StatelessWidget {
               Container(
                 height: 130,
                 width: double.infinity,
-                decoration: const BoxDecoration(
-                  color: Color(0xFFFFE8D5),
-                  borderRadius: BorderRadius.only(
+                decoration: BoxDecoration(
+                  color: colors.primaryContainer,
+                  borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(22),
                     topRight: Radius.circular(22),
                   ),
@@ -57,8 +59,8 @@ class RecipeCard extends StatelessWidget {
                           return Container(
                             width: 36,
                             height: 36,
-                            decoration: const BoxDecoration(
-                              color: Colors.white,
+                            decoration: BoxDecoration(
+                              color: colors.surface,
                               shape: BoxShape.circle,
                             ),
                             child: IconButton(
@@ -71,7 +73,8 @@ class RecipeCard extends StatelessWidget {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
                                       content: Text(
-                                        'Batas 10 resep favorit tercapai. Upgrade ke Premium untuk menyimpan tanpa batas.',
+                                        'Batas 10 resep favorit tercapai. '
+                                        'Upgrade ke Premium untuk menyimpan tanpa batas.',
                                       ),
                                     ),
                                   );
@@ -83,8 +86,8 @@ class RecipeCard extends StatelessWidget {
                                     : Icons.favorite_border,
                                 size: 20,
                                 color: isFavorite
-                                    ? const Color(0xFFE8752E)
-                                    : const Color(0xFF777777),
+                                    ? colors.primary
+                                    : colors.onSurfaceVariant,
                               ),
                             ),
                           );
@@ -104,9 +107,10 @@ class RecipeCard extends StatelessWidget {
                       recipe.title,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.w700,
                         fontSize: 15,
+                        color: colors.onSurface,
                       ),
                     ),
 
@@ -114,8 +118,8 @@ class RecipeCard extends StatelessWidget {
 
                     Text(
                       recipe.category,
-                      style: const TextStyle(
-                        color: Color(0xFF888888),
+                      style: TextStyle(
+                        color: colors.onSurfaceVariant,
                         fontSize: 12,
                       ),
                     ),
@@ -124,17 +128,16 @@ class RecipeCard extends StatelessWidget {
 
                     Row(
                       children: [
-                        const Icon(
-                          Icons.schedule,
-                          size: 16,
-                          color: Color(0xFFE8752E),
-                        ),
+                        Icon(Icons.schedule, size: 16, color: colors.primary),
+
                         const SizedBox(width: 5),
+
                         Text(
                           recipe.duration,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w500,
+                            color: colors.onSurface,
                           ),
                         ),
                       ],

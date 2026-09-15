@@ -7,11 +7,14 @@ import 'controllers/usage_controller.dart';
 import 'services/local_storage_service.dart';
 import 'controllers/meal_planner_controller.dart';
 import 'core/theme/app_theme.dart';
+import 'controllers/theme_controller.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await LocalStorageService.init();
+
+  await ThemeController.instance.loadFromStorage();
 
   await SubscriptionController.instance.loadFromStorage();
 
@@ -29,11 +32,18 @@ class RacikAIApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'RacikAI',
-      theme: AppTheme.lightTheme,
-      home: const MainScreen(),
+    return AnimatedBuilder(
+      animation: ThemeController.instance,
+      builder: (context, _) {
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          title: 'RacikAI',
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          themeMode: ThemeController.instance.themeMode,
+          home: const MainScreen(),
+        );
+      },
     );
   }
 }
