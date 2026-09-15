@@ -4,9 +4,50 @@ import '../controllers/subscription_controller.dart';
 import '../controllers/theme_controller.dart';
 import '../controllers/usage_controller.dart';
 import 'premium_screen.dart';
+import 'edit_profile_screen.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  String name = 'Guest User';
+  String email = 'guest@racikai.app';
+  String preference = 'Tidak ada';
+
+  Future<void> openEditProfile() async {
+    final result = await Navigator.push<Map<String, String>>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditProfileScreen(
+          initialName: name,
+          initialEmail: email,
+          initialPreference: preference,
+        ),
+      ),
+    );
+
+    if (result == null) {
+      return;
+    }
+
+    setState(() {
+      name = result['name'] ?? name;
+      email = result['email'] ?? email;
+      preference = result['preference'] ?? preference;
+    });
+
+    if (!mounted) {
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Profil berhasil diperbarui.')),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +74,6 @@ class ProfileScreen extends StatelessWidget {
 
                 const SizedBox(height: 28),
 
-                // USER PROFILE
                 Center(
                   child: Column(
                     children: [
@@ -52,7 +92,7 @@ class ProfileScreen extends StatelessWidget {
                       const SizedBox(height: 14),
 
                       Text(
-                        'Guest User',
+                        name,
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.w800,
@@ -63,12 +103,23 @@ class ProfileScreen extends StatelessWidget {
                       const SizedBox(height: 5),
 
                       Text(
+                        email,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: colors.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+
+                      Text(
                         subscription.isPremium
                             ? 'RacikAI Premium Member ✨'
                             : 'Cook smarter with RacikAI ✨',
                         style: TextStyle(
-                          fontSize: 13,
-                          color: colors.onSurfaceVariant,
+                          fontSize: 12,
+                          color: subscription.isPremium
+                              ? colors.primary
+                              : colors.onSurfaceVariant,
                         ),
                       ),
                     ],
@@ -77,12 +128,10 @@ class ProfileScreen extends StatelessWidget {
 
                 const SizedBox(height: 30),
 
-                // PLAN
                 _PlanOverviewCard(subscription: subscription),
 
                 const SizedBox(height: 30),
 
-                // PREFERENCES
                 Text(
                   'Preferensi',
                   style: TextStyle(
@@ -90,6 +139,13 @@ class ProfileScreen extends StatelessWidget {
                     fontWeight: FontWeight.w800,
                     color: colors.onSurface,
                   ),
+                ),
+
+                _ProfileMenuItem(
+                  icon: Icons.edit_outlined,
+                  title: 'Edit Profil',
+                  trailingText: preference,
+                  onTap: openEditProfile,
                 ),
 
                 const SizedBox(height: 12),
@@ -118,7 +174,6 @@ class ProfileScreen extends StatelessWidget {
 
                 const SizedBox(height: 26),
 
-                // ABOUT
                 Text(
                   'Tentang',
                   style: TextStyle(
