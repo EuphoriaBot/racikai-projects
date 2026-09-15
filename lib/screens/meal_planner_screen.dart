@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import '../controllers/meal_planner_controller.dart';
 import '../data/dummy_recipes.dart';
 import '../models/recipe.dart';
-import 'recipe_detail_screen.dart';
+
+import 'package:go_router/go_router.dart';
 
 class MealPlannerScreen extends StatelessWidget {
   const MealPlannerScreen({super.key});
@@ -282,12 +283,7 @@ class _FilledDay extends StatelessWidget {
           Expanded(
             child: InkWell(
               onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => RecipeDetailScreen(recipe: recipe),
-                  ),
-                );
+                context.push('/recipe/${recipe.id}');
               },
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

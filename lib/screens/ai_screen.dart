@@ -5,8 +5,8 @@ import '../controllers/usage_controller.dart';
 import '../data/dummy_recipes.dart';
 import '../models/chat_message.dart';
 import '../models/recipe.dart';
-import 'premium_screen.dart';
-import 'recipe_detail_screen.dart';
+
+import 'package:go_router/go_router.dart';
 
 class AiScreen extends StatefulWidget {
   const AiScreen({super.key});
@@ -110,12 +110,7 @@ class _AiScreenState extends State<AiScreen> {
               onPressed: () {
                 Navigator.pop(dialogContext);
 
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const PremiumScreen(),
-                  ),
-                );
+                context.push('/premium');
               },
               style: FilledButton.styleFrom(
                 backgroundColor: colors.primary,
@@ -572,12 +567,7 @@ class _RecipeSources extends StatelessWidget {
               child: InkWell(
                 borderRadius: BorderRadius.circular(14),
                 onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => RecipeDetailScreen(recipe: recipe),
-                    ),
-                  );
+                  context.push('/recipe/${recipe.id}');
                 },
                 child: Container(
                   padding: const EdgeInsets.all(12),

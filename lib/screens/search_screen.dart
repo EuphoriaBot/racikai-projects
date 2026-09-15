@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import '../controllers/favorite_controller.dart';
 import '../data/dummy_recipes.dart';
 import '../models/recipe.dart';
-import 'recipe_detail_screen.dart';
+
+import 'package:go_router/go_router.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -238,12 +239,7 @@ class _SearchRecipeGridCard extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(20),
         onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => RecipeDetailScreen(recipe: recipe),
-            ),
-          );
+          context.push('/recipe/${recipe.id}');
         },
         child: Container(
           decoration: BoxDecoration(

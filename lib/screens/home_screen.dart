@@ -2,11 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../widgets/recipe_card.dart';
 import '../data/dummy_recipes.dart';
-import 'recipe_detail_screen.dart';
-import 'ingredient_finder_screen.dart';
 import '../controllers/subscription_controller.dart';
-import 'meal_planner_screen.dart';
-import 'premium_screen.dart';
+
+import 'package:go_router/go_router.dart';
 
 class HomeScreen extends StatelessWidget {
   final VoidCallback onSearchTap;
@@ -81,7 +79,6 @@ class HomeScreen extends StatelessWidget {
 
             const SizedBox(height: 22),
 
-            // SEARCH BAR
             InkWell(
               onTap: onSearchTap,
               borderRadius: BorderRadius.circular(16),
@@ -111,7 +108,6 @@ class HomeScreen extends StatelessWidget {
 
             const SizedBox(height: 24),
 
-            // INGREDIENT FINDER CARD
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(22),
@@ -145,7 +141,6 @@ class HomeScreen extends StatelessWidget {
 
                   const SizedBox(height: 16),
 
-                  // MEAL PLANNER
                   Material(
                     color: Colors.transparent,
                     child: InkWell(
@@ -155,12 +150,7 @@ class HomeScreen extends StatelessWidget {
                             SubscriptionController.instance.isPremium;
 
                         if (isPremium) {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const MealPlannerScreen(),
-                            ),
-                          );
+                          context.push('/meal-planner');
                         } else {
                           showDialog(
                             context: context,
@@ -188,13 +178,7 @@ class HomeScreen extends StatelessWidget {
                                     onPressed: () {
                                       Navigator.pop(dialogContext);
 
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) =>
-                                              const PremiumScreen(),
-                                        ),
-                                      );
+                                      context.push('/premium');
                                     },
                                     style: FilledButton.styleFrom(
                                       backgroundColor: colors.primary,
@@ -288,12 +272,7 @@ class HomeScreen extends StatelessWidget {
 
                   FilledButton.icon(
                     onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const IngredientFinderScreen(),
-                        ),
-                      );
+                      context.push('/ingredients');
                     },
                     icon: const Icon(Icons.auto_awesome, size: 18),
                     label: const Text('Cari dari Bahan'),
@@ -312,7 +291,6 @@ class HomeScreen extends StatelessWidget {
 
             const SizedBox(height: 30),
 
-            // CATEGORY TITLE
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -333,7 +311,6 @@ class HomeScreen extends StatelessWidget {
 
             const SizedBox(height: 12),
 
-            // CATEGORY LIST
             SizedBox(
               height: 92,
               child: ListView.separated(
@@ -377,7 +354,6 @@ class HomeScreen extends StatelessWidget {
 
             const SizedBox(height: 24),
 
-            // RECOMMENDATION TITLE
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -398,7 +374,6 @@ class HomeScreen extends StatelessWidget {
 
             const SizedBox(height: 14),
 
-            // RECOMMENDATION RECIPES
             SizedBox(
               height: 255,
               child: ListView(
@@ -407,13 +382,7 @@ class HomeScreen extends StatelessWidget {
                   RecipeCard(
                     recipe: dummyRecipes[0],
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              RecipeDetailScreen(recipe: dummyRecipes[0]),
-                        ),
-                      );
+                      context.push('/recipe/${dummyRecipes[0].id}');
                     },
                   ),
 
@@ -422,13 +391,7 @@ class HomeScreen extends StatelessWidget {
                   RecipeCard(
                     recipe: dummyRecipes[1],
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              RecipeDetailScreen(recipe: dummyRecipes[1]),
-                        ),
-                      );
+                      context.push('/recipe/${dummyRecipes[1].id}');
                     },
                   ),
 
@@ -437,13 +400,7 @@ class HomeScreen extends StatelessWidget {
                   RecipeCard(
                     recipe: dummyRecipes[2],
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              RecipeDetailScreen(recipe: dummyRecipes[2]),
-                        ),
-                      );
+                      context.push('/recipe/${dummyRecipes[2].id}');
                     },
                   ),
                 ],

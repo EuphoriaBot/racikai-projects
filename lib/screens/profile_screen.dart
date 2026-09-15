@@ -4,7 +4,8 @@ import '../controllers/subscription_controller.dart';
 import '../controllers/theme_controller.dart';
 import '../controllers/usage_controller.dart';
 import 'premium_screen.dart';
-import 'edit_profile_screen.dart';
+
+import 'package:go_router/go_router.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -19,15 +20,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String preference = 'Tidak ada';
 
   Future<void> openEditProfile() async {
-    final result = await Navigator.push<Map<String, String>>(
-      context,
-      MaterialPageRoute(
-        builder: (context) => EditProfileScreen(
-          initialName: name,
-          initialEmail: email,
-          initialPreference: preference,
-        ),
-      ),
+    final result = await context.push<Map<String, String>>(
+      '/profile/edit',
+      extra: {'name': name, 'email': email, 'preference': preference},
     );
 
     if (result == null) {
@@ -444,12 +439,7 @@ class _PlanOverviewCard extends StatelessWidget {
               width: double.infinity,
               child: FilledButton.icon(
                 onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const PremiumScreen(),
-                    ),
-                  );
+                  context.push('/premium');
                 },
                 icon: const Icon(Icons.workspace_premium_rounded),
                 label: const Text('Upgrade ke Premium'),

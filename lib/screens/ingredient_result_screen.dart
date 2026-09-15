@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../data/dummy_recipes.dart';
 import '../models/recipe.dart';
-import 'recipe_detail_screen.dart';
+
+import 'package:go_router/go_router.dart';
 
 class IngredientResultScreen extends StatelessWidget {
   final List<String> selectedIngredients;
@@ -175,12 +176,7 @@ class _IngredientRecipeCard extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(20),
         onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => RecipeDetailScreen(recipe: recipe),
-            ),
-          );
+          context.push('/recipe/${recipe.id}');
         },
         child: Container(
           padding: const EdgeInsets.all(14),

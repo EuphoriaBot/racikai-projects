@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'ingredient_result_screen.dart';
+import 'package:go_router/go_router.dart';
 
 class IngredientFinderScreen extends StatefulWidget {
   const IngredientFinderScreen({super.key});
@@ -100,7 +100,6 @@ class _IngredientFinderScreenState extends State<IngredientFinderScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // TITLE
                     Text(
                       'Apa yang ada di dapurmu?',
                       style: TextStyle(
@@ -125,7 +124,6 @@ class _IngredientFinderScreenState extends State<IngredientFinderScreen> {
 
                     const SizedBox(height: 24),
 
-                    // SEARCH FIELD
                     TextField(
                       controller: searchController,
                       onChanged: (value) {
@@ -180,7 +178,6 @@ class _IngredientFinderScreenState extends State<IngredientFinderScreen> {
                       ),
                     ),
 
-                    // SELECTED INGREDIENTS
                     if (selectedIngredients.isNotEmpty) ...[
                       const SizedBox(height: 28),
 
@@ -237,7 +234,6 @@ class _IngredientFinderScreenState extends State<IngredientFinderScreen> {
 
                     const SizedBox(height: 30),
 
-                    // AVAILABLE INGREDIENTS
                     Text(
                       'Pilih bahan',
                       style: TextStyle(
@@ -305,7 +301,6 @@ class _IngredientFinderScreenState extends State<IngredientFinderScreen> {
               ),
             ),
 
-            // BOTTOM BUTTON
             Container(
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
               decoration: BoxDecoration(
@@ -316,13 +311,9 @@ class _IngredientFinderScreenState extends State<IngredientFinderScreen> {
                 onPressed: selectedIngredients.isEmpty
                     ? null
                     : () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => IngredientResultScreen(
-                              selectedIngredients: selectedIngredients.toList(),
-                            ),
-                          ),
+                        context.push(
+                          '/ingredients/results',
+                          extra: selectedIngredients.toList(),
                         );
                       },
                 style: FilledButton.styleFrom(

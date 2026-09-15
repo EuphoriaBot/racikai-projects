@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../controllers/favorite_controller.dart';
 import '../models/recipe.dart';
-import 'premium_screen.dart';
+
+import 'package:go_router/go_router.dart';
 
 class RecipeDetailScreen extends StatelessWidget {
   final Recipe recipe;
@@ -35,7 +36,7 @@ class RecipeDetailScreen extends StatelessWidget {
                 ),
                 child: IconButton(
                   onPressed: () {
-                    Navigator.pop(context);
+                    context.pop();
                   },
                   icon: Icon(Icons.arrow_back, color: colors.onSurface),
                 ),
@@ -304,10 +305,7 @@ void _showFavoriteLimitDialog(BuildContext context) {
             onPressed: () {
               Navigator.pop(dialogContext);
 
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const PremiumScreen()),
-              );
+              context.push('/premium');
             },
             style: FilledButton.styleFrom(
               backgroundColor: colors.primary,

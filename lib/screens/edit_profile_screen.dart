@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:go_router/go_router.dart';
+
 class EditProfileScreen extends StatefulWidget {
   final String initialName;
   final String initialEmail;
@@ -83,7 +85,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       return;
     }
 
-    Navigator.pop(context, {
+    context.pop<Map<String, String>>({
       'name': nameController.text.trim(),
       'email': emailController.text.trim(),
       'preference': selectedPreference ?? 'Tidak ada',

@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../controllers/favorite_controller.dart';
 import '../models/recipe.dart';
-import 'recipe_detail_screen.dart';
+
+import 'package:go_router/go_router.dart';
 
 class SavedScreen extends StatelessWidget {
   const SavedScreen({super.key});
@@ -85,12 +86,7 @@ class _SavedRecipeCard extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(20),
         onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => RecipeDetailScreen(recipe: recipe),
-            ),
-          );
+          context.push('/recipe/${recipe.id}');
         },
         child: Container(
           height: 120,

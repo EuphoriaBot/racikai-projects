@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../controllers/subscription_controller.dart';
 
+import 'package:go_router/go_router.dart';
+
 class PremiumScreen extends StatefulWidget {
   const PremiumScreen({super.key});
 
@@ -40,7 +42,6 @@ class _PremiumScreenState extends State<PremiumScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // PREMIUM HEADER
               Center(
                 child: Column(
                   children: [
@@ -146,7 +147,6 @@ class _PremiumScreenState extends State<PremiumScreen> {
 
               const SizedBox(height: 14),
 
-              // MONTHLY
               _PlanCard(
                 title: 'Bulanan',
                 price: 'Rp15.000',
@@ -162,7 +162,6 @@ class _PremiumScreenState extends State<PremiumScreen> {
 
               const SizedBox(height: 12),
 
-              // YEARLY
               _PlanCard(
                 title: 'Tahunan',
                 price: 'Rp120.000',
@@ -208,7 +207,6 @@ class _PremiumScreenState extends State<PremiumScreen> {
         ),
       ),
 
-      // FIXED UPGRADE BUTTON
       bottomNavigationBar: SafeArea(
         child: Container(
           padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
@@ -230,7 +228,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
 
               final messenger = ScaffoldMessenger.of(context);
 
-              Navigator.pop(context);
+              context.pop();
 
               messenger.showSnackBar(
                 SnackBar(
@@ -381,7 +379,6 @@ class _PlanCard extends StatelessWidget {
           ),
           child: Row(
             children: [
-              // CUSTOM RADIO
               Container(
                 width: 24,
                 height: 24,
