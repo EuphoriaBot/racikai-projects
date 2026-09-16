@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../cubits/favorite/favorite_cubit.dart';
+import '../cubits/favorite/favorite_state.dart';
 import 'ai_screen.dart';
 import 'home_screen.dart';
 import 'profile_screen.dart';
@@ -38,16 +41,40 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isWideScreen = constraints.maxWidth >= tabletBreakpoint;
-
-        if (isWideScreen) {
-          return _buildTabletLayout();
+    return BlocListener<FavoriteCubit, FavoriteState>(
+      listenWhen: (previous, current) {
+        return previous.actionId != current.actionId;
+      },
+      listener: (context, state) {
+        if (ModalRoute.of(context)?.isCurrent != true) {
+          return;
         }
 
-        return _buildMobileLayout();
+        if (state.action == FavoriteAction.limitReached) {
+          ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Batas ${FavoriteCubit.freeFavoriteLimit} '
+                'resep favorit tercapai. '
+                'Upgrade ke Premium untuk menyimpan tanpa batas.',
+              ),
+            ),
+          );
+        }
       },
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isWideScreen = constraints.maxWidth >= tabletBreakpoint;
+
+          if (isWideScreen) {
+            return _buildTabletLayout();
+          }
+
+          return _buildMobileLayout();
+        },
+      ),
     );
   }
 

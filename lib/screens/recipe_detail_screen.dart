@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-
-import '../controllers/favorite_controller.dart';
-import '../models/recipe.dart';
-
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+
+import '../cubits/favorite/favorite_cubit.dart';
+import '../cubits/favorite/favorite_state.dart';
+import '../models/recipe.dart';
 
 class RecipeDetailScreen extends StatelessWidget {
   final Recipe recipe;
@@ -15,250 +16,267 @@ class RecipeDetailScreen extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
     final backgroundColor = Theme.of(context).scaffoldBackgroundColor;
 
-    return Scaffold(
-      backgroundColor: backgroundColor,
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar(
-            expandedHeight: 280,
-            pinned: true,
-            backgroundColor: backgroundColor,
-            foregroundColor: colors.onSurface,
-            surfaceTintColor: Colors.transparent,
-            elevation: 0,
+    return BlocListener<FavoriteCubit, FavoriteState>(
+      listenWhen: (previous, current) {
+        return previous.actionId != current.actionId;
+      },
+      listener: (context, state) {
+        if (state.action == FavoriteAction.limitReached) {
+          _showFavoriteLimitDialog(context);
 
-            leading: Padding(
-              padding: const EdgeInsets.all(8),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: colors.surface.withValues(alpha: 0.90),
-                  shape: BoxShape.circle,
-                ),
-                child: IconButton(
-                  onPressed: () {
-                    context.pop();
-                  },
-                  icon: Icon(Icons.arrow_back, color: colors.onSurface),
-                ),
-              ),
+          return;
+        }
+
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+        if (state.action == FavoriteAction.added) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              duration: Duration(milliseconds: 900),
+              content: Text('Resep disimpan ke favorit'),
             ),
+          );
+        }
 
-            actions: [
-              Padding(
+        if (state.action == FavoriteAction.removed) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              duration: Duration(milliseconds: 900),
+              content: Text('Resep dihapus dari favorit'),
+            ),
+          );
+        }
+      },
+
+      child: Scaffold(
+        backgroundColor: backgroundColor,
+
+        body: CustomScrollView(
+          slivers: [
+            SliverAppBar(
+              expandedHeight: 280,
+              pinned: true,
+              backgroundColor: backgroundColor,
+              foregroundColor: colors.onSurface,
+              surfaceTintColor: Colors.transparent,
+              elevation: 0,
+
+              leading: Padding(
                 padding: const EdgeInsets.all(8),
                 child: Container(
                   decoration: BoxDecoration(
                     color: colors.surface.withValues(alpha: 0.90),
                     shape: BoxShape.circle,
                   ),
-                  child: AnimatedBuilder(
-                    animation: FavoriteController.instance,
-                    builder: (context, _) {
-                      final isFavorite = FavoriteController.instance.isFavorite(
-                        recipe.id,
-                      );
-
-                      return IconButton(
-                        onPressed: () {
-                          final result = FavoriteController.instance
-                              .toggleFavorite(recipe.id);
-
-                          if (result == FavoriteResult.limitReached) {
-                            _showFavoriteLimitDialog(context);
-
-                            return;
-                          }
-
-                          ScaffoldMessenger.of(context).hideCurrentSnackBar();
-
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              duration: const Duration(milliseconds: 900),
-                              content: Text(
-                                result == FavoriteResult.added
-                                    ? 'Resep disimpan ke favorit'
-                                    : 'Resep dihapus dari favorit',
-                              ),
-                            ),
-                          );
-                        },
-                        icon: Icon(
-                          isFavorite ? Icons.favorite : Icons.favorite_border,
-                          color: isFavorite
-                              ? colors.primary
-                              : colors.onSurfaceVariant,
-                        ),
-                      );
+                  child: IconButton(
+                    onPressed: () {
+                      context.pop();
                     },
+                    icon: Icon(Icons.arrow_back, color: colors.onSurface),
                   ),
                 ),
               ),
-            ],
 
-            flexibleSpace: FlexibleSpaceBar(
-              background: Container(
-                color: colors.primaryContainer,
-                alignment: Alignment.center,
-                child: Text(
-                  recipe.emoji,
-                  style: const TextStyle(fontSize: 110),
-                ),
-              ),
-            ),
-          ),
-
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 24, 20, 120),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 7,
-                    ),
+              actions: [
+                Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: Container(
                     decoration: BoxDecoration(
-                      color: colors.primaryContainer,
-                      borderRadius: BorderRadius.circular(30),
+                      color: colors.surface.withValues(alpha: 0.90),
+                      shape: BoxShape.circle,
                     ),
-                    child: Text(
-                      recipe.category,
-                      style: TextStyle(
-                        color: colors.onPrimaryContainer,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
 
-                  const SizedBox(height: 14),
+                    child: BlocBuilder<FavoriteCubit, FavoriteState>(
+                      buildWhen: (previous, current) {
+                        return previous.favoriteIds != current.favoriteIds;
+                      },
+                      builder: (context, state) {
+                        final isFavorite = state.isFavorite(recipe.id);
 
-                  Text(
-                    recipe.title,
-                    style: TextStyle(
-                      fontSize: 28,
-                      height: 1.2,
-                      fontWeight: FontWeight.w800,
-                      color: colors.onSurface,
-                    ),
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  Text(
-                    recipe.description,
-                    style: TextStyle(
-                      fontSize: 15,
-                      height: 1.6,
-                      color: colors.onSurfaceVariant,
+                        return IconButton(
+                          onPressed: () {
+                            context.read<FavoriteCubit>().toggleFavorite(
+                              recipe.id,
+                            );
+                          },
+                          icon: Icon(
+                            isFavorite ? Icons.favorite : Icons.favorite_border,
+                            color: isFavorite
+                                ? colors.primary
+                                : colors.onSurfaceVariant,
+                          ),
+                        );
+                      },
                     ),
                   ),
+                ),
+              ],
 
-                  const SizedBox(height: 24),
-
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _InfoCard(
-                          icon: Icons.schedule_rounded,
-                          label: 'Waktu',
-                          value: recipe.duration,
-                        ),
-                      ),
-
-                      const SizedBox(width: 12),
-
-                      Expanded(
-                        child: _InfoCard(
-                          icon: Icons.restaurant_menu_rounded,
-                          label: 'Bahan',
-                          value: '${recipe.ingredients.length} bahan',
-                        ),
-                      ),
-                    ],
+              flexibleSpace: FlexibleSpaceBar(
+                background: Container(
+                  color: colors.primaryContainer,
+                  alignment: Alignment.center,
+                  child: Text(
+                    recipe.emoji,
+                    style: const TextStyle(fontSize: 110),
                   ),
-
-                  const SizedBox(height: 32),
-
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Bahan-bahan',
-                        style: TextStyle(
-                          fontSize: 21,
-                          fontWeight: FontWeight.w800,
-                          color: colors.onSurface,
-                        ),
-                      ),
-
-                      Text(
-                        '${recipe.ingredients.length} item',
-                        style: TextStyle(
-                          color: colors.onSurfaceVariant,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  ...recipe.ingredients.map((ingredient) {
-                    return _IngredientItem(ingredient: ingredient);
-                  }),
-
-                  const SizedBox(height: 32),
-
-                  Text(
-                    'Cara Membuat',
-                    style: TextStyle(
-                      fontSize: 21,
-                      fontWeight: FontWeight.w800,
-                      color: colors.onSurface,
-                    ),
-                  ),
-
-                  const SizedBox(height: 18),
-
-                  ...List.generate(recipe.instructions.length, (index) {
-                    return _InstructionItem(
-                      number: index + 1,
-                      instruction: recipe.instructions[index],
-                      isLast: index == recipe.instructions.length - 1,
-                    );
-                  }),
-                ],
+                ),
               ),
             ),
-          ),
-        ],
-      ),
 
-      bottomNavigationBar: SafeArea(
-        child: Container(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
-          decoration: BoxDecoration(
-            color: backgroundColor,
-            border: Border(top: BorderSide(color: colors.outlineVariant)),
-          ),
-          child: FilledButton.icon(
-            onPressed: () {
-              context.push('/recipe/${recipe.id}/cook');
-            },
-            icon: const Icon(Icons.play_arrow_rounded),
-            label: const Text('Mulai Memasak'),
-            style: FilledButton.styleFrom(
-              backgroundColor: colors.primary,
-              foregroundColor: colors.onPrimary,
-              minimumSize: const Size(double.infinity, 56),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 24, 20, 120),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 7,
+                      ),
+                      decoration: BoxDecoration(
+                        color: colors.primaryContainer,
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      child: Text(
+                        recipe.category,
+                        style: TextStyle(
+                          color: colors.onPrimaryContainer,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 14),
+
+                    Text(
+                      recipe.title,
+                      style: TextStyle(
+                        fontSize: 28,
+                        height: 1.2,
+                        fontWeight: FontWeight.w800,
+                        color: colors.onSurface,
+                      ),
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    Text(
+                      recipe.description,
+                      style: TextStyle(
+                        fontSize: 15,
+                        height: 1.6,
+                        color: colors.onSurfaceVariant,
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _InfoCard(
+                            icon: Icons.schedule_rounded,
+                            label: 'Waktu',
+                            value: recipe.duration,
+                          ),
+                        ),
+
+                        const SizedBox(width: 12),
+
+                        Expanded(
+                          child: _InfoCard(
+                            icon: Icons.restaurant_menu_rounded,
+                            label: 'Bahan',
+                            value: '${recipe.ingredients.length} bahan',
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 32),
+
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Bahan-bahan',
+                          style: TextStyle(
+                            fontSize: 21,
+                            fontWeight: FontWeight.w800,
+                            color: colors.onSurface,
+                          ),
+                        ),
+
+                        Text(
+                          '${recipe.ingredients.length} item',
+                          style: TextStyle(
+                            color: colors.onSurfaceVariant,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    ...recipe.ingredients.map((ingredient) {
+                      return _IngredientItem(ingredient: ingredient);
+                    }),
+
+                    const SizedBox(height: 32),
+
+                    Text(
+                      'Cara Membuat',
+                      style: TextStyle(
+                        fontSize: 21,
+                        fontWeight: FontWeight.w800,
+                        color: colors.onSurface,
+                      ),
+                    ),
+
+                    const SizedBox(height: 18),
+
+                    ...List.generate(recipe.instructions.length, (index) {
+                      return _InstructionItem(
+                        number: index + 1,
+                        instruction: recipe.instructions[index],
+                        isLast: index == recipe.instructions.length - 1,
+                      );
+                    }),
+                  ],
+                ),
               ),
-              textStyle: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
+            ),
+          ],
+        ),
+
+        bottomNavigationBar: SafeArea(
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
+            decoration: BoxDecoration(
+              color: backgroundColor,
+              border: Border(top: BorderSide(color: colors.outlineVariant)),
+            ),
+            child: FilledButton.icon(
+              onPressed: () {
+                context.push('/recipe/${recipe.id}/cook');
+              },
+              icon: const Icon(Icons.play_arrow_rounded),
+              label: const Text('Mulai Memasak'),
+              style: FilledButton.styleFrom(
+                backgroundColor: colors.primary,
+                foregroundColor: colors.onPrimary,
+                minimumSize: const Size(double.infinity, 56),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                textStyle: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
           ),
@@ -276,17 +294,23 @@ void _showFavoriteLimitDialog(BuildContext context) {
 
       return AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+
         icon: Icon(Icons.favorite_rounded, size: 42, color: colors.primary),
+
         title: const Text(
           'Batas Favorit Tercapai',
           textAlign: TextAlign.center,
         ),
-        content: const Text(
-          'Akun Free dapat menyimpan maksimal 10 resep. '
+
+        content: Text(
+          'Akun Free dapat menyimpan maksimal '
+          '${FavoriteCubit.freeFavoriteLimit} resep. '
           'Upgrade ke Premium untuk menyimpan resep tanpa batas.',
           textAlign: TextAlign.center,
         ),
+
         actionsAlignment: MainAxisAlignment.center,
+
         actions: [
           TextButton(
             onPressed: () {
@@ -467,7 +491,6 @@ class _InstructionItem extends StatelessWidget {
                 ),
               ),
 
-              // CONNECTING LINE
               if (!isLast)
                 Expanded(
                   child: Container(

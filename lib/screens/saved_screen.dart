@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../controllers/favorite_controller.dart';
+import '../cubits/favorite/favorite_cubit.dart';
+import '../cubits/favorite/favorite_state.dart';
 import '../models/recipe.dart';
 
 import 'package:go_router/go_router.dart';
@@ -13,10 +15,9 @@ class SavedScreen extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
 
     return SafeArea(
-      child: AnimatedBuilder(
-        animation: FavoriteController.instance,
-        builder: (context, _) {
-          final favorites = FavoriteController.instance.favoriteRecipes;
+      child: BlocBuilder<FavoriteCubit, FavoriteState>(
+        builder: (context, state) {
+          final favorites = context.read<FavoriteCubit>().favoriteRecipes;
 
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -137,7 +138,7 @@ class _SavedRecipeCard extends StatelessWidget {
                             padding: EdgeInsets.zero,
                             constraints: const BoxConstraints(),
                             onPressed: () {
-                              FavoriteController.instance.toggleFavorite(
+                              context.read<FavoriteCubit>().toggleFavorite(
                                 recipe.id,
                               );
                             },

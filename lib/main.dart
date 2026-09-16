@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'controllers/favorite_controller.dart';
 import 'controllers/subscription_controller.dart';
 import 'controllers/usage_controller.dart';
 import 'services/local_storage_service.dart';
@@ -8,6 +8,10 @@ import 'controllers/meal_planner_controller.dart';
 import 'core/theme/app_theme.dart';
 import 'controllers/theme_controller.dart';
 import 'core/router/app_router.dart';
+import 'core/bloc/app_bloc_observer.dart';
+import 'cubits/favorite/favorite_cubit.dart';
+import '../cubits/favorite/favorite_cubit.dart';
+import '../cubits/favorite/favorite_state.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -17,8 +21,6 @@ Future<void> main() async {
   await ThemeController.instance.loadFromStorage();
 
   await SubscriptionController.instance.loadFromStorage();
-
-  await FavoriteController.instance.loadFromStorage();
 
   await UsageController.instance.loadFromStorage();
 
@@ -32,18 +34,21 @@ class RacikAIApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: ThemeController.instance,
-      builder: (context, _) {
-        return MaterialApp.router(
-          debugShowCheckedModeBanner: false,
-          title: 'RacikAI',
-          theme: AppTheme.lightTheme,
-          darkTheme: AppTheme.darkTheme,
-          themeMode: ThemeController.instance.themeMode,
-          routerConfig: appRouter,
-        );
-      },
+    return BlocProvider(
+      create: (context) => FavoriteCubit()..loadFromStorage(),
+      child: AnimatedBuilder(
+        animation: ThemeController.instance,
+        builder: (context, _) {
+          return MaterialApp.router(
+            debugShowCheckedModeBanner: false,
+            title: 'RacikAI',
+            theme: AppTheme.lightTheme,
+            darkTheme: AppTheme.darkTheme,
+            themeMode: ThemeController.instance.themeMode,
+            routerConfig: appRouter,
+          );
+        },
+      ),
     );
   }
 }

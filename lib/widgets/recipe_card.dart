@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../controllers/favorite_controller.dart';
+import '../cubits/favorite/favorite_cubit.dart';
+import '../cubits/favorite/favorite_state.dart';
 import '../models/recipe.dart';
 
 class RecipeCard extends StatelessWidget {
@@ -50,11 +52,12 @@ class RecipeCard extends StatelessWidget {
                     Positioned(
                       top: 10,
                       right: 10,
-                      child: AnimatedBuilder(
-                        animation: FavoriteController.instance,
-                        builder: (context, _) {
-                          final isFavorite = FavoriteController.instance
-                              .isFavorite(recipe.id);
+                      child: BlocBuilder<FavoriteCubit, FavoriteState>(
+                        buildWhen: (previous, current) {
+                          return previous.favoriteIds != current.favoriteIds;
+                        },
+                        builder: (context, state) {
+                          final isFavorite = state.isFavorite(recipe.id);
 
                           return Container(
                             width: 36,
@@ -66,19 +69,9 @@ class RecipeCard extends StatelessWidget {
                             child: IconButton(
                               padding: EdgeInsets.zero,
                               onPressed: () {
-                                final result = FavoriteController.instance
-                                    .toggleFavorite(recipe.id);
-
-                                if (result == FavoriteResult.limitReached) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text(
-                                        'Batas 10 resep favorit tercapai. '
-                                        'Upgrade ke Premium untuk menyimpan tanpa batas.',
-                                      ),
-                                    ),
-                                  );
-                                }
+                                context.read<FavoriteCubit>().toggleFavorite(
+                                  recipe.id,
+                                );
                               },
                               icon: Icon(
                                 isFavorite
