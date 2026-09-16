@@ -245,13 +245,7 @@ class RecipeDetailScreen extends StatelessWidget {
           ),
           child: FilledButton.icon(
             onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text(
-                    'Mode memasak akan dibuat pada tahap berikutnya.',
-                  ),
-                ),
-              );
+              context.push('/recipe/${recipe.id}/cook');
             },
             icon: const Icon(Icons.play_arrow_rounded),
             label: const Text('Mulai Memasak'),

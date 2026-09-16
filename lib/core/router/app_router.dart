@@ -10,6 +10,7 @@ import '../../screens/main_screen.dart';
 import '../../screens/meal_planner_screen.dart';
 import '../../screens/premium_screen.dart';
 import '../../screens/recipe_detail_screen.dart';
+import '../../screens/cooking_mode_screen.dart';
 
 Recipe? _findRecipeById(int? id) {
   if (id == null) {
@@ -47,6 +48,21 @@ final GoRouter appRouter = GoRouter(
         }
 
         return RecipeDetailScreen(recipe: recipe);
+      },
+    ),
+
+    GoRoute(
+      path: '/recipe/:id/cook',
+      builder: (context, state) {
+        final id = int.tryParse(state.pathParameters['id'] ?? '');
+
+        final recipe = _findRecipeById(id);
+
+        if (recipe == null) {
+          return const _RouteErrorScreen(message: 'Resep tidak ditemukan.');
+        }
+
+        return CookingModeScreen(recipe: recipe);
       },
     ),
 
