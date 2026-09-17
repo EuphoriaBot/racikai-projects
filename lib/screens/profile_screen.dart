@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../controllers/subscription_controller.dart';
 import '../controllers/theme_controller.dart';
 import '../controllers/usage_controller.dart';
-import 'premium_screen.dart';
 
 import 'package:go_router/go_router.dart';
 

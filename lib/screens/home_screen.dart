@@ -65,7 +65,13 @@ class _HomeContent extends StatelessWidget {
                     border: Border.all(color: colors.outlineVariant),
                   ),
                   child: IconButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Belum ada notifikasi baru.'),
+                        ),
+                      );
+                    },
                     icon: Icon(
                       Icons.notifications_none_rounded,
                       color: colors.onSurfaceVariant,

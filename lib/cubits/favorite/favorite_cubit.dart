@@ -7,7 +7,7 @@ import 'favorite_state.dart';
 class FavoriteCubit extends Cubit<FavoriteState> {
   FavoriteCubit() : super(const FavoriteState());
 
-  static const int freeFavoriteLimit = 4;
+  static const int freeFavoriteLimit = 10;
 
   void loadFromStorage() {
     final savedFavorites = LocalStorageService.favoriteIds;
