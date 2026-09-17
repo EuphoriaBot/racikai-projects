@@ -1,18 +1,34 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 import '../controllers/meal_planner_controller.dart';
-import '../data/dummy_recipes.dart';
-import '../models/recipe.dart';
-
-import 'package:go_router/go_router.dart';
+import '../core/di/service_locator.dart';
+import '../features/recipe/domain/entities/recipe_entity.dart';
+import '../features/recipe/presentation/cubit/recipe_cubit.dart';
+import '../features/recipe/presentation/cubit/recipe_state.dart';
 
 class MealPlannerScreen extends StatelessWidget {
   const MealPlannerScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (context) => sl<RecipeCubit>()..loadRecipes(),
+      child: const _MealPlannerContent(),
+    );
+  }
+}
+
+class _MealPlannerContent extends StatelessWidget {
+  const _MealPlannerContent();
+
+  @override
+  Widget build(BuildContext context) {
     final planner = MealPlannerController.instance;
+
     final colors = Theme.of(context).colorScheme;
+
     final backgroundColor = Theme.of(context).scaffoldBackgroundColor;
 
     return Scaffold(
@@ -41,74 +57,103 @@ class MealPlannerScreen extends StatelessWidget {
         ],
       ),
 
-      body: AnimatedBuilder(
-        animation: planner,
-        builder: (context, _) {
-          return ListView(
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
-            children: [
-              // HEADER CARD
-              Container(
-                padding: const EdgeInsets.all(18),
-                decoration: BoxDecoration(
-                  color: colors.primaryContainer,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Row(
+      body: BlocBuilder<RecipeCubit, RecipeState>(
+        builder: (context, recipeState) {
+          if (recipeState is RecipeInitial || recipeState is RecipeLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (recipeState is RecipeError) {
+            return _RecipeError(
+              message: recipeState.message,
+              onRetry: () {
+                context.read<RecipeCubit>().loadRecipes();
+              },
+            );
+          }
+
+          if (recipeState is RecipeLoaded) {
+            return AnimatedBuilder(
+              animation: planner,
+              builder: (context, _) {
+                return ListView(
+                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
                   children: [
-                    Icon(
-                      Icons.calendar_month_rounded,
-                      size: 34,
-                      color: colors.primary,
-                    ),
-
-                    const SizedBox(width: 14),
-
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                    Container(
+                      padding: const EdgeInsets.all(18),
+                      decoration: BoxDecoration(
+                        color: colors.primaryContainer,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
                         children: [
-                          Text(
-                            'Rencana makan mingguan',
-                            style: TextStyle(
-                              fontSize: 17,
-                              fontWeight: FontWeight.w800,
-                              color: colors.onPrimaryContainer,
-                            ),
+                          Icon(
+                            Icons.calendar_month_rounded,
+                            size: 34,
+                            color: colors.primary,
                           ),
 
-                          const SizedBox(height: 4),
+                          const SizedBox(width: 14),
 
-                          Text(
-                            'Pilih satu resep untuk setiap hari agar menu mingguan lebih teratur.',
-                            style: TextStyle(
-                              fontSize: 12,
-                              height: 1.4,
-                              color: colors.onPrimaryContainer.withValues(
-                                alpha: 0.75,
-                              ),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Rencana makan mingguan',
+                                  style: TextStyle(
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.w800,
+                                    color: colors.onPrimaryContainer,
+                                  ),
+                                ),
+
+                                const SizedBox(height: 4),
+
+                                Text(
+                                  'Pilih satu resep untuk setiap hari '
+                                  'agar menu mingguan lebih teratur.',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    height: 1.4,
+                                    color: colors.onPrimaryContainer.withValues(
+                                      alpha: 0.75,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],
                       ),
                     ),
+
+                    const SizedBox(height: 26),
+
+                    ...planner.days.map((day) {
+                      final recipeId = planner.recipeIdForDay(day);
+
+                      final recipe = _findRecipeById(
+                        recipeState.recipes,
+                        recipeId,
+                      );
+
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: _MealDayCard(
+                          day: day,
+                          recipe: recipe,
+                          recipes: recipeState.recipes,
+                        ),
+                      );
+                    }),
                   ],
-                ),
-              ),
-
-              const SizedBox(height: 26),
-
-              // DAYS
-              ...planner.days.map((day) {
-                final recipe = planner.recipeForDay(day);
-
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: _MealDayCard(day: day, recipe: recipe),
                 );
-              }),
-            ],
-          );
+              },
+            );
+          }
+
+          return const SizedBox.shrink();
         },
       ),
     );
@@ -123,7 +168,8 @@ class MealPlannerScreen extends StatelessWidget {
         return AlertDialog(
           title: const Text('Hapus Meal Plan?'),
           content: const Text(
-            'Semua menu yang sudah dipilih untuk minggu ini akan dihapus.',
+            'Semua menu yang sudah dipilih untuk minggu ini '
+            'akan dihapus.',
           ),
           actions: [
             TextButton(
@@ -152,11 +198,30 @@ class MealPlannerScreen extends StatelessWidget {
   }
 }
 
+RecipeEntity? _findRecipeById(List<RecipeEntity> recipes, int? recipeId) {
+  if (recipeId == null) {
+    return null;
+  }
+
+  for (final recipe in recipes) {
+    if (recipe.id == recipeId) {
+      return recipe;
+    }
+  }
+
+  return null;
+}
+
 class _MealDayCard extends StatelessWidget {
   final String day;
-  final Recipe? recipe;
+  final RecipeEntity? recipe;
+  final List<RecipeEntity> recipes;
 
-  const _MealDayCard({required this.day, required this.recipe});
+  const _MealDayCard({
+    required this.day,
+    required this.recipe,
+    required this.recipes,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -169,16 +234,17 @@ class _MealDayCard extends StatelessWidget {
         border: Border.all(color: colors.outlineVariant),
       ),
       child: recipe == null
-          ? _EmptyDay(day: day)
-          : _FilledDay(day: day, recipe: recipe!),
+          ? _EmptyDay(day: day, recipes: recipes)
+          : _FilledDay(day: day, recipe: recipe!, recipes: recipes),
     );
   }
 }
 
 class _EmptyDay extends StatelessWidget {
   final String day;
+  final List<RecipeEntity> recipes;
 
-  const _EmptyDay({required this.day});
+  const _EmptyDay({required this.day, required this.recipes});
 
   @override
   Widget build(BuildContext context) {
@@ -187,7 +253,7 @@ class _EmptyDay extends StatelessWidget {
     return InkWell(
       borderRadius: BorderRadius.circular(18),
       onTap: () {
-        _showRecipePicker(context, day);
+        _showRecipePicker(context, day, recipes);
       },
       child: Padding(
         padding: const EdgeInsets.all(17),
@@ -243,9 +309,14 @@ class _EmptyDay extends StatelessWidget {
 
 class _FilledDay extends StatelessWidget {
   final String day;
-  final Recipe recipe;
+  final RecipeEntity recipe;
+  final List<RecipeEntity> recipes;
 
-  const _FilledDay({required this.day, required this.recipe});
+  const _FilledDay({
+    required this.day,
+    required this.recipe,
+    required this.recipes,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -317,7 +388,7 @@ class _FilledDay extends StatelessWidget {
             iconColor: colors.onSurfaceVariant,
             onSelected: (value) {
               if (value == 'change') {
-                _showRecipePicker(context, day);
+                _showRecipePicker(context, day, recipes);
               }
 
               if (value == 'remove') {
@@ -335,7 +406,11 @@ class _FilledDay extends StatelessWidget {
   }
 }
 
-void _showRecipePicker(BuildContext context, String day) {
+void _showRecipePicker(
+  BuildContext context,
+  String day,
+  List<RecipeEntity> recipes,
+) {
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
@@ -384,16 +459,16 @@ void _showRecipePicker(BuildContext context, String day) {
               Expanded(
                 child: ListView.separated(
                   padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-                  itemCount: dummyRecipes.length,
+                  itemCount: recipes.length,
                   separatorBuilder: (_, _) => const SizedBox(height: 10),
                   itemBuilder: (context, index) {
-                    final recipe = dummyRecipes[index];
+                    final recipe = recipes[index];
 
                     return ListTile(
                       onTap: () {
                         MealPlannerController.instance.setRecipeForDay(
                           day,
-                          recipe,
+                          recipe.id,
                         );
 
                         Navigator.pop(sheetContext);
@@ -429,7 +504,8 @@ void _showRecipePicker(BuildContext context, String day) {
                       ),
 
                       subtitle: Text(
-                        '${recipe.category} • ${recipe.duration}',
+                        '${recipe.category} • '
+                        '${recipe.duration}',
                         style: TextStyle(color: colors.onSurfaceVariant),
                       ),
 
@@ -447,4 +523,55 @@ void _showRecipePicker(BuildContext context, String day) {
       );
     },
   );
+}
+
+class _RecipeError extends StatelessWidget {
+  final String message;
+  final VoidCallback onRetry;
+
+  const _RecipeError({required this.message, required this.onRetry});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline_rounded, size: 64, color: colors.error),
+
+            const SizedBox(height: 16),
+
+            Text(
+              'Gagal Memuat Resep',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: colors.onSurface,
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: TextStyle(color: colors.onSurfaceVariant),
+            ),
+
+            const SizedBox(height: 20),
+
+            FilledButton.icon(
+              onPressed: onRetry,
+              icon: const Icon(Icons.refresh_rounded),
+              label: const Text('Coba Lagi'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

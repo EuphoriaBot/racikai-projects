@@ -1,14 +1,30 @@
 import 'package:flutter/material.dart';
-
-import '../data/dummy_recipes.dart';
-import '../models/recipe.dart';
-
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+
+import '../core/di/service_locator.dart';
+import '../features/recipe/domain/entities/recipe_entity.dart';
+import '../features/recipe/presentation/cubit/recipe_cubit.dart';
+import '../features/recipe/presentation/cubit/recipe_state.dart';
 
 class IngredientResultScreen extends StatelessWidget {
   final List<String> selectedIngredients;
 
   const IngredientResultScreen({super.key, required this.selectedIngredients});
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (context) => sl<RecipeCubit>()..loadRecipes(),
+      child: _IngredientResultContent(selectedIngredients: selectedIngredients),
+    );
+  }
+}
+
+class _IngredientResultContent extends StatelessWidget {
+  final List<String> selectedIngredients;
+
+  const _IngredientResultContent({required this.selectedIngredients});
 
   bool ingredientMatches(String recipeIngredient, String selectedIngredient) {
     final recipeText = recipeIngredient.toLowerCase();
@@ -19,7 +35,7 @@ class IngredientResultScreen extends StatelessWidget {
         selectedText.contains(recipeText);
   }
 
-  int calculateMatchedIngredients(Recipe recipe) {
+  int calculateMatchedIngredients(RecipeEntity recipe) {
     int matchCount = 0;
 
     for (final recipeIngredient in recipe.ingredients) {
@@ -35,7 +51,7 @@ class IngredientResultScreen extends StatelessWidget {
     return matchCount;
   }
 
-  double calculateMatchPercentage(Recipe recipe) {
+  double calculateMatchPercentage(RecipeEntity recipe) {
     if (recipe.ingredients.isEmpty) {
       return 0;
     }
@@ -51,17 +67,8 @@ class IngredientResultScreen extends StatelessWidget {
 
     final backgroundColor = Theme.of(context).scaffoldBackgroundColor;
 
-    final matchedRecipes = dummyRecipes
-        .where((recipe) => calculateMatchedIngredients(recipe) > 0)
-        .toList();
-
-    matchedRecipes.sort((a, b) {
-      return calculateMatchPercentage(b).compareTo(calculateMatchPercentage(a));
-    });
-
     return Scaffold(
       backgroundColor: backgroundColor,
-
       appBar: AppBar(
         backgroundColor: backgroundColor,
         foregroundColor: colors.onSurface,
@@ -75,10 +82,36 @@ class IngredientResultScreen extends StatelessWidget {
           ),
         ),
       ),
+      body: BlocBuilder<RecipeCubit, RecipeState>(
+        builder: (context, state) {
+          if (state is RecipeInitial || state is RecipeLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-      body: matchedRecipes.isEmpty
-          ? const _NoResult()
-          : ListView(
+          if (state is RecipeError) {
+            return _RecipeError(
+              message: state.message,
+              onRetry: () {
+                context.read<RecipeCubit>().loadRecipes();
+              },
+            );
+          }
+
+          if (state is RecipeLoaded) {
+            final matchedRecipes = state.recipes
+                .where((recipe) => calculateMatchedIngredients(recipe) > 0)
+                .toList();
+
+            matchedRecipes.sort((a, b) {
+              return calculateMatchPercentage(b)
+                  .compareTo(calculateMatchPercentage(a));
+            });
+
+            if (matchedRecipes.isEmpty) {
+              return const _NoResult();
+            }
+
+            return ListView(
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
               children: [
                 Text(
@@ -137,13 +170,18 @@ class IngredientResultScreen extends StatelessWidget {
                   );
                 }),
               ],
-            ),
+            );
+          }
+
+          return const SizedBox.shrink();
+        },
+      ),
     );
   }
 }
 
 class _IngredientRecipeCard extends StatelessWidget {
-  final Recipe recipe;
+  final RecipeEntity recipe;
   final int matchPercentage;
   final int matchedIngredients;
 
@@ -325,6 +363,57 @@ class _NoResult extends StatelessWidget {
               'Coba pilih bahan lain atau tambahkan lebih banyak bahan.',
               textAlign: TextAlign.center,
               style: TextStyle(color: colors.onSurfaceVariant, height: 1.5),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _RecipeError extends StatelessWidget {
+  final String message;
+  final VoidCallback onRetry;
+
+  const _RecipeError({required this.message, required this.onRetry});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline_rounded, size: 64, color: colors.error),
+
+            const SizedBox(height: 16),
+
+            Text(
+              'Gagal Memuat Resep',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: colors.onSurface,
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: TextStyle(color: colors.onSurfaceVariant),
+            ),
+
+            const SizedBox(height: 20),
+
+            FilledButton.icon(
+              onPressed: onRetry,
+              icon: const Icon(Icons.refresh_rounded),
+              label: const Text('Coba Lagi'),
             ),
           ],
         ),

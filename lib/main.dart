@@ -8,15 +8,15 @@ import 'controllers/meal_planner_controller.dart';
 import 'core/theme/app_theme.dart';
 import 'controllers/theme_controller.dart';
 import 'core/router/app_router.dart';
-import 'core/bloc/app_bloc_observer.dart';
 import 'cubits/favorite/favorite_cubit.dart';
-import '../cubits/favorite/favorite_cubit.dart';
-import '../cubits/favorite/favorite_state.dart';
+import 'core/di/service_locator.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await LocalStorageService.init();
+
+  await setupDependencies();
 
   await ThemeController.instance.loadFromStorage();
 

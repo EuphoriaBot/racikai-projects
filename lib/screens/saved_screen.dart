@@ -1,72 +1,152 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
+import '../core/di/service_locator.dart';
 import '../cubits/favorite/favorite_cubit.dart';
 import '../cubits/favorite/favorite_state.dart';
-import '../models/recipe.dart';
-
-import 'package:go_router/go_router.dart';
+import '../features/recipe/domain/entities/recipe_entity.dart';
+import '../features/recipe/presentation/cubit/recipe_cubit.dart';
+import '../features/recipe/presentation/cubit/recipe_state.dart';
 
 class SavedScreen extends StatelessWidget {
   const SavedScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (context) => sl<RecipeCubit>()..loadRecipes(),
+      child: const _SavedContent(),
+    );
+  }
+}
+
+class _SavedContent extends StatelessWidget {
+  const _SavedContent();
+
+  @override
+  Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
 
     return SafeArea(
-      child: BlocBuilder<FavoriteCubit, FavoriteState>(
-        builder: (context, state) {
-          final favorites = context.read<FavoriteCubit>().favoriteRecipes;
+      child: BlocBuilder<RecipeCubit, RecipeState>(
+        builder: (context, recipeState) {
+          if (recipeState is RecipeInitial || recipeState is RecipeLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+          if (recipeState is RecipeError) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(32),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
+                    Icon(
+                      Icons.error_outline_rounded,
+                      size: 64,
+                      color: colors.error,
+                    ),
+
+                    const SizedBox(height: 16),
+
                     Text(
-                      'Resep Tersimpan',
+                      'Gagal Memuat Resep',
                       style: TextStyle(
-                        fontSize: 26,
-                        fontWeight: FontWeight.w800,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
                         color: colors.onSurface,
                       ),
                     ),
 
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 8),
 
                     Text(
-                      favorites.isEmpty
-                          ? 'Belum ada resep yang disimpan.'
-                          : '${favorites.length} resep tersimpan',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: colors.onSurfaceVariant,
-                      ),
+                      recipeState.message,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: colors.onSurfaceVariant),
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    FilledButton.icon(
+                      onPressed: () {
+                        context.read<RecipeCubit>().loadRecipes();
+                      },
+                      icon: const Icon(Icons.refresh_rounded),
+                      label: const Text('Coba Lagi'),
                     ),
                   ],
                 ),
               ),
+            );
+          }
 
-              const SizedBox(height: 22),
+          if (recipeState is RecipeLoaded) {
+            return BlocBuilder<FavoriteCubit, FavoriteState>(
+              builder: (context, favoriteState) {
+                final favorites = recipeState.recipes
+                    .where(
+                      (recipe) => favoriteState.favoriteIds.contains(recipe.id),
+                    )
+                    .toList();
 
-              Expanded(
-                child: favorites.isEmpty
-                    ? const _EmptySaved()
-                    : ListView.separated(
-                        padding: const EdgeInsets.fromLTRB(20, 0, 20, 30),
-                        itemCount: favorites.length,
-                        separatorBuilder: (_, _) => const SizedBox(height: 14),
-                        itemBuilder: (context, index) {
-                          return _SavedRecipeCard(recipe: favorites[index]);
-                        },
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Resep Tersimpan',
+                            style: TextStyle(
+                              fontSize: 26,
+                              fontWeight: FontWeight.w800,
+                              color: colors.onSurface,
+                            ),
+                          ),
+
+                          const SizedBox(height: 6),
+
+                          Text(
+                            favorites.isEmpty
+                                ? 'Belum ada resep yang disimpan.'
+                                : '${favorites.length} resep tersimpan',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: colors.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
                       ),
-              ),
-            ],
-          );
+                    ),
+
+                    const SizedBox(height: 22),
+
+                    Expanded(
+                      child: favorites.isEmpty
+                          ? const _EmptySaved()
+                          : ListView.separated(
+                              padding: const EdgeInsets.fromLTRB(20, 0, 20, 30),
+                              itemCount: favorites.length,
+                              separatorBuilder: (_, _) =>
+                                  const SizedBox(height: 14),
+                              itemBuilder: (context, index) {
+                                return _SavedRecipeCard(
+                                  recipe: favorites[index],
+                                );
+                              },
+                            ),
+                    ),
+                  ],
+                );
+              },
+            );
+          }
+
+          return const SizedBox.shrink();
         },
       ),
     );
@@ -74,7 +154,7 @@ class SavedScreen extends StatelessWidget {
 }
 
 class _SavedRecipeCard extends StatelessWidget {
-  final Recipe recipe;
+  final RecipeEntity recipe;
 
   const _SavedRecipeCard({required this.recipe});
 
@@ -98,7 +178,6 @@ class _SavedRecipeCard extends StatelessWidget {
           ),
           child: Row(
             children: [
-              // IMAGE / EMOJI AREA
               Container(
                 width: 115,
                 height: double.infinity,
@@ -232,7 +311,8 @@ class _EmptySaved extends StatelessWidget {
             const SizedBox(height: 8),
 
             Text(
-              'Tekan ikon hati pada resep yang kamu suka dan resep akan muncul di sini.',
+              'Tekan ikon hati pada resep yang kamu suka '
+              'dan resep akan muncul di sini.',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,

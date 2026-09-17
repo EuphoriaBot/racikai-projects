@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../data/dummy_recipes.dart';
-import '../../models/recipe.dart';
+import '../di/service_locator.dart';
+import '../../features/recipe/domain/entities/recipe_entity.dart';
+import '../../features/recipe/domain/usecases/get_recipe_by_id.dart';
+import '../../screens/cooking_mode_screen.dart';
 import '../../screens/edit_profile_screen.dart';
 import '../../screens/ingredient_finder_screen.dart';
 import '../../screens/ingredient_result_screen.dart';
@@ -10,21 +12,6 @@ import '../../screens/main_screen.dart';
 import '../../screens/meal_planner_screen.dart';
 import '../../screens/premium_screen.dart';
 import '../../screens/recipe_detail_screen.dart';
-import '../../screens/cooking_mode_screen.dart';
-
-Recipe? _findRecipeById(int? id) {
-  if (id == null) {
-    return null;
-  }
-
-  for (final recipe in dummyRecipes) {
-    if (recipe.id == id) {
-      return recipe;
-    }
-  }
-
-  return null;
-}
 
 final GoRouter appRouter = GoRouter(
   initialLocation: '/',
@@ -41,13 +28,7 @@ final GoRouter appRouter = GoRouter(
       builder: (context, state) {
         final id = int.tryParse(state.pathParameters['id'] ?? '');
 
-        final recipe = _findRecipeById(id);
-
-        if (recipe == null) {
-          return const _RouteErrorScreen(message: 'Resep tidak ditemukan.');
-        }
-
-        return RecipeDetailScreen(recipe: recipe);
+        return _RecipeRouteLoader(recipeId: id);
       },
     ),
 
@@ -56,13 +37,7 @@ final GoRouter appRouter = GoRouter(
       builder: (context, state) {
         final id = int.tryParse(state.pathParameters['id'] ?? '');
 
-        final recipe = _findRecipeById(id);
-
-        if (recipe == null) {
-          return const _RouteErrorScreen(message: 'Resep tidak ditemukan.');
-        }
-
-        return CookingModeScreen(recipe: recipe);
+        return _RecipeRouteLoader(recipeId: id, cookingMode: true);
       },
     ),
 
@@ -76,7 +51,7 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/ingredients/results',
       builder: (context, state) {
-        final ingredients = state.extra as List<String>? ?? [];
+        final ingredients = state.extra as List<String>? ?? <String>[];
 
         return IngredientResultScreen(selectedIngredients: ingredients);
       },
@@ -99,7 +74,7 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/profile/edit',
       builder: (context, state) {
-        final data = state.extra as Map<String, String>? ?? {};
+        final data = state.extra as Map<String, String>? ?? <String, String>{};
 
         return EditProfileScreen(
           initialName: data['name'] ?? 'Guest User',
@@ -116,6 +91,63 @@ final GoRouter appRouter = GoRouter(
     );
   },
 );
+
+class _RecipeRouteLoader extends StatefulWidget {
+  final int? recipeId;
+  final bool cookingMode;
+
+  const _RecipeRouteLoader({required this.recipeId, this.cookingMode = false});
+
+  @override
+  State<_RecipeRouteLoader> createState() => _RecipeRouteLoaderState();
+}
+
+class _RecipeRouteLoaderState extends State<_RecipeRouteLoader> {
+  late final Future<RecipeEntity?> recipeFuture;
+
+  @override
+  void initState() {
+    super.initState();
+
+    if (widget.recipeId == null) {
+      recipeFuture = Future<RecipeEntity?>.value(null);
+    } else {
+      recipeFuture = sl<GetRecipeById>()(widget.recipeId!);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<RecipeEntity?>(
+      future: recipeFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        if (snapshot.hasError) {
+          return const _RouteErrorScreen(
+            message: 'Terjadi kesalahan saat memuat resep.',
+          );
+        }
+
+        final recipe = snapshot.data;
+
+        if (recipe == null) {
+          return const _RouteErrorScreen(message: 'Resep tidak ditemukan.');
+        }
+
+        if (widget.cookingMode) {
+          return CookingModeScreen(recipe: recipe);
+        }
+
+        return RecipeDetailScreen(recipe: recipe);
+      },
+    );
+  }
+}
 
 class _RouteErrorScreen extends StatelessWidget {
   final String message;
@@ -140,7 +172,7 @@ class _RouteErrorScreen extends StatelessWidget {
                 color: colors.primary,
               ),
 
-              const SizedBox(height: 18),
+              const SizedBox(height: 20),
 
               Text(
                 message,
@@ -152,13 +184,13 @@ class _RouteErrorScreen extends StatelessWidget {
                 ),
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: 24),
 
               FilledButton.icon(
                 onPressed: () {
                   context.go('/');
                 },
-                icon: const Icon(Icons.home_outlined),
+                icon: const Icon(Icons.home_rounded),
                 label: const Text('Kembali ke Home'),
               ),
             ],

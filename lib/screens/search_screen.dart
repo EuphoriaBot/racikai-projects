@@ -1,21 +1,34 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
-import '../cubits/favorite/favorite_cubit.dart';
-import '../cubits/favorite/favorite_state.dart';
-import '../data/dummy_recipes.dart';
-import '../models/recipe.dart';
-
 import 'package:go_router/go_router.dart';
 
-class SearchScreen extends StatefulWidget {
+import '../core/di/service_locator.dart';
+import '../cubits/favorite/favorite_cubit.dart';
+import '../cubits/favorite/favorite_state.dart';
+import '../features/recipe/domain/entities/recipe_entity.dart';
+import '../features/recipe/presentation/cubit/recipe_cubit.dart';
+import '../features/recipe/presentation/cubit/recipe_state.dart';
+
+class SearchScreen extends StatelessWidget {
   const SearchScreen({super.key});
 
   @override
-  State<SearchScreen> createState() => _SearchScreenState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (context) => sl<RecipeCubit>()..loadRecipes(),
+      child: const _SearchContent(),
+    );
+  }
 }
 
-class _SearchScreenState extends State<SearchScreen> {
+class _SearchContent extends StatefulWidget {
+  const _SearchContent();
+
+  @override
+  State<_SearchContent> createState() => _SearchContentState();
+}
+
+class _SearchContentState extends State<_SearchContent> {
   String searchQuery = '';
   String selectedCategory = 'Semua';
 
@@ -37,11 +50,13 @@ class _SearchScreenState extends State<SearchScreen> {
     super.dispose();
   }
 
-  List<Recipe> get filteredRecipes {
-    return dummyRecipes.where((recipe) {
+  List<RecipeEntity> _filterRecipes(List<RecipeEntity> recipes) {
+    return recipes.where((recipe) {
+      final query = searchQuery.toLowerCase();
+
       final matchesSearch =
-          recipe.title.toLowerCase().contains(searchQuery.toLowerCase()) ||
-          recipe.category.toLowerCase().contains(searchQuery.toLowerCase());
+          recipe.title.toLowerCase().contains(query) ||
+          recipe.category.toLowerCase().contains(query);
 
       final matchesCategory =
           selectedCategory == 'Semua' || recipe.category == selectedCategory;
@@ -172,9 +187,29 @@ class _SearchScreenState extends State<SearchScreen> {
           const SizedBox(height: 22),
 
           Expanded(
-            child: filteredRecipes.isEmpty
-                ? const _EmptySearch()
-                : Center(
+            child: BlocBuilder<RecipeCubit, RecipeState>(
+              builder: (context, state) {
+                if (state is RecipeInitial || state is RecipeLoading) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                if (state is RecipeError) {
+                  return _RecipeError(
+                    message: state.message,
+                    onRetry: () {
+                      context.read<RecipeCubit>().loadRecipes();
+                    },
+                  );
+                }
+
+                if (state is RecipeLoaded) {
+                  final filteredRecipes = _filterRecipes(state.recipes);
+
+                  if (filteredRecipes.isEmpty) {
+                    return const _EmptySearch();
+                  }
+
+                  return Center(
                     child: ConstrainedBox(
                       constraints: const BoxConstraints(maxWidth: 1200),
                       child: LayoutBuilder(
@@ -219,7 +254,12 @@ class _SearchScreenState extends State<SearchScreen> {
                         },
                       ),
                     ),
-                  ),
+                  );
+                }
+
+                return const SizedBox.shrink();
+              },
+            ),
           ),
         ],
       ),
@@ -228,7 +268,7 @@ class _SearchScreenState extends State<SearchScreen> {
 }
 
 class _SearchRecipeGridCard extends StatelessWidget {
-  final Recipe recipe;
+  final RecipeEntity recipe;
 
   const _SearchRecipeGridCard({required this.recipe});
 
@@ -421,6 +461,57 @@ class _EmptySearch extends StatelessWidget {
               'Coba gunakan kata kunci atau kategori lain.',
               textAlign: TextAlign.center,
               style: TextStyle(color: colors.onSurfaceVariant),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _RecipeError extends StatelessWidget {
+  final String message;
+  final VoidCallback onRetry;
+
+  const _RecipeError({required this.message, required this.onRetry});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline_rounded, size: 64, color: colors.error),
+
+            const SizedBox(height: 16),
+
+            Text(
+              'Gagal Memuat Resep',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: colors.onSurface,
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: TextStyle(color: colors.onSurfaceVariant),
+            ),
+
+            const SizedBox(height: 20),
+
+            FilledButton.icon(
+              onPressed: onRetry,
+              icon: const Icon(Icons.refresh_rounded),
+              label: const Text('Coba Lagi'),
             ),
           ],
         ),

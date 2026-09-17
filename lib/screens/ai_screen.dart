@@ -1,21 +1,35 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 import '../controllers/subscription_controller.dart';
 import '../controllers/usage_controller.dart';
-import '../data/dummy_recipes.dart';
+import '../core/di/service_locator.dart';
+import '../features/recipe/domain/entities/recipe_entity.dart';
+import '../features/recipe/presentation/cubit/recipe_cubit.dart';
+import '../features/recipe/presentation/cubit/recipe_state.dart';
 import '../models/chat_message.dart';
-import '../models/recipe.dart';
 
-import 'package:go_router/go_router.dart';
-
-class AiScreen extends StatefulWidget {
+class AiScreen extends StatelessWidget {
   const AiScreen({super.key});
 
   @override
-  State<AiScreen> createState() => _AiScreenState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (context) => sl<RecipeCubit>()..loadRecipes(),
+      child: const _AiContent(),
+    );
+  }
 }
 
-class _AiScreenState extends State<AiScreen> {
+class _AiContent extends StatefulWidget {
+  const _AiContent();
+
+  @override
+  State<_AiContent> createState() => _AiContentState();
+}
+
+class _AiContentState extends State<_AiContent> {
   final TextEditingController messageController = TextEditingController();
 
   final ScrollController scrollController = ScrollController();
@@ -25,7 +39,9 @@ class _AiScreenState extends State<AiScreen> {
   final List<ChatMessage> messages = [
     const ChatMessage(
       role: ChatRole.assistant,
-      text: 'Halo! 👋 Aku RacikAI. Beritahu aku bahan yang kamu punya atau resep yang ingin kamu cari.',
+      text:
+          'Halo! 👋 Aku RacikAI. Beritahu aku bahan yang kamu punya '
+          'atau resep yang ingin kamu cari.',
     ),
   ];
 
@@ -39,6 +55,7 @@ class _AiScreenState extends State<AiScreen> {
   void dispose() {
     messageController.dispose();
     scrollController.dispose();
+
     super.dispose();
   }
 
@@ -69,7 +86,9 @@ class _AiScreenState extends State<AiScreen> {
 
     await Future.delayed(const Duration(milliseconds: 900));
 
-    if (!mounted) return;
+    if (!mounted) {
+      return;
+    }
 
     final response = generateDummyResponse(question);
 
@@ -133,9 +152,11 @@ class _AiScreenState extends State<AiScreen> {
       return const ChatMessage(
         role: ChatRole.assistant,
         text:
-            'Dari bahan yang kamu sebutkan, kamu bisa mencoba Garlic Soy Chicken 🍗.\n\n'
-            'Resep ini menggunakan ayam, bawang putih, kecap, minyak, dan sedikit garam. '
-            'Proses memasaknya juga cukup sederhana dan cocok untuk menu sehari-hari.',
+            'Dari bahan yang kamu sebutkan, kamu bisa mencoba '
+            'Garlic Soy Chicken 🍗.\n\n'
+            'Resep ini menggunakan ayam, bawang putih, kecap, minyak, '
+            'dan sedikit garam. Proses memasaknya juga cukup sederhana '
+            'dan cocok untuk menu sehari-hari.',
         sourceRecipeIds: [1, 6],
       );
     }
@@ -144,8 +165,10 @@ class _AiScreenState extends State<AiScreen> {
       return const ChatMessage(
         role: ChatRole.assistant,
         text:
-            'Kalau kamu punya nasi, salah satu pilihan paling sederhana adalah Nasi Goreng Spesial 🍚.\n\n'
-            'Kamu bisa mengombinasikannya dengan telur, bawang putih, dan kecap.',
+            'Kalau kamu punya nasi, salah satu pilihan paling sederhana '
+            'adalah Nasi Goreng Spesial 🍚.\n\n'
+            'Kamu bisa mengombinasikannya dengan telur, bawang putih, '
+            'dan kecap.',
         sourceRecipeIds: [2, 8],
       );
     }
@@ -155,7 +178,8 @@ class _AiScreenState extends State<AiScreen> {
         role: ChatRole.assistant,
         text:
             'Kamu bisa mencoba Creamy Chicken Pasta 🍝. '
-            'Resep ini cocok kalau kamu punya pasta, ayam, susu, bawang putih, dan keju.',
+            'Resep ini cocok kalau kamu punya pasta, ayam, susu, '
+            'bawang putih, dan keju.',
         sourceRecipeIds: [3],
       );
     }
@@ -164,8 +188,9 @@ class _AiScreenState extends State<AiScreen> {
       return const ChatMessage(
         role: ChatRole.assistant,
         text:
-            'Untuk bahan daging sapi, Beef Teriyaki bisa menjadi pilihan yang praktis 🥩. '
-            'Rasanya manis dan gurih serta proses memasaknya cukup sederhana.',
+            'Untuk bahan daging sapi, Beef Teriyaki bisa menjadi '
+            'pilihan yang praktis 🥩. Rasanya manis dan gurih serta '
+            'proses memasaknya cukup sederhana.',
         sourceRecipeIds: [4],
       );
     }
@@ -177,7 +202,8 @@ class _AiScreenState extends State<AiScreen> {
         role: ChatRole.assistant,
         text:
             'Kamu bisa membuat Vegetable Stir Fry 🥬. '
-            'Cukup gunakan beberapa sayuran yang tersedia lalu tumis bersama bawang putih dan sedikit saus.',
+            'Cukup gunakan beberapa sayuran yang tersedia lalu tumis '
+            'bersama bawang putih dan sedikit saus.',
         sourceRecipeIds: [5],
       );
     }
@@ -187,7 +213,8 @@ class _AiScreenState extends State<AiScreen> {
         role: ChatRole.assistant,
         text:
             'Telur bisa digunakan untuk banyak menu sederhana. '
-            'Dari resep yang tersedia, kamu bisa mencoba Nasi Goreng Spesial atau Beef Fried Rice.',
+            'Dari resep yang tersedia, kamu bisa mencoba '
+            'Nasi Goreng Spesial atau Beef Fried Rice.',
         sourceRecipeIds: [2, 8],
       );
     }
@@ -199,7 +226,8 @@ class _AiScreenState extends State<AiScreen> {
         role: ChatRole.assistant,
         text:
             'Kalau ingin sesuatu yang manis, coba Chocolate Pancake 🥞. '
-            'Bahannya sederhana seperti tepung, telur, susu, cokelat bubuk, dan gula.',
+            'Bahannya sederhana seperti tepung, telur, susu, '
+            'cokelat bubuk, dan gula.',
         sourceRecipeIds: [7],
       );
     }
@@ -207,8 +235,9 @@ class _AiScreenState extends State<AiScreen> {
     return const ChatMessage(
       role: ChatRole.assistant,
       text:
-          'Aku belum menemukan kecocokan yang sangat spesifik dari pertanyaan itu. '
-          'Coba sebutkan bahan utama yang kamu punya, misalnya ayam, nasi, telur, pasta, daging, atau sayuran.',
+          'Aku belum menemukan kecocokan yang sangat spesifik dari '
+          'pertanyaan itu. Coba sebutkan bahan utama yang kamu punya, '
+          'misalnya ayam, nasi, telur, pasta, daging, atau sayuran.',
     );
   }
 
@@ -233,6 +262,9 @@ class _AiScreenState extends State<AiScreen> {
     return SafeArea(
       child: Column(
         children: [
+          // ==========================================
+          // HEADER
+          // ==========================================
           Container(
             padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
             decoration: BoxDecoration(
@@ -286,7 +318,9 @@ class _AiScreenState extends State<AiScreen> {
                           final usage = UsageController.instance.aiUsage;
 
                           return Text(
-                            '$usage / ${UsageController.freeAiLimit} pertanyaan hari ini',
+                            '$usage / '
+                            '${UsageController.freeAiLimit} '
+                            'pertanyaan hari ini',
                             style: TextStyle(
                               fontSize: 12,
                               color: colors.onSurfaceVariant,
@@ -301,6 +335,9 @@ class _AiScreenState extends State<AiScreen> {
             ),
           ),
 
+          // ==========================================
+          // CHAT MESSAGES
+          // ==========================================
           Expanded(
             child: ListView(
               controller: scrollController,
@@ -356,6 +393,9 @@ class _AiScreenState extends State<AiScreen> {
             ),
           ),
 
+          // ==========================================
+          // MESSAGE INPUT
+          // ==========================================
           Container(
             padding: const EdgeInsets.fromLTRB(16, 10, 16, 14),
             decoration: BoxDecoration(
@@ -433,6 +473,10 @@ class _AiScreenState extends State<AiScreen> {
   }
 }
 
+// ==================================================
+// CHAT MESSAGE BUBBLE
+// ==================================================
+
 class _ChatMessageBubble extends StatelessWidget {
   final ChatMessage message;
 
@@ -471,6 +515,7 @@ class _ChatMessageBubble extends StatelessWidget {
                     color: colors.primary,
                   ),
                 ),
+
                 const SizedBox(width: 8),
               ],
 
@@ -518,6 +563,10 @@ class _ChatMessageBubble extends StatelessWidget {
   }
 }
 
+// ==================================================
+// RECIPE SOURCES
+// ==================================================
+
 class _RecipeSources extends StatelessWidget {
   final List<int> recipeIds;
 
@@ -527,108 +576,133 @@ class _RecipeSources extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
 
-    final List<Recipe> recipes = dummyRecipes.where((recipe) {
-      return recipeIds.contains(recipe.id);
-    }).toList();
+    return BlocBuilder<RecipeCubit, RecipeState>(
+      builder: (context, state) {
+        if (state is RecipeInitial || state is RecipeLoading) {
+          return const SizedBox.shrink();
+        }
 
-    if (recipes.isEmpty) {
-      return const SizedBox.shrink();
-    }
+        if (state is RecipeError) {
+          return const SizedBox.shrink();
+        }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
+        if (state is! RecipeLoaded) {
+          return const SizedBox.shrink();
+        }
+
+        final List<RecipeEntity> recipes = state.recipes.where((recipe) {
+          return recipeIds.contains(recipe.id);
+        }).toList();
+
+        if (recipes.isEmpty) {
+          return const SizedBox.shrink();
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(
-              Icons.menu_book_outlined,
-              size: 15,
-              color: colors.onSurfaceVariant,
-            ),
-            const SizedBox(width: 5),
-            Text(
-              'Sumber resep',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: colors.onSurfaceVariant,
-              ),
-            ),
-          ],
-        ),
+            Row(
+              children: [
+                Icon(
+                  Icons.menu_book_outlined,
+                  size: 15,
+                  color: colors.onSurfaceVariant,
+                ),
 
-        const SizedBox(height: 8),
+                const SizedBox(width: 5),
 
-        ...recipes.map((recipe) {
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                borderRadius: BorderRadius.circular(14),
-                onTap: () {
-                  context.push('/recipe/${recipe.id}');
-                },
-                child: Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: colors.primaryContainer,
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Row(
-                    children: [
-                      Text(recipe.emoji, style: const TextStyle(fontSize: 28)),
-
-                      const SizedBox(width: 10),
-
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              recipe.title,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
-                                color: colors.onPrimaryContainer,
-                              ),
-                            ),
-
-                            const SizedBox(height: 3),
-
-                            Text(
-                              recipe.duration,
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: colors.onPrimaryContainer.withValues(
-                                  alpha: 0.75,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      Icon(
-                        Icons.arrow_forward_ios,
-                        size: 13,
-                        color: colors.onPrimaryContainer.withValues(
-                          alpha: 0.65,
-                        ),
-                      ),
-                    ],
+                Text(
+                  'Sumber resep',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: colors.onSurfaceVariant,
                   ),
                 ),
-              ),
+              ],
             ),
-          );
-        }),
-      ],
+
+            const SizedBox(height: 8),
+
+            ...recipes.map((recipe) {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(14),
+                    onTap: () {
+                      context.push('/recipe/${recipe.id}');
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: colors.primaryContainer,
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Row(
+                        children: [
+                          Text(
+                            recipe.emoji,
+                            style: const TextStyle(fontSize: 28),
+                          ),
+
+                          const SizedBox(width: 10),
+
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  recipe.title,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                    color: colors.onPrimaryContainer,
+                                  ),
+                                ),
+
+                                const SizedBox(height: 3),
+
+                                Text(
+                                  recipe.duration,
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: colors.onPrimaryContainer.withValues(
+                                      alpha: 0.75,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          Icon(
+                            Icons.arrow_forward_ios,
+                            size: 13,
+                            color: colors.onPrimaryContainer.withValues(
+                              alpha: 0.65,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }),
+          ],
+        );
+      },
     );
   }
 }
+
+// ==================================================
+// TYPING BUBBLE
+// ==================================================
 
 class _TypingBubble extends StatelessWidget {
   const _TypingBubble();

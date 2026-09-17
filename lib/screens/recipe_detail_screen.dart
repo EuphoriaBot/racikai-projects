@@ -4,10 +4,10 @@ import 'package:go_router/go_router.dart';
 
 import '../cubits/favorite/favorite_cubit.dart';
 import '../cubits/favorite/favorite_state.dart';
-import '../models/recipe.dart';
+import '../features/recipe/domain/entities/recipe_entity.dart';
 
 class RecipeDetailScreen extends StatelessWidget {
-  final Recipe recipe;
+  final RecipeEntity recipe;
 
   const RecipeDetailScreen({super.key, required this.recipe});
 

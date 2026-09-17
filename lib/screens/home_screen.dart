@@ -1,15 +1,31 @@
 import 'package:flutter/material.dart';
-
-import '../widgets/recipe_card.dart';
-import '../data/dummy_recipes.dart';
-import '../controllers/subscription_controller.dart';
-
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+
+import '../controllers/subscription_controller.dart';
+import '../core/di/service_locator.dart';
+import '../features/recipe/presentation/cubit/recipe_cubit.dart';
+import '../features/recipe/presentation/cubit/recipe_state.dart';
+import '../widgets/recipe_card.dart';
 
 class HomeScreen extends StatelessWidget {
   final VoidCallback onSearchTap;
 
   const HomeScreen({super.key, required this.onSearchTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (context) => sl<RecipeCubit>()..loadRecipes(),
+      child: _HomeContent(onSearchTap: onSearchTap),
+    );
+  }
+}
+
+class _HomeContent extends StatelessWidget {
+  final VoidCallback onSearchTap;
+
+  const _HomeContent({required this.onSearchTap});
 
   @override
   Widget build(BuildContext context) {
@@ -93,7 +109,9 @@ class HomeScreen extends StatelessWidget {
                 child: Row(
                   children: [
                     Icon(Icons.search, color: colors.onSurfaceVariant),
+
                     const SizedBox(width: 12),
+
                     Text(
                       'Cari resep...',
                       style: TextStyle(
@@ -374,37 +392,90 @@ class HomeScreen extends StatelessWidget {
 
             const SizedBox(height: 14),
 
-            SizedBox(
-              height: 255,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                children: [
-                  RecipeCard(
-                    recipe: dummyRecipes[0],
-                    onTap: () {
-                      context.push('/recipe/${dummyRecipes[0].id}');
-                    },
-                  ),
+            BlocBuilder<RecipeCubit, RecipeState>(
+              builder: (context, state) {
+                if (state is RecipeInitial || state is RecipeLoading) {
+                  return const SizedBox(
+                    height: 255,
+                    child: Center(child: CircularProgressIndicator()),
+                  );
+                }
 
-                  const SizedBox(width: 16),
+                if (state is RecipeError) {
+                  return SizedBox(
+                    height: 255,
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.error_outline_rounded,
+                            size: 42,
+                            color: colors.error,
+                          ),
 
-                  RecipeCard(
-                    recipe: dummyRecipes[1],
-                    onTap: () {
-                      context.push('/recipe/${dummyRecipes[1].id}');
-                    },
-                  ),
+                          const SizedBox(height: 10),
 
-                  const SizedBox(width: 16),
+                          Text(
+                            'Gagal memuat resep',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              color: colors.onSurface,
+                            ),
+                          ),
 
-                  RecipeCard(
-                    recipe: dummyRecipes[2],
-                    onTap: () {
-                      context.push('/recipe/${dummyRecipes[2].id}');
-                    },
-                  ),
-                ],
-              ),
+                          const SizedBox(height: 10),
+
+                          TextButton.icon(
+                            onPressed: () {
+                              context.read<RecipeCubit>().loadRecipes();
+                            },
+                            icon: const Icon(Icons.refresh_rounded),
+                            label: const Text('Coba Lagi'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }
+
+                if (state is RecipeLoaded) {
+                  final recommendations = state.recipes.take(3).toList();
+
+                  if (recommendations.isEmpty) {
+                    return SizedBox(
+                      height: 255,
+                      child: Center(
+                        child: Text(
+                          'Belum ada resep tersedia.',
+                          style: TextStyle(color: colors.onSurfaceVariant),
+                        ),
+                      ),
+                    );
+                  }
+
+                  return SizedBox(
+                    height: 255,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: recommendations.length,
+                      separatorBuilder: (_, _) => const SizedBox(width: 16),
+                      itemBuilder: (context, index) {
+                        final recipe = recommendations[index];
+
+                        return RecipeCard(
+                          recipe: recipe,
+                          onTap: () {
+                            context.push('/recipe/${recipe.id}');
+                          },
+                        );
+                      },
+                    ),
+                  );
+                }
+
+                return const SizedBox.shrink();
+              },
             ),
           ],
         ),

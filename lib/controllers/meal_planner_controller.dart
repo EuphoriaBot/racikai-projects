@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../data/dummy_recipes.dart';
-import '../models/recipe.dart';
 import '../services/local_storage_service.dart';
 
 class MealPlannerController extends ChangeNotifier {
@@ -29,22 +27,12 @@ class MealPlannerController extends ChangeNotifier {
     notifyListeners();
   }
 
-  Recipe? recipeForDay(String day) {
-    final recipeId = _mealPlan[day];
-
-    if (recipeId == null) {
-      return null;
-    }
-
-    try {
-      return dummyRecipes.firstWhere((recipe) => recipe.id == recipeId);
-    } catch (_) {
-      return null;
-    }
+  int? recipeIdForDay(String day) {
+    return _mealPlan[day];
   }
 
-  void setRecipeForDay(String day, Recipe recipe) {
-    _mealPlan[day] = recipe.id;
+  void setRecipeForDay(String day, int recipeId) {
+    _mealPlan[day] = recipeId;
 
     LocalStorageService.saveMealPlan(_mealPlan);
 

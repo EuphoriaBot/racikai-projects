@@ -4,10 +4,10 @@ import 'package:flutter/material.dart';
 
 import '../core/extensions/int_extensions.dart';
 import '../core/mixins/cooking_timer_mixin.dart';
-import '../models/recipe.dart';
+import '../features/recipe/domain/entities/recipe_entity.dart';
 
 class CookingModeScreen extends StatefulWidget {
-  final Recipe recipe;
+  final RecipeEntity recipe;
 
   const CookingModeScreen({super.key, required this.recipe});
 
@@ -222,7 +222,6 @@ class _CookingModeScreenState extends State<CookingModeScreen>
 
               const SizedBox(height: 20),
 
-              // TIMER
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -267,7 +266,6 @@ class _CookingModeScreenState extends State<CookingModeScreen>
 
               const SizedBox(height: 18),
 
-              // NAVIGATION
               Row(
                 children: [
                   Expanded(

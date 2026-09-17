@@ -3,10 +3,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../cubits/favorite/favorite_cubit.dart';
 import '../cubits/favorite/favorite_state.dart';
-import '../models/recipe.dart';
+import '../features/recipe/domain/entities/recipe_entity.dart';
 
 class RecipeCard extends StatelessWidget {
-  final Recipe recipe;
+  final RecipeEntity recipe;
   final VoidCallback? onTap;
 
   const RecipeCard({super.key, required this.recipe, this.onTap});
@@ -30,6 +30,9 @@ class RecipeCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // ==========================================
+              // IMAGE / EMOJI
+              // ==========================================
               Container(
                 height: 130,
                 width: double.infinity,
@@ -49,6 +52,9 @@ class RecipeCard extends StatelessWidget {
                       ),
                     ),
 
+                    // ====================================
+                    // FAVORITE BUTTON
+                    // ====================================
                     Positioned(
                       top: 10,
                       right: 10,
@@ -91,6 +97,9 @@ class RecipeCard extends StatelessWidget {
                 ),
               ),
 
+              // ==========================================
+              // RECIPE INFORMATION
+              // ==========================================
               Padding(
                 padding: const EdgeInsets.all(14),
                 child: Column(
