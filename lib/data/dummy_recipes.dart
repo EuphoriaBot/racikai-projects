@@ -1,7 +1,7 @@
-import '../models/recipe.dart';
+import '../features/recipe/data/models/recipe_model.dart';
 
-const List<Recipe> dummyRecipes = [
-  Recipe(
+const List<RecipeModel> dummyRecipes = [
+  RecipeModel(
     id: 1,
     title: 'Garlic Soy Chicken',
     category: 'Ayam',
@@ -24,7 +24,7 @@ const List<Recipe> dummyRecipes = [
     ],
   ),
 
-  Recipe(
+  RecipeModel(
     id: 2,
     title: 'Nasi Goreng Spesial',
     category: 'Nasi',
@@ -47,7 +47,7 @@ const List<Recipe> dummyRecipes = [
     ],
   ),
 
-  Recipe(
+  RecipeModel(
     id: 3,
     title: 'Creamy Chicken Pasta',
     category: 'Pasta',
@@ -71,7 +71,7 @@ const List<Recipe> dummyRecipes = [
     ],
   ),
 
-  Recipe(
+  RecipeModel(
     id: 4,
     title: 'Beef Teriyaki',
     category: 'Daging',
@@ -93,7 +93,7 @@ const List<Recipe> dummyRecipes = [
     ],
   ),
 
-  Recipe(
+  RecipeModel(
     id: 5,
     title: 'Vegetable Stir Fry',
     category: 'Sayur',
@@ -110,7 +110,7 @@ const List<Recipe> dummyRecipes = [
     ],
   ),
 
-  Recipe(
+  RecipeModel(
     id: 6,
     title: 'Chicken Curry',
     category: 'Ayam',
@@ -133,7 +133,7 @@ const List<Recipe> dummyRecipes = [
     ],
   ),
 
-  Recipe(
+  RecipeModel(
     id: 7,
     title: 'Chocolate Pancake',
     category: 'Dessert',
@@ -157,7 +157,7 @@ const List<Recipe> dummyRecipes = [
     ],
   ),
 
-  Recipe(
+  RecipeModel(
     id: 8,
     title: 'Beef Fried Rice',
     category: 'Nasi',

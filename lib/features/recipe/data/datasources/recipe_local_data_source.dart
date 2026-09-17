@@ -10,34 +10,14 @@ abstract class RecipeLocalDataSource {
 class RecipeLocalDataSourceImpl implements RecipeLocalDataSource {
   @override
   Future<List<RecipeModel>> getRecipes() async {
-    return dummyRecipes.map((recipe) {
-      return RecipeModel(
-        id: recipe.id,
-        title: recipe.title,
-        category: recipe.category,
-        duration: recipe.duration,
-        emoji: recipe.emoji,
-        description: recipe.description,
-        ingredients: List<String>.from(recipe.ingredients),
-        instructions: List<String>.from(recipe.instructions),
-      );
-    }).toList();
+    return List<RecipeModel>.unmodifiable(dummyRecipes);
   }
 
   @override
   Future<RecipeModel?> getRecipeById(int id) async {
     for (final recipe in dummyRecipes) {
       if (recipe.id == id) {
-        return RecipeModel(
-          id: recipe.id,
-          title: recipe.title,
-          category: recipe.category,
-          duration: recipe.duration,
-          emoji: recipe.emoji,
-          description: recipe.description,
-          ingredients: List<String>.from(recipe.ingredients),
-          instructions: List<String>.from(recipe.instructions),
-        );
+        return recipe;
       }
     }
 
