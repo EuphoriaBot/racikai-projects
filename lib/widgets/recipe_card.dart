@@ -30,9 +30,6 @@ class RecipeCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ==========================================
-              // IMAGE / EMOJI
-              // ==========================================
               Container(
                 height: 130,
                 width: double.infinity,
@@ -52,9 +49,6 @@ class RecipeCard extends StatelessWidget {
                       ),
                     ),
 
-                    // ====================================
-                    // FAVORITE BUTTON
-                    // ====================================
                     Positioned(
                       top: 10,
                       right: 10,
@@ -97,9 +91,6 @@ class RecipeCard extends StatelessWidget {
                 ),
               ),
 
-              // ==========================================
-              // RECIPE INFORMATION
-              // ==========================================
               Padding(
                 padding: const EdgeInsets.all(14),
                 child: Column(

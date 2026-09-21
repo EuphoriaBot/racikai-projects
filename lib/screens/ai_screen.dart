@@ -262,9 +262,6 @@ class _AiContentState extends State<_AiContent> {
     return SafeArea(
       child: Column(
         children: [
-          // ==========================================
-          // HEADER
-          // ==========================================
           Container(
             padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
             decoration: BoxDecoration(
@@ -335,9 +332,6 @@ class _AiContentState extends State<_AiContent> {
             ),
           ),
 
-          // ==========================================
-          // CHAT MESSAGES
-          // ==========================================
           Expanded(
             child: ListView(
               controller: scrollController,
@@ -393,9 +387,6 @@ class _AiContentState extends State<_AiContent> {
             ),
           ),
 
-          // ==========================================
-          // MESSAGE INPUT
-          // ==========================================
           Container(
             padding: const EdgeInsets.fromLTRB(16, 10, 16, 14),
             decoration: BoxDecoration(
@@ -472,10 +463,6 @@ class _AiContentState extends State<_AiContent> {
     );
   }
 }
-
-// ==================================================
-// CHAT MESSAGE BUBBLE
-// ==================================================
 
 class _ChatMessageBubble extends StatelessWidget {
   final ChatMessage message;
@@ -562,10 +549,6 @@ class _ChatMessageBubble extends StatelessWidget {
     );
   }
 }
-
-// ==================================================
-// RECIPE SOURCES
-// ==================================================
 
 class _RecipeSources extends StatelessWidget {
   final List<int> recipeIds;
@@ -699,10 +682,6 @@ class _RecipeSources extends StatelessWidget {
     );
   }
 }
-
-// ==================================================
-// TYPING BUBBLE
-// ==================================================
 
 class _TypingBubble extends StatelessWidget {
   const _TypingBubble();
