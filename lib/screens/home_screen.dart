@@ -1,31 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../controllers/subscription_controller.dart';
-import '../core/di/service_locator.dart';
-import '../features/recipe/presentation/cubit/recipe_cubit.dart';
-import '../features/recipe/presentation/cubit/recipe_state.dart';
+import '../data/dummy_recipes.dart';
 import '../widgets/recipe_card.dart';
 
 class HomeScreen extends StatelessWidget {
   final VoidCallback onSearchTap;
 
   const HomeScreen({super.key, required this.onSearchTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => sl<RecipeCubit>()..loadRecipes(),
-      child: _HomeContent(onSearchTap: onSearchTap),
-    );
-  }
-}
-
-class _HomeContent extends StatelessWidget {
-  final VoidCallback onSearchTap;
-
-  const _HomeContent({required this.onSearchTap});
 
   @override
   Widget build(BuildContext context) {
@@ -57,21 +40,15 @@ class _HomeContent extends StatelessWidget {
                   ),
                 ),
                 Container(
-                  width: 44,
-                  height: 44,
+                  width: 50,
+                  height: 50,
                   decoration: BoxDecoration(
                     color: colors.surface,
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(18),
                     border: Border.all(color: colors.outlineVariant),
                   ),
                   child: IconButton(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Belum ada notifikasi baru.'),
-                        ),
-                      );
-                    },
+                    onPressed: () {},
                     icon: Icon(
                       Icons.notifications_none_rounded,
                       color: colors.onSurfaceVariant,
@@ -81,43 +58,23 @@ class _HomeContent extends StatelessWidget {
               ],
             ),
 
-            const SizedBox(height: 28),
-
-            Text(
-              'Selamat datang 👋',
-              style: TextStyle(fontSize: 14, color: colors.onSurfaceVariant),
-            ),
-
-            const SizedBox(height: 4),
-
-            Text(
-              'Mau masak apa hari ini?',
-              style: TextStyle(
-                fontSize: 25,
-                fontWeight: FontWeight.w700,
-                color: colors.onSurface,
-              ),
-            ),
-
-            const SizedBox(height: 22),
+            const SizedBox(height: 20),
 
             InkWell(
               onTap: onSearchTap,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(18),
               child: Container(
-                height: 56,
+                height: 58,
                 padding: const EdgeInsets.symmetric(horizontal: 18),
                 decoration: BoxDecoration(
                   color: colors.surface,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(18),
                   border: Border.all(color: colors.outlineVariant),
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.search, color: colors.onSurfaceVariant),
-
+                    Icon(Icons.search_rounded, color: colors.onSurfaceVariant),
                     const SizedBox(width: 12),
-
                     Text(
                       'Cari resep...',
                       style: TextStyle(
@@ -137,19 +94,19 @@ class _HomeContent extends StatelessWidget {
               padding: const EdgeInsets.all(22),
               decoration: BoxDecoration(
                 color: colors.primaryContainer,
-                borderRadius: BorderRadius.circular(24),
+                borderRadius: BorderRadius.circular(28),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
-                    width: 45,
-                    height: 45,
+                    width: 54,
+                    height: 54,
                     decoration: BoxDecoration(
-                      color: colors.primary,
-                      borderRadius: BorderRadius.circular(14),
+                      color: colors.surface,
+                      borderRadius: BorderRadius.circular(16),
                     ),
-                    child: Icon(Icons.auto_awesome, color: colors.onPrimary),
+                    child: Icon(Icons.auto_awesome, color: colors.primary),
                   ),
 
                   const SizedBox(height: 18),
@@ -157,8 +114,9 @@ class _HomeContent extends StatelessWidget {
                   Text(
                     'Punya bahan di rumah?',
                     style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
+                      fontSize: 28,
+                      height: 1.15,
+                      fontWeight: FontWeight.w800,
                       color: colors.onPrimaryContainer,
                     ),
                   ),
@@ -168,7 +126,7 @@ class _HomeContent extends StatelessWidget {
                   Material(
                     color: Colors.transparent,
                     child: InkWell(
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(22),
                       onTap: () {
                         final isPremium =
                             SubscriptionController.instance.isPremium;
@@ -181,7 +139,7 @@ class _HomeContent extends StatelessWidget {
                             builder: (dialogContext) {
                               return AlertDialog(
                                 icon: Icon(
-                                  Icons.calendar_month,
+                                  Icons.calendar_month_rounded,
                                   size: 42,
                                   color: colors.primary,
                                 ),
@@ -201,7 +159,6 @@ class _HomeContent extends StatelessWidget {
                                   FilledButton(
                                     onPressed: () {
                                       Navigator.pop(dialogContext);
-
                                       context.push('/premium');
                                     },
                                     style: FilledButton.styleFrom(
@@ -220,30 +177,24 @@ class _HomeContent extends StatelessWidget {
                         padding: const EdgeInsets.all(18),
                         decoration: BoxDecoration(
                           color: colors.surface,
-                          borderRadius: BorderRadius.circular(20),
+                          borderRadius: BorderRadius.circular(22),
                           border: Border.all(color: colors.outlineVariant),
                         ),
                         child: Row(
                           children: [
-                            SizedBox(
-                              width: 48,
-                              height: 48,
-                              child: DecoratedBox(
-                                decoration: BoxDecoration(
-                                  color: colors.primaryContainer,
-                                  borderRadius: const BorderRadius.all(
-                                    Radius.circular(14),
-                                  ),
-                                ),
-                                child: Icon(
-                                  Icons.calendar_month_rounded,
-                                  color: colors.primary,
-                                ),
+                            Container(
+                              width: 52,
+                              height: 52,
+                              decoration: BoxDecoration(
+                                color: colors.primaryContainer,
+                                borderRadius: BorderRadius.circular(15),
+                              ),
+                              child: Icon(
+                                Icons.calendar_month_rounded,
+                                color: colors.primary,
                               ),
                             ),
-
                             const SizedBox(width: 14),
-
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -256,9 +207,7 @@ class _HomeContent extends StatelessWidget {
                                       color: colors.onSurface,
                                     ),
                                   ),
-
                                   const SizedBox(height: 4),
-
                                   Text(
                                     'Rencanakan menu untuk 7 hari',
                                     style: TextStyle(
@@ -269,9 +218,8 @@ class _HomeContent extends StatelessWidget {
                                 ],
                               ),
                             ),
-
                             Icon(
-                              Icons.arrow_forward_ios,
+                              Icons.arrow_forward_ios_rounded,
                               size: 15,
                               color: colors.onSurfaceVariant,
                             ),
@@ -281,14 +229,14 @@ class _HomeContent extends StatelessWidget {
                     ),
                   ),
 
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 16),
 
                   Text(
                     'Beritahu RacikAI bahan yang kamu punya dan temukan resep yang cocok untuk dibuat.',
                     style: TextStyle(
                       fontSize: 14,
                       height: 1.5,
-                      color: colors.onPrimaryContainer.withValues(alpha: 0.75),
+                      color: colors.onPrimaryContainer.withValues(alpha: 0.78),
                     ),
                   ),
 
@@ -301,11 +249,14 @@ class _HomeContent extends StatelessWidget {
                     icon: const Icon(Icons.auto_awesome, size: 18),
                     label: const Text('Cari dari Bahan'),
                     style: FilledButton.styleFrom(
-                      backgroundColor: colors.primary,
-                      foregroundColor: colors.onPrimary,
+                      backgroundColor: colors.surface,
+                      foregroundColor: colors.primary,
                       padding: const EdgeInsets.symmetric(
                         horizontal: 18,
                         vertical: 14,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
                       ),
                     ),
                   ),
@@ -315,25 +266,13 @@ class _HomeContent extends StatelessWidget {
 
             const SizedBox(height: 30),
 
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Kategori',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                    color: colors.onSurface,
-                  ),
-                ),
-                TextButton(
-                  onPressed: onSearchTap,
-                  child: const Text('Lihat Semua'),
-                ),
-              ],
+            _SectionHeader(
+              title: 'Kategori',
+              actionLabel: 'Lihat Semua',
+              onTap: onSearchTap,
             ),
 
-            const SizedBox(height: 12),
+            const SizedBox(height: 14),
 
             SizedBox(
               height: 92,
@@ -359,9 +298,7 @@ class _HomeContent extends StatelessWidget {
                           color: colors.primary,
                         ),
                       ),
-
                       const SizedBox(height: 7),
-
                       Text(
                         category['name'] as String,
                         style: TextStyle(
@@ -376,116 +313,88 @@ class _HomeContent extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: 28),
 
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Rekomendasi untukmu',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                    color: colors.onSurface,
-                  ),
-                ),
-                TextButton(
-                  onPressed: onSearchTap,
-                  child: const Text('Lihat Semua'),
-                ),
-              ],
+            _SectionHeader(
+              title: 'Rekomendasi untukmu',
+              actionLabel: 'Lihat Semua',
+              onTap: onSearchTap,
             ),
 
             const SizedBox(height: 14),
 
-            BlocBuilder<RecipeCubit, RecipeState>(
-              builder: (context, state) {
-                if (state is RecipeInitial || state is RecipeLoading) {
-                  return const SizedBox(
-                    height: 255,
-                    child: Center(child: CircularProgressIndicator()),
-                  );
-                }
-
-                if (state is RecipeError) {
-                  return SizedBox(
-                    height: 255,
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.error_outline_rounded,
-                            size: 42,
-                            color: colors.error,
-                          ),
-
-                          const SizedBox(height: 10),
-
-                          Text(
-                            'Gagal memuat resep',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w700,
-                              color: colors.onSurface,
-                            ),
-                          ),
-
-                          const SizedBox(height: 10),
-
-                          TextButton.icon(
-                            onPressed: () {
-                              context.read<RecipeCubit>().loadRecipes();
-                            },
-                            icon: const Icon(Icons.refresh_rounded),
-                            label: const Text('Coba Lagi'),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                }
-
-                if (state is RecipeLoaded) {
-                  final recommendations = state.recipes.take(3).toList();
-
-                  if (recommendations.isEmpty) {
-                    return SizedBox(
-                      height: 255,
-                      child: Center(
-                        child: Text(
-                          'Belum ada resep tersedia.',
-                          style: TextStyle(color: colors.onSurfaceVariant),
-                        ),
-                      ),
-                    );
-                  }
-
-                  return SizedBox(
-                    height: 255,
-                    child: ListView.separated(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: recommendations.length,
-                      separatorBuilder: (_, _) => const SizedBox(width: 16),
-                      itemBuilder: (context, index) {
-                        final recipe = recommendations[index];
-
-                        return RecipeCard(
-                          recipe: recipe,
-                          onTap: () {
-                            context.push('/recipe/${recipe.id}');
-                          },
-                        );
-                      },
-                    ),
-                  );
-                }
-
-                return const SizedBox.shrink();
-              },
+            SizedBox(
+              height: 255,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                children: [
+                  RecipeCard(
+                    recipe: dummyRecipes[0],
+                    onTap: () {
+                      context.push('/recipe/${dummyRecipes[0].id}');
+                    },
+                  ),
+                  const SizedBox(width: 16),
+                  RecipeCard(
+                    recipe: dummyRecipes[1],
+                    onTap: () {
+                      context.push('/recipe/${dummyRecipes[1].id}');
+                    },
+                  ),
+                  const SizedBox(width: 16),
+                  RecipeCard(
+                    recipe: dummyRecipes[2],
+                    onTap: () {
+                      context.push('/recipe/${dummyRecipes[2].id}');
+                    },
+                  ),
+                ],
+              ),
             ),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _SectionHeader extends StatelessWidget {
+  final String title;
+  final String actionLabel;
+  final VoidCallback onTap;
+
+  const _SectionHeader({
+    required this.title,
+    required this.actionLabel,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+            color: colors.onSurface,
+          ),
+        ),
+        TextButton(
+          onPressed: onTap,
+          child: Text(
+            actionLabel,
+            style: TextStyle(
+              color: colors.primary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
