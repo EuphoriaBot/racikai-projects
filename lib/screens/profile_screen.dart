@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../controllers/subscription_controller.dart';
 import '../controllers/theme_controller.dart';
 import '../controllers/usage_controller.dart';
-
-import 'package:go_router/go_router.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -18,7 +17,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String email = 'guest@racikai.app';
   String preference = 'Tidak ada';
 
-  Future<void> openEditProfile() async {
+  Future<void> _openEditProfile() async {
     final result = await context.push<Map<String, String>>(
       '/profile/edit',
       extra: {'name': name, 'email': email, 'preference': preference},
@@ -43,6 +42,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  void _showInfoMessage(String message) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
+  }
+
   @override
   Widget build(BuildContext context) {
     final subscription = SubscriptionController.instance;
@@ -53,108 +58,57 @@ class _ProfileScreenState extends State<ProfileScreen> {
       builder: (context, _) {
         return SafeArea(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Profile',
-                  style: TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.w800,
-                    color: colors.onSurface,
-                  ),
+                _AccountHeader(
+                  name: name,
+                  email: email,
+                  isPremium: subscription.isPremium,
+                  onEdit: _openEditProfile,
                 ),
 
-                const SizedBox(height: 28),
-
-                Center(
-                  child: Column(
-                    children: [
-                      CircleAvatar(
-                        radius: 45,
-                        backgroundColor: colors.primaryContainer,
-                        child: Icon(
-                          subscription.isPremium
-                              ? Icons.workspace_premium_rounded
-                              : Icons.person_rounded,
-                          size: 46,
-                          color: colors.primary,
-                        ),
-                      ),
-
-                      const SizedBox(height: 14),
-
-                      Text(
-                        name,
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w800,
-                          color: colors.onSurface,
-                        ),
-                      ),
-
-                      const SizedBox(height: 5),
-
-                      Text(
-                        email,
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: colors.onSurfaceVariant,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-
-                      Text(
-                        subscription.isPremium
-                            ? 'RacikAI Premium Member ✨'
-                            : 'Cook smarter with RacikAI ✨',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: subscription.isPremium
-                              ? colors.primary
-                              : colors.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 30),
+                const SizedBox(height: 18),
 
                 _PlanOverviewCard(subscription: subscription),
 
                 const SizedBox(height: 30),
 
-                Text(
-                  'Preferensi',
-                  style: TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w800,
-                    color: colors.onSurface,
-                  ),
-                ),
+                const _SectionTitle(title: 'Preferensi'),
+
+                const SizedBox(height: 12),
 
                 _ProfileMenuItem(
-                  icon: Icons.edit_outlined,
-                  title: 'Edit Profil',
+                  icon: Icons.restaurant_menu_rounded,
+                  title: 'Preferensi makanan',
                   trailingText: preference,
-                  onTap: openEditProfile,
+                  onTap: _openEditProfile,
                 ),
+
+                const SizedBox(height: 18),
+
+                const _SectionTitle(title: 'Pengaturan'),
 
                 const SizedBox(height: 12),
 
                 _ProfileMenuItem(
                   icon: Icons.notifications_none_rounded,
                   title: 'Notifikasi',
-                  onTap: () {},
+                  onTap: () {
+                    _showInfoMessage('Pengaturan notifikasi belum tersedia.');
+                  },
                 ),
 
                 _ProfileMenuItem(
                   icon: Icons.language_rounded,
                   title: 'Bahasa',
                   trailingText: 'Indonesia',
-                  onTap: () {},
+                  onTap: () {
+                    _showInfoMessage(
+                      'Saat ini RacikAI menggunakan Bahasa Indonesia.',
+                    );
+                  },
                 ),
 
                 _ProfileMenuItem(
@@ -166,16 +120,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   },
                 ),
 
-                const SizedBox(height: 26),
+                const SizedBox(height: 18),
 
-                Text(
-                  'Tentang',
-                  style: TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w800,
-                    color: colors.onSurface,
-                  ),
-                ),
+                const _SectionTitle(title: 'Tentang'),
 
                 const SizedBox(height: 12),
 
@@ -201,17 +148,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 _ProfileMenuItem(
                   icon: Icons.lock_outline_rounded,
                   title: 'Kebijakan Privasi',
-                  onTap: () {},
+                  onTap: () {
+                    _showInfoMessage(
+                      'Halaman kebijakan privasi belum tersedia.',
+                    );
+                  },
                 ),
 
-                const SizedBox(height: 28),
+                const SizedBox(height: 22),
 
                 Center(
                   child: Text(
                     'RacikAI v1.0.0',
                     style: TextStyle(
-                      fontSize: 12,
-                      color: colors.onSurfaceVariant,
+                      fontSize: 11,
+                      color: colors.onSurfaceVariant.withValues(alpha: 0.7),
                     ),
                   ),
                 ),
@@ -220,6 +171,168 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         );
       },
+    );
+  }
+}
+
+class _AccountHeader extends StatelessWidget {
+  final String name;
+  final String email;
+  final bool isPremium;
+  final VoidCallback onEdit;
+
+  const _AccountHeader({
+    required this.name,
+    required this.email,
+    required this.isPremium,
+    required this.onEdit,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: colors.outlineVariant),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 66,
+            height: 66,
+            decoration: BoxDecoration(
+              color: colors.primaryContainer,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              isPremium
+                  ? Icons.workspace_premium_rounded
+                  : Icons.person_rounded,
+              size: 34,
+              color: colors.primary,
+            ),
+          ),
+
+          const SizedBox(width: 14),
+
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    color: colors.onSurface,
+                  ),
+                ),
+
+                const SizedBox(height: 3),
+
+                Text(
+                  email,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: colors.onSurfaceVariant,
+                  ),
+                ),
+
+                const SizedBox(height: 8),
+
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isPremium
+                        ? colors.primaryContainer
+                        : colors.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        isPremium
+                            ? Icons.workspace_premium_rounded
+                            : Icons.person_outline_rounded,
+                        size: 14,
+                        color: isPremium
+                            ? colors.primary
+                            : colors.onSurfaceVariant,
+                      ),
+
+                      const SizedBox(width: 5),
+
+                      Text(
+                        isPremium ? 'Premium' : 'Free',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: isPremium
+                              ? colors.primary
+                              : colors.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(width: 10),
+
+          Material(
+            color: colors.primaryContainer,
+            borderRadius: BorderRadius.circular(14),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(14),
+              onTap: onEdit,
+              child: SizedBox(
+                width: 44,
+                height: 44,
+                child: Icon(
+                  Icons.edit_outlined,
+                  size: 20,
+                  color: colors.primary,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SectionTitle extends StatelessWidget {
+  final String title;
+
+  const _SectionTitle({required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return Text(
+      title,
+      style: TextStyle(
+        fontSize: 17,
+        fontWeight: FontWeight.w700,
+        color: colors.onSurface,
+      ),
     );
   }
 }
@@ -244,9 +357,9 @@ void _showThemePicker(BuildContext context) {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Pilih Tampilan',
+                    'Tampilan',
                     style: TextStyle(
-                      fontSize: 21,
+                      fontSize: 20,
                       fontWeight: FontWeight.w800,
                       color: colors.onSurface,
                     ),
@@ -255,8 +368,11 @@ void _showThemePicker(BuildContext context) {
                   const SizedBox(height: 6),
 
                   Text(
-                    'Sesuaikan tema RacikAI dengan kenyamananmu.',
-                    style: TextStyle(color: colors.onSurfaceVariant),
+                    'Pilih tema yang paling nyaman digunakan.',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: colors.onSurfaceVariant,
+                    ),
                   ),
 
                   const SizedBox(height: 22),
@@ -309,19 +425,38 @@ class _PlanOverviewCard extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: colors.primaryContainer,
+        color: colors.surface,
         borderRadius: BorderRadius.circular(22),
-        border: isPremium
-            ? Border.all(color: colors.primary, width: 1.5)
-            : null,
+        border: Border.all(
+          color: isPremium
+              ? colors.primary.withValues(alpha: 0.6)
+              : colors.outlineVariant,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
+              Container(
+                width: 46,
+                height: 46,
+                decoration: BoxDecoration(
+                  color: colors.primaryContainer,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(
+                  isPremium
+                      ? Icons.workspace_premium_rounded
+                      : Icons.auto_awesome_rounded,
+                  color: colors.primary,
+                ),
+              ),
+
+              const SizedBox(width: 12),
+
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -329,103 +464,104 @@ class _PlanOverviewCard extends StatelessWidget {
                     Text(
                       subscription.planName,
                       style: TextStyle(
-                        fontSize: 19,
+                        fontSize: 17,
                         fontWeight: FontWeight.w800,
-                        color: colors.onPrimaryContainer,
+                        color: colors.onSurface,
                       ),
                     ),
 
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 3),
 
                     Text(
                       isPremium
                           ? 'Paket ${subscription.planPeriod}'
-                          : 'Paket kamu saat ini',
+                          : 'Paket yang sedang digunakan',
                       style: TextStyle(
                         fontSize: 12,
-                        color: colors.onPrimaryContainer.withValues(
-                          alpha: 0.75,
-                        ),
+                        color: colors.onSurfaceVariant,
                       ),
                     ),
-
-                    if (!isPremium) ...[
-                      const SizedBox(height: 18),
-
-                      AnimatedBuilder(
-                        animation: UsageController.instance,
-                        builder: (context, _) {
-                          final usage = UsageController.instance.aiUsage;
-
-                          return Column(
-                            children: [
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    'Pertanyaan AI hari ini',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: colors.onPrimaryContainer
-                                          .withValues(alpha: 0.8),
-                                    ),
-                                  ),
-                                  Text(
-                                    '$usage / ${UsageController.freeAiLimit}',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w700,
-                                      color: colors.primary,
-                                    ),
-                                  ),
-                                ],
-                              ),
-
-                              const SizedBox(height: 8),
-
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(20),
-                                child: LinearProgressIndicator(
-                                  value: usage / UsageController.freeAiLimit,
-                                  minHeight: 7,
-                                  backgroundColor: colors.surface.withValues(
-                                    alpha: 0.65,
-                                  ),
-                                  color: colors.primary,
-                                ),
-                              ),
-                            ],
-                          );
-                        },
-                      ),
-                    ],
                   ],
                 ),
-              ),
-
-              Icon(
-                isPremium
-                    ? Icons.workspace_premium_rounded
-                    : Icons.auto_awesome,
-                color: colors.primary,
               ),
             ],
           ),
 
-          const SizedBox(height: 20),
+          if (!isPremium) ...[
+            const SizedBox(height: 18),
+
+            AnimatedBuilder(
+              animation: UsageController.instance,
+              builder: (context, _) {
+                final usage = UsageController.instance.aiUsage;
+
+                final progress = (usage / UsageController.freeAiLimit)
+                    .clamp(0.0, 1.0)
+                    .toDouble();
+
+                return Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: colors.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              'Penggunaan AI hari ini',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: colors.onSurfaceVariant,
+                              ),
+                            ),
+                          ),
+
+                          Text(
+                            '$usage / ${UsageController.freeAiLimit}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: colors.primary,
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 10),
+
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(20),
+                        child: LinearProgressIndicator(
+                          value: progress,
+                          minHeight: 6,
+                          backgroundColor: colors.surface,
+                          color: colors.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ],
+
+          const SizedBox(height: 18),
 
           _PlanFeatureRow(
-            icon: Icons.auto_awesome,
+            icon: Icons.auto_awesome_rounded,
             text: isPremium
                 ? 'Pertanyaan AI tanpa batas'
-                : '5 pertanyaan AI per hari',
+                : '${UsageController.freeAiLimit} pertanyaan AI per hari',
           ),
 
-          const SizedBox(height: 10),
+          const SizedBox(height: 11),
 
           _PlanFeatureRow(
-            icon: Icons.favorite_outline,
+            icon: Icons.favorite_border_rounded,
             text: isPremium
                 ? 'Simpan resep tanpa batas'
                 : 'Maksimal 10 resep favorit',
@@ -443,8 +579,6 @@ class _PlanOverviewCard extends StatelessWidget {
                 icon: const Icon(Icons.workspace_premium_rounded),
                 label: const Text('Upgrade ke Premium'),
                 style: FilledButton.styleFrom(
-                  backgroundColor: colors.primary,
-                  foregroundColor: colors.onPrimary,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14),
@@ -459,14 +593,20 @@ class _PlanOverviewCard extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 11, horizontal: 14),
               decoration: BoxDecoration(
-                color: colors.surface.withValues(alpha: 0.7),
-                borderRadius: BorderRadius.circular(13),
+                color: colors.primaryContainer,
+                borderRadius: BorderRadius.circular(14),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.check_circle, size: 18, color: colors.primary),
+                  Icon(
+                    Icons.check_circle_rounded,
+                    size: 18,
+                    color: colors.primary,
+                  ),
+
                   const SizedBox(width: 7),
+
                   Text(
                     'Premium aktif',
                     style: TextStyle(
@@ -496,16 +636,24 @@ class _PlanFeatureRow extends StatelessWidget {
 
     return Row(
       children: [
-        Icon(icon, size: 18, color: colors.primary),
+        Container(
+          width: 34,
+          height: 34,
+          decoration: BoxDecoration(
+            color: colors.primaryContainer,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(icon, size: 17, color: colors.primary),
+        ),
 
-        const SizedBox(width: 9),
+        const SizedBox(width: 10),
 
         Expanded(
           child: Text(
             text,
             style: TextStyle(
               fontSize: 13,
-              color: colors.onPrimaryContainer,
+              color: colors.onSurface,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -535,15 +683,15 @@ class _ProfileMenuItem extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: Material(
-        color: Colors.transparent,
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(18),
+        clipBehavior: Clip.antiAlias,
         child: InkWell(
-          borderRadius: BorderRadius.circular(16),
           onTap: onTap,
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
             decoration: BoxDecoration(
-              color: colors.surface,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(18),
               border: Border.all(color: colors.outlineVariant),
             ),
             child: Row(
@@ -572,13 +720,18 @@ class _ProfileMenuItem extends StatelessWidget {
                 ),
 
                 if (trailingText != null) ...[
-                  Text(
-                    trailingText!,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: colors.onSurfaceVariant,
+                  Flexible(
+                    child: Text(
+                      trailingText!,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: colors.onSurfaceVariant,
+                      ),
                     ),
                   ),
+
                   const SizedBox(width: 8),
                 ],
 

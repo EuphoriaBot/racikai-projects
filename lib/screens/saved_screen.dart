@@ -15,7 +15,7 @@ class SavedScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => sl<RecipeCubit>()..loadRecipes(),
+      create: (_) => sl<RecipeCubit>()..loadRecipes(),
       child: const _SavedContent(),
     );
   }
@@ -26,63 +26,30 @@ class _SavedContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
+    final backgroundColor = Theme.of(context).scaffoldBackgroundColor;
 
-    return SafeArea(
-      child: BlocBuilder<RecipeCubit, RecipeState>(
-        builder: (context, recipeState) {
-          if (recipeState is RecipeInitial || recipeState is RecipeLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
+    return Scaffold(
+      backgroundColor: backgroundColor,
+      body: SafeArea(
+        child: BlocBuilder<RecipeCubit, RecipeState>(
+          builder: (context, recipeState) {
+            if (recipeState is RecipeInitial || recipeState is RecipeLoading) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-          if (recipeState is RecipeError) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(32),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.error_outline_rounded,
-                      size: 64,
-                      color: colors.error,
-                    ),
+            if (recipeState is RecipeError) {
+              return _SavedError(
+                message: recipeState.message,
+                onRetry: () {
+                  context.read<RecipeCubit>().loadRecipes();
+                },
+              );
+            }
 
-                    const SizedBox(height: 16),
+            if (recipeState is! RecipeLoaded) {
+              return const SizedBox.shrink();
+            }
 
-                    Text(
-                      'Gagal Memuat Resep',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        color: colors.onSurface,
-                      ),
-                    ),
-
-                    const SizedBox(height: 8),
-
-                    Text(
-                      recipeState.message,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: colors.onSurfaceVariant),
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    FilledButton.icon(
-                      onPressed: () {
-                        context.read<RecipeCubit>().loadRecipes();
-                      },
-                      icon: const Icon(Icons.refresh_rounded),
-                      label: const Text('Coba Lagi'),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }
-
-          if (recipeState is RecipeLoaded) {
             return BlocBuilder<FavoriteCubit, FavoriteState>(
               builder: (context, favoriteState) {
                 final favorites = recipeState.recipes
@@ -91,64 +58,59 @@ class _SavedContent extends StatelessWidget {
                     )
                     .toList();
 
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Resep Tersimpan',
-                            style: TextStyle(
-                              fontSize: 26,
-                              fontWeight: FontWeight.w800,
-                              color: colors.onSurface,
-                            ),
-                          ),
+                if (favorites.isEmpty) {
+                  return const _EmptySavedState();
+                }
 
-                          const SizedBox(height: 6),
-
-                          Text(
-                            favorites.isEmpty
-                                ? 'Belum ada resep yang disimpan.'
-                                : '${favorites.length} resep tersimpan',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: colors.onSurfaceVariant,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 22),
-
-                    Expanded(
-                      child: favorites.isEmpty
-                          ? const _EmptySaved()
-                          : ListView.separated(
-                              padding: const EdgeInsets.fromLTRB(20, 0, 20, 30),
-                              itemCount: favorites.length,
-                              separatorBuilder: (_, _) =>
-                                  const SizedBox(height: 14),
-                              itemBuilder: (context, index) {
-                                return _SavedRecipeCard(
-                                  recipe: favorites[index],
-                                );
-                              },
-                            ),
-                    ),
-                  ],
-                );
+                return _SavedRecipeList(recipes: favorites);
               },
             );
-          }
-
-          return const SizedBox.shrink();
-        },
+          },
+        ),
       ),
+    );
+  }
+}
+
+class _SavedRecipeList extends StatelessWidget {
+  final List<RecipeEntity> recipes;
+
+  const _SavedRecipeList({required this.recipes});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return ListView.separated(
+      padding: const EdgeInsets.fromLTRB(20, 18, 20, 32),
+      itemCount: recipes.length + 1,
+      separatorBuilder: (_, index) {
+        if (index == 0) {
+          return const SizedBox(height: 16);
+        }
+
+        return const SizedBox(height: 12);
+      },
+      itemBuilder: (context, index) {
+        if (index == 0) {
+          return Row(
+            children: [
+              Text(
+                '${recipes.length} resep tersimpan',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: colors.onSurfaceVariant,
+                ),
+              ),
+            ],
+          );
+        }
+
+        final recipe = recipes[index - 1];
+
+        return _SavedRecipeCard(recipe: recipe);
+      },
     );
   }
 }
@@ -163,112 +125,94 @@ class _SavedRecipeCard extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
 
     return Material(
-      color: Colors.transparent,
+      color: colors.surface,
+      borderRadius: BorderRadius.circular(22),
+      clipBehavior: Clip.antiAlias,
       child: InkWell(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(22),
         onTap: () {
           context.push('/recipe/${recipe.id}');
         },
         child: Container(
-          height: 120,
+          padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: colors.surface,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(22),
             border: Border.all(color: colors.outlineVariant),
           ),
           child: Row(
             children: [
               Container(
-                width: 115,
-                height: double.infinity,
+                width: 86,
+                height: 86,
+                alignment: Alignment.center,
                 decoration: BoxDecoration(
                   color: colors.primaryContainer,
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(20),
-                    bottomLeft: Radius.circular(20),
-                  ),
+                  borderRadius: BorderRadius.circular(18),
                 ),
-                alignment: Alignment.center,
-                child: Text(recipe.emoji, style: const TextStyle(fontSize: 48)),
+                child: Text(recipe.emoji, style: const TextStyle(fontSize: 42)),
               ),
 
+              const SizedBox(width: 14),
+
               Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(14),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              recipe.title,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
-                                color: colors.onSurface,
-                              ),
-                            ),
-                          ),
-
-                          IconButton(
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
-                            onPressed: () {
-                              context.read<FavoriteCubit>().toggleFavorite(
-                                recipe.id,
-                              );
-                            },
-                            icon: Icon(
-                              Icons.favorite,
-                              size: 21,
-                              color: colors.primary,
-                            ),
-                          ),
-                        ],
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      recipe.title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 16,
+                        height: 1.25,
+                        fontWeight: FontWeight.w700,
+                        color: colors.onSurface,
                       ),
+                    ),
 
-                      const SizedBox(height: 7),
+                    const SizedBox(height: 6),
 
-                      Text(
-                        recipe.category,
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: colors.onSurfaceVariant,
+                    Text(
+                      recipe.category,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: colors.onSurfaceVariant,
+                      ),
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.schedule_rounded,
+                          size: 17,
+                          color: colors.primary,
                         ),
-                      ),
-
-                      const Spacer(),
-
-                      Row(
-                        children: [
-                          Icon(Icons.schedule, size: 16, color: colors.primary),
-
-                          const SizedBox(width: 5),
-
-                          Text(
-                            recipe.duration,
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                              color: colors.onSurface,
-                            ),
-                          ),
-
-                          const Spacer(),
-
-                          Icon(
-                            Icons.arrow_forward_ios,
-                            size: 14,
+                        const SizedBox(width: 6),
+                        Text(
+                          recipe.duration,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
                             color: colors.onSurfaceVariant,
                           ),
-                        ],
-                      ),
-                    ],
-                  ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
+              ),
+
+              const SizedBox(width: 8),
+              IconButton(
+                tooltip: 'Hapus dari tersimpan',
+                onPressed: () {
+                  context.read<FavoriteCubit>().toggleFavorite(recipe.id);
+                },
+                icon: Icon(Icons.favorite_rounded, color: colors.primary),
               ),
             ],
           ),
@@ -278,8 +222,80 @@ class _SavedRecipeCard extends StatelessWidget {
   }
 }
 
-class _EmptySaved extends StatelessWidget {
-  const _EmptySaved();
+class _EmptySavedState extends StatelessWidget {
+  const _EmptySavedState();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(36, 40, 36, 120),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 104,
+              height: 104,
+              decoration: BoxDecoration(
+                color: colors.surfaceContainerHighest,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.favorite_border_rounded,
+                size: 48,
+                color: colors.onSurfaceVariant,
+              ),
+            ),
+
+            const SizedBox(height: 26),
+
+            Text(
+              'Belum ada yang disimpan',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: colors.onSurface,
+              ),
+            ),
+
+            const SizedBox(height: 10),
+
+            Text(
+              'Simpan resep yang ingin kamu coba nanti.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                height: 1.5,
+                color: colors.onSurfaceVariant,
+              ),
+            ),
+
+            const SizedBox(height: 6),
+
+            Text(
+              'Ketuk ikon hati pada resep untuk menyimpannya di sini.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 13,
+                height: 1.5,
+                color: colors.onSurfaceVariant.withValues(alpha: 0.75),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SavedError extends StatelessWidget {
+  final String message;
+  final VoidCallback onRetry;
+
+  const _SavedError({required this.message, required this.onRetry});
 
   @override
   Widget build(BuildContext context) {
@@ -291,18 +307,15 @@ class _EmptySaved extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.favorite_border_rounded,
-              size: 70,
-              color: colors.onSurfaceVariant.withValues(alpha: 0.55),
-            ),
+            Icon(Icons.error_outline_rounded, size: 56, color: colors.error),
 
-            const SizedBox(height: 18),
+            const SizedBox(height: 16),
 
             Text(
-              'Belum ada resep favorit',
+              'Resep tersimpan gagal dimuat',
+              textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 19,
+                fontSize: 18,
                 fontWeight: FontWeight.w700,
                 color: colors.onSurface,
               ),
@@ -311,14 +324,17 @@ class _EmptySaved extends StatelessWidget {
             const SizedBox(height: 8),
 
             Text(
-              'Tekan ikon hati pada resep yang kamu suka '
-              'dan resep akan muncul di sini.',
+              message,
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                height: 1.5,
-                color: colors.onSurfaceVariant,
-              ),
+              style: TextStyle(color: colors.onSurfaceVariant),
+            ),
+
+            const SizedBox(height: 20),
+
+            FilledButton.icon(
+              onPressed: onRetry,
+              icon: const Icon(Icons.refresh_rounded),
+              label: const Text('Coba lagi'),
             ),
           ],
         ),
