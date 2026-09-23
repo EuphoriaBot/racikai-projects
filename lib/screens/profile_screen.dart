@@ -58,7 +58,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       builder: (context, _) {
         return SafeArea(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -75,94 +75,105 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                 const SizedBox(height: 30),
 
-                const _SectionTitle(title: 'Preferensi'),
+                const _SectionTitle(title: 'Personalisasi'),
 
-                const SizedBox(height: 12),
+                const SizedBox(height: 10),
 
-                _ProfileMenuItem(
-                  icon: Icons.restaurant_menu_rounded,
-                  title: 'Preferensi makanan',
-                  trailingText: preference,
-                  onTap: _openEditProfile,
+                _SettingsGroup(
+                  children: [
+                    _SettingsItem(
+                      icon: Icons.restaurant_menu_rounded,
+                      title: 'Preferensi makanan',
+                      trailingText: preference,
+                      onTap: _openEditProfile,
+                    ),
+                    _SettingsItem(
+                      icon: Icons.palette_outlined,
+                      title: 'Tampilan',
+                      trailingText: ThemeController.instance.modeLabel,
+                      onTap: () {
+                        _showThemePicker(context);
+                      },
+                    ),
+                    _SettingsItem(
+                      icon: Icons.language_rounded,
+                      title: 'Bahasa',
+                      trailingText: 'Indonesia',
+                      onTap: () {
+                        _showInfoMessage(
+                          'Saat ini RacikAI menggunakan Bahasa Indonesia.',
+                        );
+                      },
+                    ),
+                  ],
                 ),
 
-                const SizedBox(height: 18),
+                const SizedBox(height: 26),
 
                 const _SectionTitle(title: 'Pengaturan'),
 
-                const SizedBox(height: 12),
+                const SizedBox(height: 10),
 
-                _ProfileMenuItem(
-                  icon: Icons.notifications_none_rounded,
-                  title: 'Notifikasi',
-                  onTap: () {
-                    _showInfoMessage('Pengaturan notifikasi belum tersedia.');
-                  },
+                _SettingsGroup(
+                  children: [
+                    _SettingsItem(
+                      icon: Icons.notifications_none_rounded,
+                      title: 'Notifikasi',
+                      onTap: () {
+                        _showInfoMessage(
+                          'Pengaturan notifikasi belum tersedia.',
+                        );
+                      },
+                    ),
+                  ],
                 ),
 
-                _ProfileMenuItem(
-                  icon: Icons.language_rounded,
-                  title: 'Bahasa',
-                  trailingText: 'Indonesia',
-                  onTap: () {
-                    _showInfoMessage(
-                      'Saat ini RacikAI menggunakan Bahasa Indonesia.',
-                    );
-                  },
+                const SizedBox(height: 26),
+
+                const _SectionTitle(title: 'Informasi'),
+
+                const SizedBox(height: 10),
+
+                _SettingsGroup(
+                  children: [
+                    _SettingsItem(
+                      icon: Icons.info_outline_rounded,
+                      title: 'Tentang RacikAI',
+                      onTap: () {
+                        showAboutDialog(
+                          context: context,
+                          applicationName: 'RacikAI',
+                          applicationVersion: '1.0.0',
+                          children: const [
+                            Text(
+                              'RacikAI membantu pengguna menemukan resep '
+                              'berdasarkan bahan yang dimiliki dan mendapatkan '
+                              'rekomendasi resep dengan bantuan AI.',
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                    _SettingsItem(
+                      icon: Icons.lock_outline_rounded,
+                      title: 'Kebijakan Privasi',
+                      onTap: () {
+                        _showInfoMessage(
+                          'Halaman kebijakan privasi belum tersedia.',
+                        );
+                      },
+                    ),
+                  ],
                 ),
 
-                _ProfileMenuItem(
-                  icon: Icons.palette_outlined,
-                  title: 'Tampilan',
-                  trailingText: ThemeController.instance.modeLabel,
-                  onTap: () {
-                    _showThemePicker(context);
-                  },
-                ),
-
-                const SizedBox(height: 18),
-
-                const _SectionTitle(title: 'Tentang'),
-
-                const SizedBox(height: 12),
-
-                _ProfileMenuItem(
-                  icon: Icons.info_outline_rounded,
-                  title: 'Tentang RacikAI',
-                  onTap: () {
-                    showAboutDialog(
-                      context: context,
-                      applicationName: 'RacikAI',
-                      applicationVersion: '1.0.0',
-                      children: const [
-                        Text(
-                          'RacikAI membantu pengguna menemukan resep '
-                          'berdasarkan bahan yang dimiliki dan mendapatkan '
-                          'rekomendasi resep dengan bantuan AI.',
-                        ),
-                      ],
-                    );
-                  },
-                ),
-
-                _ProfileMenuItem(
-                  icon: Icons.lock_outline_rounded,
-                  title: 'Kebijakan Privasi',
-                  onTap: () {
-                    _showInfoMessage(
-                      'Halaman kebijakan privasi belum tersedia.',
-                    );
-                  },
-                ),
-
-                const SizedBox(height: 22),
+                const SizedBox(height: 26),
 
                 Center(
                   child: Text(
                     'RacikAI v1.0.0',
                     style: TextStyle(
                       fontSize: 11,
-                      color: colors.onSurfaceVariant.withValues(alpha: 0.7),
+                      color: colors.onSurfaceVariant.withValues(alpha: 0.65),
                     ),
                   ),
                 ),
@@ -326,12 +337,128 @@ class _SectionTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
 
-    return Text(
-      title,
-      style: TextStyle(
-        fontSize: 17,
-        fontWeight: FontWeight.w700,
-        color: colors.onSurface,
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Text(
+        title,
+        style: TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w700,
+          color: colors.onSurfaceVariant,
+        ),
+      ),
+    );
+  }
+}
+
+class _SettingsGroup extends StatelessWidget {
+  final List<Widget> children;
+
+  const _SettingsGroup({required this.children});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: colors.outlineVariant),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (int i = 0; i < children.length; i++) ...[
+            children[i],
+
+            if (i != children.length - 1)
+              Padding(
+                padding: const EdgeInsets.only(left: 53, right: 16),
+                child: Divider(
+                  height: 1,
+                  thickness: 1,
+                  color: colors.outlineVariant.withValues(alpha: 0.65),
+                ),
+              ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _SettingsItem extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String? trailingText;
+  final VoidCallback onTap;
+
+  const _SettingsItem({
+    required this.icon,
+    required this.title,
+    required this.onTap,
+    this.trailingText,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          child: Row(
+            children: [
+              SizedBox(
+                width: 22,
+                child: Icon(icon, size: 21, color: colors.primary),
+              ),
+
+              const SizedBox(width: 15),
+
+              Expanded(
+                child: Text(
+                  title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: colors.onSurface,
+                  ),
+                ),
+              ),
+
+              if (trailingText != null) ...[
+                const SizedBox(width: 12),
+
+                Text(
+                  trailingText!,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: colors.onSurfaceVariant,
+                  ),
+                ),
+              ],
+
+              const SizedBox(width: 8),
+
+              Icon(
+                Icons.chevron_right_rounded,
+                size: 21,
+                color: colors.onSurfaceVariant.withValues(alpha: 0.7),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -659,92 +786,6 @@ class _PlanFeatureRow extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _ProfileMenuItem extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String? trailingText;
-  final VoidCallback onTap;
-
-  const _ProfileMenuItem({
-    required this.icon,
-    required this.title,
-    required this.onTap,
-    this.trailingText,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: Material(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(18),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: onTap,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: colors.outlineVariant),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: colors.primaryContainer,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(icon, size: 20, color: colors.primary),
-                ),
-
-                const SizedBox(width: 13),
-
-                Expanded(
-                  child: Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: colors.onSurface,
-                    ),
-                  ),
-                ),
-
-                if (trailingText != null) ...[
-                  Flexible(
-                    child: Text(
-                      trailingText!,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: colors.onSurfaceVariant,
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(width: 8),
-                ],
-
-                Icon(
-                  Icons.arrow_forward_ios_rounded,
-                  size: 14,
-                  color: colors.onSurfaceVariant,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
     );
   }
 }
