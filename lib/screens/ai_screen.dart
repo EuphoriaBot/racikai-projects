@@ -9,6 +9,7 @@ import '../features/recipe/domain/entities/recipe_entity.dart';
 import '../features/recipe/presentation/cubit/recipe_cubit.dart';
 import '../features/recipe/presentation/cubit/recipe_state.dart';
 import '../models/chat_message.dart';
+import '../services/ai_service.dart';
 
 class AiScreen extends StatelessWidget {
   const AiScreen({super.key});
@@ -31,8 +32,8 @@ class _AiContent extends StatefulWidget {
 
 class _AiContentState extends State<_AiContent> {
   final TextEditingController messageController = TextEditingController();
-
   final ScrollController scrollController = ScrollController();
+  final AiService aiService = AiService();
 
   bool isTyping = false;
 
@@ -55,6 +56,7 @@ class _AiContentState extends State<_AiContent> {
   void dispose() {
     messageController.dispose();
     scrollController.dispose();
+    aiService.dispose();
 
     super.dispose();
   }
@@ -80,24 +82,43 @@ class _AiContentState extends State<_AiContent> {
       isTyping = true;
     });
 
-    usage.recordAiQuestion();
-
     scrollToBottom();
 
-    await Future.delayed(const Duration(milliseconds: 900));
+    try {
+      final response = await aiService.ask(question);
 
-    if (!mounted) {
-      return;
+      if (!mounted) {
+        return;
+      }
+
+      // Pertanyaan baru dihitung setelah backend berhasil merespons.
+      usage.recordAiQuestion();
+
+      setState(() {
+        messages.add(response);
+      });
+    } on AiServiceException catch (error) {
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        messages.add(
+          ChatMessage(role: ChatRole.assistant, text: error.message),
+        );
+
+        // Supaya pertanyaan mudah dikirim ulang kalau backend bermasalah.
+        messageController.text = question;
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          isTyping = false;
+        });
+
+        scrollToBottom();
+      }
     }
-
-    final response = generateDummyResponse(question);
-
-    setState(() {
-      messages.add(response);
-      isTyping = false;
-    });
-
-    scrollToBottom();
   }
 
   void showAiLimitDialog() {
@@ -128,7 +149,6 @@ class _AiContentState extends State<_AiContent> {
             FilledButton(
               onPressed: () {
                 Navigator.pop(dialogContext);
-
                 context.push('/premium');
               },
               style: FilledButton.styleFrom(
@@ -140,104 +160,6 @@ class _AiContentState extends State<_AiContent> {
           ],
         );
       },
-    );
-  }
-
-  ChatMessage generateDummyResponse(String question) {
-    final text = question.toLowerCase();
-
-    if (text.contains('ayam') ||
-        text.contains('chicken') ||
-        text.contains('kecap')) {
-      return const ChatMessage(
-        role: ChatRole.assistant,
-        text:
-            'Dari bahan yang kamu sebutkan, kamu bisa mencoba '
-            'Garlic Soy Chicken 🍗.\n\n'
-            'Resep ini menggunakan ayam, bawang putih, kecap, minyak, '
-            'dan sedikit garam. Proses memasaknya juga cukup sederhana '
-            'dan cocok untuk menu sehari-hari.',
-        sourceRecipeIds: [1, 6],
-      );
-    }
-
-    if (text.contains('nasi') || text.contains('rice')) {
-      return const ChatMessage(
-        role: ChatRole.assistant,
-        text:
-            'Kalau kamu punya nasi, salah satu pilihan paling sederhana '
-            'adalah Nasi Goreng Spesial 🍚.\n\n'
-            'Kamu bisa mengombinasikannya dengan telur, bawang putih, '
-            'dan kecap.',
-        sourceRecipeIds: [2, 8],
-      );
-    }
-
-    if (text.contains('pasta')) {
-      return const ChatMessage(
-        role: ChatRole.assistant,
-        text:
-            'Kamu bisa mencoba Creamy Chicken Pasta 🍝. '
-            'Resep ini cocok kalau kamu punya pasta, ayam, susu, '
-            'bawang putih, dan keju.',
-        sourceRecipeIds: [3],
-      );
-    }
-
-    if (text.contains('daging') || text.contains('beef')) {
-      return const ChatMessage(
-        role: ChatRole.assistant,
-        text:
-            'Untuk bahan daging sapi, Beef Teriyaki bisa menjadi '
-            'pilihan yang praktis 🥩. Rasanya manis dan gurih serta '
-            'proses memasaknya cukup sederhana.',
-        sourceRecipeIds: [4],
-      );
-    }
-
-    if (text.contains('sayur') ||
-        text.contains('wortel') ||
-        text.contains('brokoli')) {
-      return const ChatMessage(
-        role: ChatRole.assistant,
-        text:
-            'Kamu bisa membuat Vegetable Stir Fry 🥬. '
-            'Cukup gunakan beberapa sayuran yang tersedia lalu tumis '
-            'bersama bawang putih dan sedikit saus.',
-        sourceRecipeIds: [5],
-      );
-    }
-
-    if (text.contains('telur')) {
-      return const ChatMessage(
-        role: ChatRole.assistant,
-        text:
-            'Telur bisa digunakan untuk banyak menu sederhana. '
-            'Dari resep yang tersedia, kamu bisa mencoba '
-            'Nasi Goreng Spesial atau Beef Fried Rice.',
-        sourceRecipeIds: [2, 8],
-      );
-    }
-
-    if (text.contains('dessert') ||
-        text.contains('cokelat') ||
-        text.contains('pancake')) {
-      return const ChatMessage(
-        role: ChatRole.assistant,
-        text:
-            'Kalau ingin sesuatu yang manis, coba Chocolate Pancake 🥞. '
-            'Bahannya sederhana seperti tepung, telur, susu, '
-            'cokelat bubuk, dan gula.',
-        sourceRecipeIds: [7],
-      );
-    }
-
-    return const ChatMessage(
-      role: ChatRole.assistant,
-      text:
-          'Aku belum menemukan kecocokan yang sangat spesifik dari '
-          'pertanyaan itu. Coba sebutkan bahan utama yang kamu punya, '
-          'misalnya ayam, nasi, telur, pasta, daging, atau sayuran.',
     );
   }
 
@@ -262,6 +184,9 @@ class _AiContentState extends State<_AiContent> {
     return SafeArea(
       child: Column(
         children: [
+          // ==========================================
+          // HEADER AI
+          // ==========================================
           Container(
             padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
             decoration: BoxDecoration(
@@ -278,9 +203,7 @@ class _AiContentState extends State<_AiContent> {
                   ),
                   child: Icon(Icons.auto_awesome, color: colors.primary),
                 ),
-
                 const SizedBox(width: 12),
-
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -293,9 +216,7 @@ class _AiContentState extends State<_AiContent> {
                           color: colors.onSurface,
                         ),
                       ),
-
                       const SizedBox(height: 2),
-
                       AnimatedBuilder(
                         animation: UsageController.instance,
                         builder: (context, _) {
@@ -332,6 +253,9 @@ class _AiContentState extends State<_AiContent> {
             ),
           ),
 
+          // ==========================================
+          // CHAT
+          // ==========================================
           Expanded(
             child: ListView(
               controller: scrollController,
@@ -343,7 +267,6 @@ class _AiContentState extends State<_AiContent> {
 
                 if (messages.length == 1) ...[
                   const SizedBox(height: 12),
-
                   Text(
                     'Coba tanyakan',
                     style: TextStyle(
@@ -352,9 +275,7 @@ class _AiContentState extends State<_AiContent> {
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-
                   const SizedBox(height: 10),
-
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
@@ -387,6 +308,9 @@ class _AiContentState extends State<_AiContent> {
             ),
           ),
 
+          // ==========================================
+          // INPUT
+          // ==========================================
           Container(
             padding: const EdgeInsets.fromLTRB(16, 10, 16, 14),
             decoration: BoxDecoration(
@@ -428,9 +352,7 @@ class _AiContentState extends State<_AiContent> {
                     ),
                   ),
                 ),
-
                 const SizedBox(width: 10),
-
                 Container(
                   width: 50,
                   height: 50,
@@ -464,6 +386,10 @@ class _AiContentState extends State<_AiContent> {
   }
 }
 
+// ==================================================
+// CHAT MESSAGE
+// ==================================================
+
 class _ChatMessageBubble extends StatelessWidget {
   final ChatMessage message;
 
@@ -472,7 +398,6 @@ class _ChatMessageBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isUser = message.role == ChatRole.user;
-
     final colors = Theme.of(context).colorScheme;
 
     return Padding(
@@ -502,10 +427,8 @@ class _ChatMessageBubble extends StatelessWidget {
                     color: colors.primary,
                   ),
                 ),
-
                 const SizedBox(width: 8),
               ],
-
               Flexible(
                 child: Container(
                   padding: const EdgeInsets.all(14),
@@ -536,9 +459,17 @@ class _ChatMessageBubble extends StatelessWidget {
             ],
           ),
 
-          if (message.sourceRecipeIds.isNotEmpty) ...[
+          // Backend baru mengembalikan List<AiRecipe>.
+          if (message.recipes.isNotEmpty) ...[
             const SizedBox(height: 10),
-
+            Padding(
+              padding: const EdgeInsets.only(left: 40),
+              child: _AiRecipeSources(recipes: message.recipes),
+            ),
+          ]
+          // Fallback untuk struktur lama / dummy lokal.
+          else if (message.sourceRecipeIds.isNotEmpty) ...[
+            const SizedBox(height: 10),
             Padding(
               padding: const EdgeInsets.only(left: 40),
               child: _RecipeSources(recipeIds: message.sourceRecipeIds),
@@ -549,6 +480,245 @@ class _ChatMessageBubble extends StatelessWidget {
     );
   }
 }
+
+// ==================================================
+// RESEP DARI BACKEND AI
+// ==================================================
+
+class _AiRecipeSources extends StatelessWidget {
+  final List<AiRecipe> recipes;
+
+  const _AiRecipeSources({required this.recipes});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(Icons.auto_awesome, size: 15, color: colors.onSurfaceVariant),
+            const SizedBox(width: 5),
+            Text(
+              'Resep yang ditemukan',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: colors.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+
+        ...recipes.map((recipe) {
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(14),
+                onTap: () {
+                  _showAiRecipeDetail(context, recipe);
+                },
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(13),
+                  decoration: BoxDecoration(
+                    color: colors.primaryContainer,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 42,
+                        height: 42,
+                        decoration: BoxDecoration(
+                          color: colors.surface,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(
+                          Icons.restaurant_menu_rounded,
+                          color: colors.primary,
+                        ),
+                      ),
+                      const SizedBox(width: 11),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              recipe.title,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: colors.onPrimaryContainer,
+                              ),
+                            ),
+                            const SizedBox(height: 3),
+                            Text(
+                              'Lihat bahan dan langkah',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: colors.onPrimaryContainer.withValues(
+                                  alpha: 0.75,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(
+                        Icons.arrow_forward_ios_rounded,
+                        size: 13,
+                        color: colors.onPrimaryContainer.withValues(
+                          alpha: 0.65,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        }),
+      ],
+    );
+  }
+}
+
+// ==================================================
+// DETAIL SEDERHANA RESEP DARI BACKEND
+// ==================================================
+
+void _showAiRecipeDetail(BuildContext context, AiRecipe recipe) {
+  showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    showDragHandle: true,
+    builder: (sheetContext) {
+      final colors = Theme.of(sheetContext).colorScheme;
+
+      return FractionallySizedBox(
+        heightFactor: 0.82,
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(20, 4, 20, 28),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  recipe.title,
+                  style: TextStyle(
+                    fontSize: 24,
+                    height: 1.2,
+                    fontWeight: FontWeight.w800,
+                    color: colors.onSurface,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Rekomendasi RacikAI',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: colors.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 28),
+
+                _AiRecipeSection(
+                  icon: Icons.restaurant_menu_rounded,
+                  title: 'Bahan',
+                  content: recipe.ingredients,
+                ),
+
+                const SizedBox(height: 28),
+
+                _AiRecipeSection(
+                  icon: Icons.format_list_numbered_rounded,
+                  title: 'Langkah Memasak',
+                  content: recipe.instructions,
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    },
+  );
+}
+
+class _AiRecipeSection extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String content;
+
+  const _AiRecipeSection({
+    required this.icon,
+    required this.title,
+    required this.content,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: colors.primaryContainer,
+                borderRadius: BorderRadius.circular(11),
+              ),
+              child: Icon(icon, size: 19, color: colors.primary),
+            ),
+            const SizedBox(width: 11),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: colors.onSurface,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 14),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: colors.surface,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: colors.outlineVariant),
+          ),
+          child: Text(
+            content,
+            style: TextStyle(
+              fontSize: 14,
+              height: 1.6,
+              color: colors.onSurfaceVariant,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ==================================================
+// RESEP LOKAL LAMA
+// ==================================================
 
 class _RecipeSources extends StatelessWidget {
   final List<int> recipeIds;
@@ -591,9 +761,7 @@ class _RecipeSources extends StatelessWidget {
                   size: 15,
                   color: colors.onSurfaceVariant,
                 ),
-
                 const SizedBox(width: 5),
-
                 Text(
                   'Sumber resep',
                   style: TextStyle(
@@ -604,7 +772,6 @@ class _RecipeSources extends StatelessWidget {
                 ),
               ],
             ),
-
             const SizedBox(height: 8),
 
             ...recipes.map((recipe) {
@@ -629,9 +796,7 @@ class _RecipeSources extends StatelessWidget {
                             recipe.emoji,
                             style: const TextStyle(fontSize: 28),
                           ),
-
                           const SizedBox(width: 10),
-
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -646,9 +811,7 @@ class _RecipeSources extends StatelessWidget {
                                     color: colors.onPrimaryContainer,
                                   ),
                                 ),
-
                                 const SizedBox(height: 3),
-
                                 Text(
                                   recipe.duration,
                                   style: TextStyle(
@@ -661,7 +824,6 @@ class _RecipeSources extends StatelessWidget {
                               ],
                             ),
                           ),
-
                           Icon(
                             Icons.arrow_forward_ios,
                             size: 13,
@@ -683,6 +845,10 @@ class _RecipeSources extends StatelessWidget {
   }
 }
 
+// ==================================================
+// TYPING INDICATOR
+// ==================================================
+
 class _TypingBubble extends StatelessWidget {
   const _TypingBubble();
 
@@ -702,9 +868,7 @@ class _TypingBubble extends StatelessWidget {
           ),
           child: Icon(Icons.auto_awesome, size: 17, color: colors.primary),
         ),
-
         const SizedBox(width: 8),
-
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 13),
           decoration: BoxDecoration(
@@ -723,9 +887,7 @@ class _TypingBubble extends StatelessWidget {
                   color: colors.primary,
                 ),
               ),
-
               const SizedBox(width: 9),
-
               Text(
                 'RacikAI sedang meracik...',
                 style: TextStyle(fontSize: 12, color: colors.onSurfaceVariant),
