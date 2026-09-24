@@ -1,0 +1,4 @@
+-r requirements-api.txt
+sentence-transformers>=5,<7
+faiss-cpu>=1.9,<2
+numpy>=2,<3
