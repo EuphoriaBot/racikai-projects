@@ -10,6 +10,7 @@ import '../features/recipe/presentation/cubit/recipe_cubit.dart';
 import '../features/recipe/presentation/cubit/recipe_state.dart';
 import '../models/chat_message.dart';
 import '../services/ai_service.dart';
+import 'ai_recipe_detail_screen.dart';
 
 class AiScreen extends StatelessWidget {
   const AiScreen({super.key});
@@ -57,7 +58,6 @@ class _AiContentState extends State<_AiContent> {
     messageController.dispose();
     scrollController.dispose();
     aiService.dispose();
-
     super.dispose();
   }
 
@@ -91,7 +91,6 @@ class _AiContentState extends State<_AiContent> {
         return;
       }
 
-      // Pertanyaan baru dihitung setelah backend berhasil merespons.
       usage.recordAiQuestion();
 
       setState(() {
@@ -107,7 +106,6 @@ class _AiContentState extends State<_AiContent> {
           ChatMessage(role: ChatRole.assistant, text: error.message),
         );
 
-        // Supaya pertanyaan mudah dikirim ulang kalau backend bermasalah.
         messageController.text = question;
       });
     } finally {
@@ -184,78 +182,8 @@ class _AiContentState extends State<_AiContent> {
     return SafeArea(
       child: Column(
         children: [
-          // ==========================================
-          // HEADER AI
-          // ==========================================
-          Container(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
-            decoration: BoxDecoration(
-              border: Border(bottom: BorderSide(color: colors.outlineVariant)),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 46,
-                  height: 46,
-                  decoration: BoxDecoration(
-                    color: colors.primaryContainer,
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                  child: Icon(Icons.auto_awesome, color: colors.primary),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'RacikAI Assistant',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w800,
-                          color: colors.onSurface,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      AnimatedBuilder(
-                        animation: UsageController.instance,
-                        builder: (context, _) {
-                          final isPremium =
-                              SubscriptionController.instance.isPremium;
+          _AiHeader(colors: colors),
 
-                          if (isPremium) {
-                            return Text(
-                              'Premium • AI tanpa batas ✨',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: colors.primary,
-                              ),
-                            );
-                          }
-
-                          final usage = UsageController.instance.aiUsage;
-
-                          return Text(
-                            '$usage / '
-                            '${UsageController.freeAiLimit} '
-                            'pertanyaan hari ini',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: colors.onSurfaceVariant,
-                            ),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // ==========================================
-          // CHAT
-          // ==========================================
           Expanded(
             child: ListView(
               controller: scrollController,
@@ -266,29 +194,32 @@ class _AiContentState extends State<_AiContent> {
                 }),
 
                 if (messages.length == 1) ...[
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 10),
+
                   Text(
                     'Coba tanyakan',
                     style: TextStyle(
                       fontSize: 13,
-                      color: colors.onSurfaceVariant,
                       fontWeight: FontWeight.w600,
+                      color: colors.onSurfaceVariant,
                     ),
                   ),
+
                   const SizedBox(height: 10),
+
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
                     children: suggestions.map((suggestion) {
                       return ActionChip(
-                        label: Text(
-                          suggestion,
-                          style: TextStyle(color: colors.onSurface),
-                        ),
                         avatar: Icon(
                           Icons.auto_awesome,
                           size: 16,
                           color: colors.primary,
+                        ),
+                        label: Text(
+                          suggestion,
+                          style: TextStyle(color: colors.onSurface),
                         ),
                         backgroundColor: colors.surfaceContainerHighest,
                         side: BorderSide(color: colors.outlineVariant),
@@ -308,74 +239,86 @@ class _AiContentState extends State<_AiContent> {
             ),
           ),
 
-          // ==========================================
-          // INPUT
-          // ==========================================
+          _AiInputBar(
+            controller: messageController,
+            isTyping: isTyping,
+            onChanged: () {
+              setState(() {});
+            },
+            onSend: sendMessage,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AiHeader extends StatelessWidget {
+  final ColorScheme colors;
+
+  const _AiHeader({required this.colors});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        border: Border(bottom: BorderSide(color: colors.outlineVariant)),
+      ),
+      child: Row(
+        children: [
           Container(
-            padding: const EdgeInsets.fromLTRB(16, 10, 16, 14),
+            width: 46,
+            height: 46,
             decoration: BoxDecoration(
-              color: Theme.of(context).scaffoldBackgroundColor,
-              border: Border(top: BorderSide(color: colors.outlineVariant)),
+              color: colors.primaryContainer,
+              borderRadius: BorderRadius.circular(15),
             ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
+            child: Icon(Icons.auto_awesome, color: colors.primary),
+          ),
+
+          const SizedBox(width: 12),
+
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: TextField(
-                    controller: messageController,
-                    minLines: 1,
-                    maxLines: 4,
-                    textInputAction: TextInputAction.newline,
-                    onChanged: (_) {
-                      setState(() {});
-                    },
-                    decoration: InputDecoration(
-                      hintText: 'Tanya RacikAI...',
-                      filled: true,
-                      fillColor: colors.surfaceContainerHighest,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 14,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(20),
-                        borderSide: BorderSide.none,
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(20),
-                        borderSide: BorderSide(color: colors.outlineVariant),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(20),
-                        borderSide: BorderSide(color: colors.primary),
-                      ),
-                    ),
+                Text(
+                  'RacikAI Assistant',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    color: colors.onSurface,
                   ),
                 ),
-                const SizedBox(width: 10),
-                Container(
-                  width: 50,
-                  height: 50,
-                  decoration: BoxDecoration(
-                    color: messageController.text.trim().isNotEmpty && !isTyping
-                        ? colors.primary
-                        : colors.surfaceContainerHighest,
-                    shape: BoxShape.circle,
-                  ),
-                  child: IconButton(
-                    onPressed: messageController.text.trim().isEmpty || isTyping
-                        ? null
-                        : () {
-                            sendMessage();
-                          },
-                    icon: Icon(
-                      Icons.arrow_upward_rounded,
-                      color:
-                          messageController.text.trim().isNotEmpty && !isTyping
-                          ? colors.onPrimary
-                          : colors.onSurfaceVariant,
-                    ),
-                  ),
+
+                const SizedBox(height: 2),
+
+                AnimatedBuilder(
+                  animation: UsageController.instance,
+                  builder: (context, _) {
+                    final isPremium = SubscriptionController.instance.isPremium;
+
+                    if (isPremium) {
+                      return Text(
+                        'Premium • AI tanpa batas ✨',
+                        style: TextStyle(fontSize: 12, color: colors.primary),
+                      );
+                    }
+
+                    final usage = UsageController.instance.aiUsage;
+
+                    return Text(
+                      '$usage / '
+                      '${UsageController.freeAiLimit} '
+                      'pertanyaan hari ini',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: colors.onSurfaceVariant,
+                      ),
+                    );
+                  },
                 ),
               ],
             ),
@@ -386,9 +329,98 @@ class _AiContentState extends State<_AiContent> {
   }
 }
 
-// ==================================================
-// CHAT MESSAGE
-// ==================================================
+class _AiInputBar extends StatelessWidget {
+  final TextEditingController controller;
+  final bool isTyping;
+  final VoidCallback onChanged;
+  final Future<void> Function({String? suggestion}) onSend;
+
+  const _AiInputBar({
+    required this.controller,
+    required this.isTyping,
+    required this.onChanged,
+    required this.onSend,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    final canSend = controller.text.trim().isNotEmpty && !isTyping;
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 14),
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        border: Border(top: BorderSide(color: colors.outlineVariant)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Expanded(
+              child: TextField(
+                controller: controller,
+                minLines: 1,
+                maxLines: 4,
+                textInputAction: TextInputAction.newline,
+                onChanged: (_) {
+                  onChanged();
+                },
+                decoration: InputDecoration(
+                  hintText: 'Tanya RacikAI...',
+                  filled: true,
+                  fillColor: colors.surfaceContainerHighest,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(20),
+                    borderSide: BorderSide.none,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(20),
+                    borderSide: BorderSide(color: colors.outlineVariant),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(20),
+                    borderSide: BorderSide(color: colors.primary),
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(width: 10),
+
+            Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                color: canSend
+                    ? colors.primary
+                    : colors.surfaceContainerHighest,
+                shape: BoxShape.circle,
+              ),
+              child: IconButton(
+                onPressed: canSend
+                    ? () {
+                        onSend();
+                      }
+                    : null,
+                icon: Icon(
+                  Icons.arrow_upward_rounded,
+                  color: canSend ? colors.onPrimary : colors.onSurfaceVariant,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
 class _ChatMessageBubble extends StatelessWidget {
   final ChatMessage message;
@@ -401,7 +433,7 @@ class _ChatMessageBubble extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.only(bottom: 18),
       child: Column(
         crossAxisAlignment: isUser
             ? CrossAxisAlignment.end
@@ -427,31 +459,36 @@ class _ChatMessageBubble extends StatelessWidget {
                     color: colors.primary,
                   ),
                 ),
+
                 const SizedBox(width: 8),
               ],
+
               Flexible(
-                child: Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: isUser
-                        ? colors.primary
-                        : colors.surfaceContainerHighest,
-                    borderRadius: BorderRadius.only(
-                      topLeft: const Radius.circular(18),
-                      topRight: const Radius.circular(18),
-                      bottomLeft: Radius.circular(isUser ? 18 : 4),
-                      bottomRight: Radius.circular(isUser ? 4 : 18),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 760),
+                  child: Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: isUser
+                          ? colors.primary
+                          : colors.surfaceContainerHighest,
+                      borderRadius: BorderRadius.only(
+                        topLeft: const Radius.circular(18),
+                        topRight: const Radius.circular(18),
+                        bottomLeft: Radius.circular(isUser ? 18 : 4),
+                        bottomRight: Radius.circular(isUser ? 4 : 18),
+                      ),
+                      border: isUser
+                          ? null
+                          : Border.all(color: colors.outlineVariant),
                     ),
-                    border: isUser
-                        ? null
-                        : Border.all(color: colors.outlineVariant),
-                  ),
-                  child: Text(
-                    message.text,
-                    style: TextStyle(
-                      fontSize: 14,
-                      height: 1.55,
-                      color: isUser ? colors.onPrimary : colors.onSurface,
+                    child: Text(
+                      isUser ? message.text : _cleanAiText(message.text),
+                      style: TextStyle(
+                        fontSize: 14,
+                        height: 1.6,
+                        color: isUser ? colors.onPrimary : colors.onSurface,
+                      ),
                     ),
                   ),
                 ),
@@ -459,17 +496,16 @@ class _ChatMessageBubble extends StatelessWidget {
             ],
           ),
 
-          // Backend baru mengembalikan List<AiRecipe>.
           if (message.recipes.isNotEmpty) ...[
-            const SizedBox(height: 10),
+            const SizedBox(height: 12),
+
             Padding(
               padding: const EdgeInsets.only(left: 40),
               child: _AiRecipeSources(recipes: message.recipes),
             ),
-          ]
-          // Fallback untuk struktur lama / dummy lokal.
-          else if (message.sourceRecipeIds.isNotEmpty) ...[
-            const SizedBox(height: 10),
+          ] else if (message.sourceRecipeIds.isNotEmpty) ...[
+            const SizedBox(height: 12),
+
             Padding(
               padding: const EdgeInsets.only(left: 40),
               child: _RecipeSources(recipeIds: message.sourceRecipeIds),
@@ -481,10 +517,6 @@ class _ChatMessageBubble extends StatelessWidget {
   }
 }
 
-// ==================================================
-// RESEP DARI BACKEND AI
-// ==================================================
-
 class _AiRecipeSources extends StatelessWidget {
   final List<AiRecipe> recipes;
 
@@ -494,231 +526,280 @@ class _AiRecipeSources extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Icon(Icons.auto_awesome, size: 15, color: colors.onSurfaceVariant),
-            const SizedBox(width: 5),
-            Text(
-              'Resep yang ditemukan',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: colors.onSurfaceVariant,
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 760),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  color: colors.primaryContainer,
+                  borderRadius: BorderRadius.circular(9),
+                ),
+                child: Icon(
+                  Icons.auto_awesome_rounded,
+                  size: 15,
+                  color: colors.primary,
+                ),
               ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
 
-        ...recipes.map((recipe) {
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                borderRadius: BorderRadius.circular(14),
-                onTap: () {
-                  _showAiRecipeDetail(context, recipe);
-                },
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(13),
-                  decoration: BoxDecoration(
-                    color: colors.primaryContainer,
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 42,
-                        height: 42,
-                        decoration: BoxDecoration(
-                          color: colors.surface,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Icon(
-                          Icons.restaurant_menu_rounded,
-                          color: colors.primary,
-                        ),
-                      ),
-                      const SizedBox(width: 11),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              recipe.title,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
-                                color: colors.onPrimaryContainer,
-                              ),
-                            ),
-                            const SizedBox(height: 3),
-                            Text(
-                              'Lihat bahan dan langkah',
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: colors.onPrimaryContainer.withValues(
-                                  alpha: 0.75,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Icon(
-                        Icons.arrow_forward_ios_rounded,
-                        size: 13,
-                        color: colors.onPrimaryContainer.withValues(
-                          alpha: 0.65,
-                        ),
-                      ),
-                    ],
+              const SizedBox(width: 8),
+
+              Text(
+                'Rekomendasi resep',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: colors.onSurface,
+                ),
+              ),
+
+              const SizedBox(width: 7),
+
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: colors.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(100),
+                ),
+                child: Text(
+                  '${recipes.length}',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: colors.onSurfaceVariant,
                   ),
                 ),
               ),
-            ),
-          );
-        }),
-      ],
+            ],
+          ),
+
+          const SizedBox(height: 10),
+
+          ...recipes.map((recipe) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: _AiRecipeCard(recipe: recipe),
+            );
+          }),
+        ],
+      ),
     );
   }
 }
 
-// ==================================================
-// DETAIL SEDERHANA RESEP DARI BACKEND
-// ==================================================
+class _AiRecipeCard extends StatelessWidget {
+  final AiRecipe recipe;
 
-void _showAiRecipeDetail(BuildContext context, AiRecipe recipe) {
-  showModalBottomSheet<void>(
-    context: context,
-    isScrollControlled: true,
-    showDragHandle: true,
-    builder: (sheetContext) {
-      final colors = Theme.of(sheetContext).colorScheme;
+  const _AiRecipeCard({required this.recipe});
 
-      return FractionallySizedBox(
-        heightFactor: 0.82,
-        child: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(20, 4, 20, 28),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  recipe.title,
-                  style: TextStyle(
-                    fontSize: 24,
-                    height: 1.2,
-                    fontWeight: FontWeight.w800,
-                    color: colors.onSurface,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Rekomendasi RacikAI',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: colors.primary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 28),
-
-                _AiRecipeSection(
-                  icon: Icons.restaurant_menu_rounded,
-                  title: 'Bahan',
-                  content: recipe.ingredients,
-                ),
-
-                const SizedBox(height: 28),
-
-                _AiRecipeSection(
-                  icon: Icons.format_list_numbered_rounded,
-                  title: 'Langkah Memasak',
-                  content: recipe.instructions,
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    },
-  );
-}
-
-class _AiRecipeSection extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String content;
-
-  const _AiRecipeSection({
-    required this.icon,
-    required this.title,
-    required this.content,
-  });
+  void _openDetail(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => AiRecipeDetailScreen(recipe: recipe)),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                color: colors.primaryContainer,
-                borderRadius: BorderRadius.circular(11),
-              ),
-              child: Icon(icon, size: 19, color: colors.primary),
-            ),
-            const SizedBox(width: 11),
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
-                color: colors.onSurface,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 14),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(16),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {
+          _openDetail(context);
+        },
+        borderRadius: BorderRadius.circular(20),
+        child: Ink(
           decoration: BoxDecoration(
-            color: colors.surface,
-            borderRadius: BorderRadius.circular(16),
+            color: colors.surfaceContainerLow,
+            borderRadius: BorderRadius.circular(20),
             border: Border.all(color: colors.outlineVariant),
           ),
-          child: Text(
-            content,
-            style: TextStyle(
-              fontSize: 14,
-              height: 1.6,
-              color: colors.onSurfaceVariant,
+          child: Padding(
+            padding: const EdgeInsets.all(10),
+            child: Row(
+              children: [
+                _RecipeThumbnail(imageUrl: recipe.imageUrl),
+
+                const SizedBox(width: 14),
+
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: colors.primaryContainer,
+                          borderRadius: BorderRadius.circular(100),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.auto_awesome_rounded,
+                              size: 12,
+                              color: colors.primary,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              'AI Pick',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                color: colors.primary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 8),
+
+                      Text(
+                        recipe.title,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 15,
+                          height: 1.25,
+                          fontWeight: FontWeight.w800,
+                          color: colors.onSurface,
+                        ),
+                      ),
+
+                      const SizedBox(height: 7),
+
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.restaurant_menu_rounded,
+                            size: 14,
+                            color: colors.onSurfaceVariant,
+                          ),
+
+                          const SizedBox(width: 5),
+
+                          Expanded(
+                            child: Text(
+                              'Bahan & langkah lengkap',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: colors.onSurfaceVariant,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 10),
+
+                      Row(
+                        children: [
+                          Text(
+                            'Lihat resep',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: colors.primary,
+                            ),
+                          ),
+
+                          const SizedBox(width: 3),
+
+                          Icon(
+                            Icons.arrow_forward_rounded,
+                            size: 15,
+                            color: colors.primary,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(width: 6),
+
+                Icon(
+                  Icons.chevron_right_rounded,
+                  color: colors.onSurfaceVariant,
+                ),
+              ],
             ),
           ),
         ),
-      ],
+      ),
     );
   }
 }
 
-// ==================================================
-// RESEP LOKAL LAMA
-// ==================================================
+class _RecipeThumbnail extends StatelessWidget {
+  final String? imageUrl;
+
+  const _RecipeThumbnail({required this.imageUrl});
+
+  @override
+  Widget build(BuildContext context) {
+    if (imageUrl != null && imageUrl!.trim().isNotEmpty) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(15),
+        child: Image.network(
+          imageUrl!,
+          width: 92,
+          height: 92,
+          fit: BoxFit.cover,
+          errorBuilder: (_, _, _) {
+            return const _RecipeThumbnailPlaceholder();
+          },
+        ),
+      );
+    }
+
+    return const _RecipeThumbnailPlaceholder();
+  }
+}
+
+class _RecipeThumbnailPlaceholder extends StatelessWidget {
+  const _RecipeThumbnailPlaceholder();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return Container(
+      width: 92,
+      height: 92,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(15),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [colors.primaryContainer, colors.secondaryContainer],
+        ),
+      ),
+      alignment: Alignment.center,
+      child: Container(
+        width: 46,
+        height: 46,
+        decoration: BoxDecoration(
+          color: colors.surface.withValues(alpha: 0.86),
+          shape: BoxShape.circle,
+        ),
+        child: Icon(Icons.restaurant_rounded, color: colors.primary, size: 24),
+      ),
+    );
+  }
+}
 
 class _RecipeSources extends StatelessWidget {
   final List<int> recipeIds;
@@ -731,15 +812,10 @@ class _RecipeSources extends StatelessWidget {
 
     return BlocBuilder<RecipeCubit, RecipeState>(
       builder: (context, state) {
-        if (state is RecipeInitial || state is RecipeLoading) {
-          return const SizedBox.shrink();
-        }
-
-        if (state is RecipeError) {
-          return const SizedBox.shrink();
-        }
-
-        if (state is! RecipeLoaded) {
+        if (state is RecipeInitial ||
+            state is RecipeLoading ||
+            state is RecipeError ||
+            state is! RecipeLoaded) {
           return const SizedBox.shrink();
         }
 
@@ -751,103 +827,109 @@ class _RecipeSources extends StatelessWidget {
           return const SizedBox.shrink();
         }
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.menu_book_outlined,
-                  size: 15,
-                  color: colors.onSurfaceVariant,
-                ),
-                const SizedBox(width: 5),
-                Text(
-                  'Sumber resep',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
+        return ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 760),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    Icons.menu_book_outlined,
+                    size: 15,
                     color: colors.onSurfaceVariant,
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
 
-            ...recipes.map((recipe) {
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(14),
-                    onTap: () {
-                      context.push('/recipe/${recipe.id}');
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: colors.primaryContainer,
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: Row(
-                        children: [
-                          Text(
-                            recipe.emoji,
-                            style: const TextStyle(fontSize: 28),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  recipe.title,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w700,
-                                    color: colors.onPrimaryContainer,
-                                  ),
-                                ),
-                                const SizedBox(height: 3),
-                                Text(
-                                  recipe.duration,
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: colors.onPrimaryContainer.withValues(
-                                      alpha: 0.75,
+                  const SizedBox(width: 5),
+
+                  Text(
+                    'Sumber resep',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: colors.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 8),
+
+              ...recipes.map((recipe) {
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(14),
+                      onTap: () {
+                        context.push('/recipe/${recipe.id}');
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: colors.primaryContainer,
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: Row(
+                          children: [
+                            Text(
+                              recipe.emoji,
+                              style: const TextStyle(fontSize: 28),
+                            ),
+
+                            const SizedBox(width: 10),
+
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    recipe.title,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w700,
+                                      color: colors.onPrimaryContainer,
                                     ),
                                   ),
-                                ),
-                              ],
+
+                                  const SizedBox(height: 3),
+
+                                  Text(
+                                    recipe.duration,
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: colors.onPrimaryContainer
+                                          .withValues(alpha: 0.75),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                          Icon(
-                            Icons.arrow_forward_ios,
-                            size: 13,
-                            color: colors.onPrimaryContainer.withValues(
-                              alpha: 0.65,
+
+                            Icon(
+                              Icons.arrow_forward_ios,
+                              size: 13,
+                              color: colors.onPrimaryContainer.withValues(
+                                alpha: 0.65,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ),
-              );
-            }),
-          ],
+                );
+              }),
+            ],
+          ),
         );
       },
     );
   }
 }
-
-// ==================================================
-// TYPING INDICATOR
-// ==================================================
 
 class _TypingBubble extends StatelessWidget {
   const _TypingBubble();
@@ -868,7 +950,9 @@ class _TypingBubble extends StatelessWidget {
           ),
           child: Icon(Icons.auto_awesome, size: 17, color: colors.primary),
         ),
+
         const SizedBox(width: 8),
+
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 13),
           decoration: BoxDecoration(
@@ -887,7 +971,9 @@ class _TypingBubble extends StatelessWidget {
                   color: colors.primary,
                 ),
               ),
+
               const SizedBox(width: 9),
+
               Text(
                 'RacikAI sedang meracik...',
                 style: TextStyle(fontSize: 12, color: colors.onSurfaceVariant),
@@ -898,4 +984,21 @@ class _TypingBubble extends StatelessWidget {
       ],
     );
   }
+}
+
+String _cleanAiText(String text) {
+  var result = text;
+
+  result = result.replaceAll(RegExp(r'^#{1,6}\s*', multiLine: true), '');
+
+  result = result.replaceAll('**', '');
+
+  result = result.replaceAll(RegExp(r'^\*\s+', multiLine: true), '• ');
+
+  result = result
+      .replaceAll('â€“', '–')
+      .replaceAll('â€”', '—')
+      .replaceAll('Â°F', '°F');
+
+  return result.trim();
 }
