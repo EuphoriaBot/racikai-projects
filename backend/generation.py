@@ -15,6 +15,42 @@ Jika resep tidak relevan, katakan terus terang. Akhiri dengan 'Sumber resep:'
 beserta judul resep yang dipakai."""
 
 
+QUERY_REWRITE_INSTRUCTION = """Anda bertugas mengubah pertanyaan resep pengguna
+menjadi query pencarian resep berbahasa Inggris.
+
+Aturan:
+- Keluarkan HANYA query pencarian dalam bahasa Inggris.
+- Jangan memberikan penjelasan.
+- Pertahankan bahan makanan yang disebutkan pengguna.
+- Pertahankan metode memasak.
+- Pertahankan pantangan atau batasan alat.
+- Gunakan istilah kuliner yang tepat.
+- Jika pertanyaan sudah berbahasa Inggris, rapikan menjadi query pencarian
+  resep yang singkat.
+
+Istilah penting:
+- kecap = soy sauce
+- kecap manis = sweet soy sauce
+- saus tomat = ketchup
+- ayam = chicken
+- telur = egg
+- kentang = potato
+- bawang putih = garlic
+- bawang merah = shallot
+- nasi = rice
+
+Contoh:
+"Saya punya ayam dan kecap"
+-> chicken soy sauce recipe
+
+"Saya punya ayam, kecap manis, dan bawang putih. Tidak ada oven."
+-> chicken sweet soy sauce garlic recipe without oven
+
+"Saya punya saus tomat dan telur"
+-> egg ketchup recipe
+"""
+
+
 class GeminiGenerator:
     def __init__(self, api_key: str, model: str, transport=None):
         if not re.fullmatch(r"[A-Za-z0-9._-]+", model):
@@ -26,19 +62,11 @@ class GeminiGenerator:
         self.model = model
         self.transport = transport
 
-    def generate(self, question, recipes):
-        prompt = json.dumps(
-            {
-                "PERTANYAAN": question,
-                "DATA_RESEP": recipes,
-            },
-            ensure_ascii=False,
-        )
-
+    def _request(self, input_text: str, system_instruction: str) -> str:
         payload = {
             "model": self.model,
-            "input": prompt,
-            "system_instruction": SYSTEM_INSTRUCTION,
+            "input": input_text,
+            "system_instruction": system_instruction,
             "generation_config": {
                 "thinking_level": "minimal",
             },
@@ -56,7 +84,6 @@ class GeminiGenerator:
             response.raise_for_status()
 
         data = response.json()
-
         output_parts = []
 
         for step in data.get("steps", []):
@@ -76,3 +103,47 @@ class GeminiGenerator:
             raise ValueError("Gemini tidak mengembalikan jawaban.")
 
         return result
+
+    def rewrite_query(self, question: str) -> str:
+        prompt = json.dumps(
+            {
+                "PERTANYAAN_PENGGUNA": question,
+            },
+            ensure_ascii=False,
+        )
+
+        result = self._request(
+            prompt,
+            QUERY_REWRITE_INSTRUCTION,
+        )
+
+        # Rapikan kemungkinan tanda kutip / markdown dari model.
+        result = result.strip()
+        result = result.strip("`").strip()
+        result = result.strip('"').strip("'").strip()
+
+        # Query retrieval seharusnya pendek dan satu baris.
+        if "\n" in result:
+            result = result.splitlines()[0].strip()
+
+        if not result:
+            raise ValueError("Query hasil rewrite kosong.")
+
+        if len(result) > 500:
+            raise ValueError("Query hasil rewrite terlalu panjang.")
+
+        return result
+
+    def generate(self, question, recipes):
+        prompt = json.dumps(
+            {
+                "PERTANYAAN": question,
+                "DATA_RESEP": recipes,
+            },
+            ensure_ascii=False,
+        )
+
+        return self._request(
+            prompt,
+            SYSTEM_INSTRUCTION,
+        )
