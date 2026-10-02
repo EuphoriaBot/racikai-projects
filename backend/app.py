@@ -1,9 +1,8 @@
-"""Local recipe retrieval API. Run from backend: python -m uvicorn app:app."""
-
 import csv
 import json
 import logging
 import os
+import re
 import struct
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -23,6 +22,143 @@ DEFAULT_AI_DIR = Path(__file__).resolve().parents[3] / "file ai"
 
 if (DEFAULT_AI_DIR / "recovered-kaggle").is_dir():
     DEFAULT_AI_DIR = DEFAULT_AI_DIR / "recovered-kaggle"
+
+CATALOG_QUERY_TRANSLATIONS = {
+    "kecap manis": "sweet soy sauce",
+    "saus tomat": "ketchup",
+    "daging sapi": "beef",
+    "bawang putih": "garlic",
+    "bawang merah": "shallot",
+    "bawang bombai": "onion",
+    "ayam": "chicken",
+    "kecap": "soy sauce",
+    "kentang": "potato",
+    "telur": "egg",
+    "keju": "cheese",
+    "nasi": "rice",
+    "sayur": "vegetable",
+    "cokelat": "chocolate",
+    "ikan": "fish",
+    "udang": "shrimp",
+    "susu": "milk",
+    "tepung": "flour",
+    "cabai": "chili",
+    "wortel": "carrot",
+    "brokoli": "broccoli",
+}
+
+
+CATALOG_STOP_WORDS = {
+    "resep",
+    "masak",
+    "makanan",
+    "dengan",
+    "dan",
+    "yang",
+    "dari",
+    "punya",
+    "saya",
+    "aku",
+    "mau",
+    "ingin",
+    "cari",
+    "buat",
+    "recipe",
+    "recipes",
+    "with",
+}
+
+
+CATEGORY_KEYWORDS = {
+    "Ayam": (
+        "chicken",
+    ),
+    "Daging": (
+        "beef",
+        "steak",
+        "pork",
+        "lamb",
+        "meat",
+    ),
+    "Nasi": (
+        "rice",
+    ),
+    "Pasta": (
+        "pasta",
+        "spaghetti",
+        "macaroni",
+        "linguine",
+        "fettuccine",
+        "penne",
+        "ravioli",
+        "lasagna",
+    ),
+    "Sayur": (
+        "vegetable",
+        "broccoli",
+        "carrot",
+        "spinach",
+        "cabbage",
+        "zucchini",
+        "eggplant",
+        "cauliflower",
+        "kale",
+    ),
+    "Dessert": (
+        "dessert",
+        "cake",
+        "cookie",
+        "brownie",
+        "chocolate",
+        "pudding",
+        "pie",
+        "tart",
+        "cupcake",
+        "ice cream",
+    ),
+}
+
+
+def normalize_catalog_query(query: str) -> str:
+    """Normalize simple Indonesian catalog queries to English terms."""
+
+    result = query.strip().lower()
+
+    translations = sorted(
+        CATALOG_QUERY_TRANSLATIONS.items(),
+        key=lambda item: len(item[0]),
+        reverse=True,
+    )
+
+    for source, target in translations:
+        result = re.sub(
+            rf"\b{re.escape(source)}\b",
+            target,
+            result,
+        )
+
+    words = [
+        word
+        for word in re.findall(r"[a-z0-9]+", result)
+        if word not in CATALOG_STOP_WORDS
+    ]
+
+    return " ".join(words)
+
+
+def _contains_catalog_keyword(
+    text: str,
+    keyword: str,
+) -> bool:
+    """Check category keyword using word boundaries."""
+
+    return (
+        re.search(
+            rf"\b{re.escape(keyword.lower())}\b",
+            text,
+        )
+        is not None
+    )
 
 
 def validate_assets(directory: Path):
@@ -44,7 +180,8 @@ def validate_assets(directory: Path):
     for name in required:
         root = (
             directory
-            if name in {
+            if name
+            in {
                 "recipe_faiss.index",
                 "recipe_metadata.csv",
             }
@@ -249,6 +386,189 @@ class RecipeEngine:
 
         return recipes
 
+    def search_catalog(
+        self,
+        query: str,
+        category: str,
+        page: int,
+        limit: int,
+    ):
+        normalized_query = normalize_catalog_query(
+            query
+        )
+
+        query_terms = [
+            term
+            for term in normalized_query.split()
+            if term
+        ]
+
+        category_keywords = (
+            CATEGORY_KEYWORDS.get(
+                category,
+                (),
+            )
+            if category != "Semua"
+            else ()
+        )
+
+        matches = []
+
+        for row in self.rows:
+            title = (
+                row.get(
+                    "Title",
+                    "",
+                )
+                or ""
+            ).strip()
+
+            ingredients = (
+                row.get(
+                    "ingredient_text",
+                    "",
+                )
+                or ""
+            ).strip()
+
+            instructions = (
+                row.get(
+                    "Instructions",
+                    "",
+                )
+                or ""
+            ).strip()
+
+            title_lower = title.lower()
+            ingredients_lower = (
+                ingredients.lower()
+            )
+
+            search_text = (
+                f"{title_lower} "
+                f"{ingredients_lower}"
+            )
+
+
+            if category_keywords:
+                category_match = any(
+                    _contains_catalog_keyword(
+                        search_text,
+                        keyword,
+                    )
+                    for keyword
+                    in category_keywords
+                )
+
+                if not category_match:
+                    continue
+
+
+            score = 0
+
+            if query_terms:
+                if not all(
+                    term in search_text
+                    for term in query_terms
+                ):
+                    continue
+
+                if (
+                    normalized_query
+                    == title_lower
+                ):
+                    score += 100
+
+                elif (
+                    normalized_query
+                    in title_lower
+                ):
+                    score += 40
+
+                for term in query_terms:
+                    if term in title_lower:
+                        score += 8
+
+                    if (
+                        term
+                        in ingredients_lower
+                    ):
+                        score += 2
+
+            image_name = (
+                row.get(
+                    "Image_Name",
+                    "",
+                )
+                or ""
+            ).strip()
+
+            ingredient_count = len(
+                [
+                    item
+                    for item
+                    in ingredients.split(",")
+                    if item.strip()
+                ]
+            )
+
+            recipe = {
+                "id": row["recipe_id"],
+                "title": title,
+                "ingredients": ingredients,
+                "instructions": instructions,
+                "image_name": (
+                    image_name
+                    if image_name
+                    else None
+                ),
+
+                "image_url": None,
+
+                "ingredient_count": (
+                    ingredient_count
+                ),
+            }
+
+            matches.append(
+                (
+                    score,
+                    title_lower,
+                    recipe,
+                )
+            )
+
+        if query_terms:
+            matches.sort(
+                key=lambda item: (
+                    -item[0],
+                    item[1],
+                )
+            )
+
+        else:
+            matches.sort(
+                key=lambda item: item[1]
+            )
+
+        total = len(matches)
+
+        start = (
+            page - 1
+        ) * limit
+
+        end = (
+            start
+            + limit
+        )
+
+        recipes = [
+            item[2]
+            for item in matches[start:end]
+        ]
+
+        return recipes, total
+
 
 class ChatRequest(BaseModel):
     message: str = Field(
@@ -286,6 +606,24 @@ class ChatResponse(BaseModel):
     text: str
     recipes: list[RecipeSource]
     generation: str = "retrieval_only"
+
+
+class CatalogRecipe(BaseModel):
+    id: str
+    title: str
+    ingredients: str
+    instructions: str
+    image_name: str | None = None
+    image_url: str | None = None
+    ingredient_count: int
+
+
+class CatalogResponse(BaseModel):
+    recipes: list[CatalogRecipe]
+    page: int
+    limit: int
+    total: int
+    has_more: bool
 
 
 def create_app(
@@ -405,6 +743,74 @@ def create_app(
             ),
             "generation": (
                 api.state.generation_status
+            ),
+        }
+
+    @api.get(
+        "/recipes",
+        response_model=CatalogResponse,
+    )
+    def recipes(
+        q: str = "",
+        category: str = "Semua",
+        page: int = 1,
+        limit: int = 24,
+    ):
+        if api.state.engine is None:
+            raise HTTPException(
+                503,
+                "Katalog resep belum siap.",
+            )
+
+        page = max(
+            page,
+            1,
+        )
+
+        limit = max(
+            1,
+            min(
+                limit,
+                48,
+            ),
+        )
+
+        if (
+            category != "Semua"
+            and category
+            not in CATEGORY_KEYWORDS
+        ):
+            category = "Semua"
+
+        try:
+            results, total = (
+                api.state.engine
+                .search_catalog(
+                    query=q,
+                    category=category,
+                    page=page,
+                    limit=limit,
+                )
+            )
+
+        except Exception:
+            log.exception(
+                "Katalog resep gagal dimuat"
+            )
+
+            raise HTTPException(
+                500,
+                "Katalog resep gagal dimuat.",
+            ) from None
+
+        return {
+            "recipes": results,
+            "page": page,
+            "limit": limit,
+            "total": total,
+            "has_more": (
+                page * limit
+                < total
             ),
         }
 

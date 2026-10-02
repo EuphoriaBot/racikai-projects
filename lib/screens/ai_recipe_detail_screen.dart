@@ -4,8 +4,13 @@ import '../models/chat_message.dart';
 
 class AiRecipeDetailScreen extends StatelessWidget {
   final AiRecipe recipe;
+  final bool isAiRecommendation;
 
-  const AiRecipeDetailScreen({super.key, required this.recipe});
+  const AiRecipeDetailScreen({
+    super.key,
+    required this.recipe,
+    this.isAiRecommendation = true,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -56,7 +61,9 @@ class AiRecipeDetailScreen extends StatelessWidget {
                             ),
                             const SizedBox(width: 5),
                             Text(
-                              'Rekomendasi RacikAI',
+                              isAiRecommendation
+                                  ? 'Rekomendasi RacikAI'
+                                  : 'Resep RacikAI',
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w700,
@@ -82,8 +89,11 @@ class AiRecipeDetailScreen extends StatelessWidget {
                       const SizedBox(height: 12),
 
                       Text(
-                        'Resep ini ditemukan dari koleksi resep RacikAI '
-                        'berdasarkan bahan dan kebutuhan yang kamu tanyakan.',
+                        isAiRecommendation
+                            ? 'Resep ini direkomendasikan RacikAI berdasarkan '
+                                  'bahan dan kebutuhan yang kamu tanyakan.'
+                            : 'Resep dari koleksi RacikAI. Lihat bahan dan '
+                                  'ikuti langkah memasaknya di bawah.',
                         style: TextStyle(
                           fontSize: 14,
                           height: 1.55,
