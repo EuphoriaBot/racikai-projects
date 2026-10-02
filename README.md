@@ -70,7 +70,7 @@ Fitur pada Home meliputi:
 
 ## 2. Recipe Search
 
-Fitur Search memungkinkan pengguna mencari resep secara langsung dari dataset RacikAI.
+Fitur Search memungkinkan pengguna mencari resep secara langsung dari dataset RacikAI
 
 Pencarian dapat dilakukan berdasarkan:
 
@@ -308,7 +308,7 @@ Flutter Application
 Sebagai contoh, pengguna memasukkan:
 
 ```text
-Saya punya ayam dan kecap.
+Saya punya ayam dan kecap
 ```
 
 Sebelum melakukan pencarian ke FAISS, query dapat ditulis ulang menjadi bentuk yang lebih sesuai dengan dataset:
@@ -317,9 +317,9 @@ Sebelum melakukan pencarian ke FAISS, query dapat ditulis ulang menjadi bentuk y
 chicken soy sauce
 ```
 
-Sentence Transformer kemudian mengubah query tersebut menjadi vector embedding.
+Sentence Transformer kemudian mengubah query tersebut menjadi vector embedding
 
-FAISS melakukan pencarian berdasarkan kemiripan vector dan mengambil beberapa resep yang paling relevan.
+FAISS melakukan pencarian berdasarkan kemiripan vector dan mengambil beberapa resep yang paling relevan
 
 Contoh resep yang dapat ditemukan:
 
@@ -329,19 +329,19 @@ Spicy Asian Chicken Soup
 Soy-Glazed Chicken with Broccoli
 ```
 
-Resep hasil retrieval selanjutnya diberikan kepada Gemini sebagai context.
+Resep hasil retrieval selanjutnya diberikan kepada Gemini sebagai context
 
-Gemini kemudian menyusun jawaban dalam Bahasa Indonesia berdasarkan resep yang ditemukan.
+Gemini kemudian menyusun jawaban dalam Bahasa Indonesia berdasarkan resep yang ditemukan
 
-Dengan metode ini, Gemini tidak hanya menghasilkan jawaban berdasarkan pengetahuan umum, tetapi diarahkan menggunakan resep yang terdapat pada dataset RacikAI sebagai sumber utama.
+Dengan metode ini, Gemini tidak hanya menghasilkan jawaban berdasarkan pengetahuan umum, tetapi diarahkan menggunakan resep yang terdapat pada dataset RacikAI sebagai sumber utama
 
 ---
 
 # Alur Recipe Search
 
-Fitur Search biasa dipisahkan dari fitur AI.
+Fitur Search biasa dipisahkan dari fitur AI
 
-Search tidak menggunakan Gemini dan tidak mengurangi batas penggunaan AI harian.
+Search tidak menggunakan Gemini dan tidak mengurangi batas penggunaan AI harian
 
 Alurnya adalah:
 
@@ -373,7 +373,7 @@ Recipe Grid
 Recipe Detail
 ```
 
-Dengan pemisahan ini, pencarian resep biasa tetap ringan, sedangkan AI digunakan ketika pengguna membutuhkan rekomendasi berbasis bahasa natural.
+Dengan pemisahan ini, pencarian resep biasa tetap ringan, sedangkan AI digunakan ketika pengguna membutuhkan rekomendasi berbasis bahasa natural
 
 ---
 
@@ -405,14 +405,14 @@ rag_document
 retrieval_document
 ```
 
-Pada pengujian backend saat ini, katalog RacikAI dapat membaca sekitar **13 ribu resep** dari metadata hasil preprocessing.
+Pada pengujian backend saat ini, katalog RacikAI dapat membaca sekitar **13 ribu resep** dari metadata hasil preprocessing
 
 Data tersebut digunakan oleh:
 
-- Recipe Search.
-- AI retrieval.
-- Recommendation source.
-- Recipe Detail.
+- Recipe Search
+- AI retrieval
+- Recommendation source
+- Recipe Detail
 
 File gambar resep belum dimasukkan langsung ke repository karena ukuran dataset yang cukup besar. Sistem telah dipersiapkan agar gambar nantinya dapat dilayani melalui backend.
 
@@ -445,9 +445,9 @@ RacikAI dibangun menggunakan teknologi berikut:
 
 # Backend API
 
-Backend RacikAI menggunakan FastAPI.
+Backend RacikAI menggunakan FastAPI
 
-Endpoint utama yang tersedia adalah sebagai berikut.
+Endpoint utama yang tersedia adalah sebagai berikut
 
 ## Health Check
 
@@ -455,7 +455,7 @@ Endpoint utama yang tersedia adalah sebagai berikut.
 GET /health
 ```
 
-Digunakan untuk mengecek apakah backend, model embedding, FAISS index, dan konfigurasi generation berhasil dimuat.
+Digunakan untuk mengecek apakah backend, model embedding, FAISS index, dan konfigurasi generation berhasil dimuat
 
 ---
 
@@ -476,7 +476,7 @@ Contoh:
 /recipes?category=Pasta
 ```
 
-Endpoint ini melakukan pencarian katalog tanpa menggunakan Gemini.
+Endpoint ini melakukan pencarian katalog tanpa menggunakan Gemini
 
 Response berisi informasi seperti:
 
@@ -611,7 +611,7 @@ pip install -r requirements.txt
 
 ## 4. Siapkan Model RAG
 
-File model dan dataset AI tidak disimpan langsung di GitHub karena ukurannya cukup besar.
+File model dan dataset AI tidak disimpan langsung di GitHub karena ukurannya cukup besar
 
 Backend membutuhkan beberapa artifact seperti:
 
@@ -649,7 +649,7 @@ AI_MODEL_DIR
 
 ## 5. Siapkan Gemini API Key
 
-AI Assistant membutuhkan Gemini API Key.
+AI Assistant membutuhkan Gemini API Key
 
 API key harus disimpan sebagai environment variable:
 
@@ -691,7 +691,7 @@ Untuk mengecek backend:
 http://localhost:8000/health
 ```
 
-Jika backend berhasil dijalankan, status akan menunjukkan bahwa model siap digunakan.
+Jika backend berhasil dijalankan, status akan menunjukkan bahwa model siap digunakan
 
 ---
 
@@ -713,7 +713,7 @@ http://localhost:8000
 
 ## 8. Menjalankan pada Android Emulator
 
-Pada Android Emulator, localhost komputer tidak dapat langsung diakses menggunakan `localhost`.
+Pada Android Emulator, localhost komputer tidak dapat langsung diakses menggunakan `localhost`
 
 RacikAI menggunakan alamat:
 
@@ -721,13 +721,13 @@ RacikAI menggunakan alamat:
 http://10.0.2.2:8000
 ```
 
-untuk mengakses backend dari Android Emulator.
+untuk mengakses backend dari Android Emulator
 
 ---
 
 ## 9. Menjalankan pada HP Android Fisik
 
-Untuk HP fisik, gunakan alamat IP lokal komputer.
+Untuk HP fisik, gunakan alamat IP lokal komputer
 
 Contoh:
 
@@ -735,9 +735,9 @@ Contoh:
 flutter run --dart-define=AI_BASE_URL=http://192.168.1.10:8000
 ```
 
-Alamat IP harus disesuaikan dengan IP komputer yang menjalankan backend.
+Alamat IP harus disesuaikan dengan IP komputer yang menjalankan backend
 
-Komputer dan HP harus berada pada jaringan yang sama.
+Komputer dan HP harus berada pada jaringan yang sama
 
 ---
 
@@ -754,13 +754,13 @@ Favorite / Saved Data
 Profile Preference
 ```
 
-Sementara itu, katalog resep dan data yang digunakan AI diperoleh melalui FastAPI backend.
+Sementara itu, katalog resep dan data yang digunakan AI diperoleh melalui FastAPI backend
 
 ---
 
 # Keamanan
 
-Pada pengembangan RacikAI, credential AI tidak diletakkan di dalam aplikasi Flutter.
+Pada pengembangan RacikAI, credential AI tidak diletakkan di dalam aplikasi Flutter
 
 Arsitektur yang digunakan:
 
@@ -776,42 +776,11 @@ Gemini API
 
 Dengan desain ini:
 
-- Gemini API Key hanya digunakan oleh backend.
-- API Key tidak dikirim ke aplikasi Flutter.
-- API Key tidak disimpan di repository.
-- File model berukuran besar tidak dimasukkan ke Git.
-- Flutter hanya menerima hasil yang telah diproses backend.
-
----
-
-# Alur Pengembangan Selanjutnya
-
-Tahap pengembangan berikutnya direncanakan sebagai berikut:
-
-```text
-Saved / Favorite
-menggunakan resep dataset asli
-        │
-        ▼
-Ingredient Finder
-menggunakan backend
-        │
-        ▼
-Home
-menggunakan dataset asli
-        │
-        ▼
-Recipe Image Integration
-        │
-        ▼
-Final UI Polish
-        │
-        ▼
-Testing
-        │
-        ▼
-Release Build
-```
+- Gemini API Key hanya digunakan oleh backend
+- API Key tidak dikirim ke aplikasi Flutter
+- API Key tidak disimpan di repository
+- File model berukuran besar tidak dimasukkan ke Git
+- Flutter hanya menerima hasil yang telah diproses backend
 
 ---
 
@@ -841,7 +810,7 @@ cd backend
 
 # Version Control
 
-Project RacikAI menggunakan Git dan GitHub sebagai version control.
+Project RacikAI menggunakan Git dan GitHub sebagai version control
 
 Repository:
 
@@ -849,7 +818,7 @@ Repository:
 https://github.com/EuphoriaBot/racikai-projects
 ```
 
-Pengembangan dilakukan secara bertahap menggunakan commit agar setiap perubahan fitur dapat dilacak.
+Pengembangan dilakukan secara bertahap menggunakan commit agar setiap perubahan fitur dapat dilacak
 
 Beberapa bagian pengembangan utama meliputi:
 
@@ -863,31 +832,3 @@ AI Recommendation UI
 Backend Recipe Catalog
 Real Dataset Search
 ```
-
----
-
-# Catatan
-
-Beberapa resource tidak disimpan langsung di repository karena ukurannya besar atau bersifat rahasia.
-
-Resource tersebut meliputi:
-
-```text
-model.safetensors
-recipe_faiss.index
-recipe_metadata.csv
-recipe image dataset
-GEMINI_API_KEY
-```
-
-Resource tersebut harus disiapkan secara terpisah sebelum seluruh fitur AI dapat dijalankan.
-
----
-
-# Mata Kuliah
-
-Project RacikAI dikembangkan untuk memenuhi tugas:
-
-**Mata Kuliah:** Pemrograman Piranti Bergerak  
-**Program Studi:** Informatika  
-**Universitas:** Universitas Mulawarman
