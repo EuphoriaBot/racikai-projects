@@ -7,9 +7,11 @@ import struct
 from contextlib import asynccontextmanager
 from pathlib import Path
 from threading import Lock
+from urllib.parse import quote
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, field_validator
 
 from generation import GeminiGenerator
@@ -18,10 +20,32 @@ from generation import GeminiGenerator
 log = logging.getLogger(__name__)
 
 
-DEFAULT_AI_DIR = Path(__file__).resolve().parents[3] / "file ai"
+DEFAULT_WORKSPACE_DIR = Path(__file__).resolve().parents[2]
+DEFAULT_ASSET_ROOT = DEFAULT_WORKSPACE_DIR / "file ai"
 
-if (DEFAULT_AI_DIR / "recovered-kaggle").is_dir():
-    DEFAULT_AI_DIR = DEFAULT_AI_DIR / "recovered-kaggle"
+DEFAULT_AI_DIR = DEFAULT_ASSET_ROOT
+
+if (DEFAULT_ASSET_ROOT / "recovered-kaggle").is_dir():
+    DEFAULT_AI_DIR = (
+        DEFAULT_ASSET_ROOT
+        / "recovered-kaggle"
+    )
+
+
+DEFAULT_IMAGE_DIR = (
+    DEFAULT_ASSET_ROOT
+    / "recipes-images"
+)
+
+IMAGE_ROUTE = "/recipe-images"
+
+IMAGE_EXTENSIONS = {
+    ".jpg",
+    ".jpeg",
+    ".png",
+    ".webp",
+}
+
 
 CATALOG_QUERY_TRANSLATIONS = {
     "kecap manis": "sweet soy sauce",
@@ -119,8 +143,10 @@ CATEGORY_KEYWORDS = {
 }
 
 
-def normalize_catalog_query(query: str) -> str:
-    """Normalize simple Indonesian catalog queries to English terms."""
+def normalize_catalog_query(
+    query: str,
+) -> str:
+    """Normalize simple Indonesian catalog queries."""
 
     result = query.strip().lower()
 
@@ -139,8 +165,12 @@ def normalize_catalog_query(query: str) -> str:
 
     words = [
         word
-        for word in re.findall(r"[a-z0-9]+", result)
-        if word not in CATALOG_STOP_WORDS
+        for word in re.findall(
+            r"[a-z0-9]+",
+            result,
+        )
+        if word
+        not in CATALOG_STOP_WORDS
     ]
 
     return " ".join(words)
@@ -160,11 +190,141 @@ def _contains_catalog_keyword(
         is not None
     )
 
+def build_image_index(
+    directory: Path,
+) -> dict[str, str]:
+    """
+    Build mapping:
+    Image_Name -> relative image file path.
 
-def validate_assets(directory: Path):
+    Example:
+    soy-sauce-chicken
+        ->
+    soy-sauce-chicken.jpg
+    """
+
+    image_index: dict[str, str] = {}
+
+    if not directory.is_dir():
+        return image_index
+
+    for image_path in directory.rglob("*"):
+        if not image_path.is_file():
+            continue
+
+        if (
+            image_path.suffix.lower()
+            not in IMAGE_EXTENSIONS
+        ):
+            continue
+
+        key = (
+            image_path.stem
+            .strip()
+            .lower()
+        )
+
+        if not key:
+            continue
+
+        relative_path = (
+            image_path
+            .relative_to(directory)
+            .as_posix()
+        )
+
+        image_index.setdefault(
+            key,
+            relative_path,
+        )
+
+    return image_index
+
+
+def _image_lookup_key(
+    image_name: str | None,
+) -> str | None:
+    if image_name is None:
+        return None
+
+    value = image_name.strip()
+
+    if not value:
+        return None
+
+    if value.upper() == "#NAME?":
+        return None
+
+    key = value.lower()
+
+    for extension in IMAGE_EXTENSIONS:
+        if key.endswith(extension):
+            key = key[
+                : -len(extension)
+            ]
+            break
+
+    key = key.strip()
+
+    return key or None
+
+
+def enrich_recipes_with_images(
+    recipes: list[dict],
+    image_index: dict[str, str],
+    request: Request,
+) -> list[dict]:
+    base_url = str(
+        request.base_url
+    ).rstrip("/")
+
+    enriched = []
+
+    for recipe in recipes:
+        item = dict(recipe)
+
+        raw_image_name = (
+            item.get("image_name")
+        )
+
+        key = _image_lookup_key(
+            raw_image_name
+        )
+
+        relative_image_path = (
+            image_index.get(key)
+            if key
+            else None
+        )
+
+        if relative_image_path:
+            encoded_path = quote(
+                relative_image_path,
+                safe="/",
+            )
+
+            item["image_url"] = (
+                f"{base_url}"
+                f"{IMAGE_ROUTE}/"
+                f"{encoded_path}"
+            )
+
+        else:
+            item["image_url"] = None
+
+        enriched.append(item)
+
+    return enriched
+
+
+def validate_assets(
+    directory: Path,
+):
     model_directory = (
         directory / "model"
-        if (directory / "model").is_dir()
+        if (
+            directory / "model"
+        ).is_dir()
         else directory
     )
 
@@ -188,26 +348,38 @@ def validate_assets(directory: Path):
             else model_directory
         )
 
-        if not (root / name).is_file():
+        if not (
+            root / name
+        ).is_file():
             raise ValueError(
                 f"File AI belum tersedia: {name}"
             )
 
-    model = model_directory / "model.safetensors"
+    model = (
+        model_directory
+        / "model.safetensors"
+    )
 
-    with model.open("rb") as stream:
+    with model.open(
+        "rb"
+    ) as stream:
         raw = stream.read(8)
 
         if len(raw) != 8:
             raise ValueError(
-                "Header model.safetensors tidak lengkap."
+                "Header model.safetensors "
+                "tidak lengkap."
             )
 
-        length = struct.unpack("<Q", raw)[0]
+        length = struct.unpack(
+            "<Q",
+            raw,
+        )[0]
 
         if length > 16_000_000:
             raise ValueError(
-                "Header model.safetensors tidak valid."
+                "Header model.safetensors "
+                "tidak valid."
             )
 
         header = json.loads(
@@ -219,43 +391,60 @@ def validate_assets(directory: Path):
         + length
         + max(
             item["data_offsets"][1]
-            for key, item in header.items()
-            if key != "__metadata__"
+            for key, item
+            in header.items()
+            if key
+            != "__metadata__"
         )
     )
 
-    if model.stat().st_size != expected:
+    if (
+        model.stat().st_size
+        != expected
+    ):
         raise ValueError(
-            f"model.safetensors tidak lengkap: "
+            "model.safetensors tidak lengkap: "
             f"{model.stat().st_size} byte; "
             f"seharusnya {expected} byte. "
             "Salin ulang model lengkap."
         )
 
     modules = json.loads(
-        (model_directory / "modules.json").read_text(
+        (
+            model_directory
+            / "modules.json"
+        ).read_text(
             encoding="utf-8"
         )
     )
 
     for module in modules:
-        path = module.get("path", "")
+        path = module.get(
+            "path",
+            "",
+        )
 
         if path and not (
-            model_directory / path
+            model_directory
+            / path
         ).is_dir():
             raise ValueError(
-                f"Folder model {path} belum tersedia. "
+                f"Folder model {path} "
+                "belum tersedia. "
                 "Salin folder model lengkap."
             )
 
     return model_directory
 
-
 class RecipeEngine:
-    def __init__(self, directory: Path):
-        model_directory = validate_assets(
-            directory
+    def __init__(
+        self,
+        directory: Path,
+    ):
+        model_directory = (
+            validate_assets(
+                directory
+            )
         )
 
         import faiss
@@ -266,10 +455,12 @@ class RecipeEngine:
         self.faiss = faiss
         self.lock = Lock()
 
-        self.index = faiss.read_index(
-            str(
-                directory
-                / "recipe_faiss.index"
+        self.index = (
+            faiss.read_index(
+                str(
+                    directory
+                    / "recipe_faiss.index"
+                )
             )
         )
 
@@ -278,17 +469,21 @@ class RecipeEngine:
             faiss.IndexFlat,
         ):
             raise ValueError(
-                "Index harus IndexFlat dengan urutan "
-                "yang sama seperti CSV."
+                "Index harus IndexFlat "
+                "dengan urutan yang sama "
+                "seperti CSV."
             )
 
         with (
-            directory / "recipe_metadata.csv"
+            directory
+            / "recipe_metadata.csv"
         ).open(
             encoding="utf-8-sig",
             newline="",
         ) as file:
-            reader = csv.DictReader(file)
+            reader = csv.DictReader(
+                file
+            )
 
             required = {
                 "recipe_id",
@@ -298,13 +493,17 @@ class RecipeEngine:
             }
 
             if not required.issubset(
-                reader.fieldnames or []
+                reader.fieldnames
+                or []
             ):
                 raise ValueError(
-                    "Kolom metadata resep tidak lengkap."
+                    "Kolom metadata resep "
+                    "tidak lengkap."
                 )
 
-            self.rows = list(reader)
+            self.rows = list(
+                reader
+            )
 
         if (
             len(self.rows)
@@ -316,16 +515,23 @@ class RecipeEngine:
                 "dengan jumlah vektor index."
             )
 
-        self.model = SentenceTransformer(
-            str(model_directory),
-            local_files_only=True,
-            device="cpu",
+        self.model = (
+            SentenceTransformer(
+                str(
+                    model_directory
+                ),
+                local_files_only=True,
+                device="cpu",
+            )
         )
 
-        self.model.max_seq_length = 384
+        self.model.max_seq_length = (
+            384
+        )
 
         if (
-            self.model.get_embedding_dimension()
+            self.model
+            .get_embedding_dimension()
             != self.index.d
         ):
             raise ValueError(
@@ -343,24 +549,34 @@ class RecipeEngine:
         with self.lock:
             query = (
                 question
-                if question.startswith("query: ")
-                else f"query: {question}"
+                if question.startswith(
+                    "query: "
+                )
+                else (
+                    f"query: {question}"
+                )
             )
 
-            vector = self.model.encode(
-                [query],
-                normalize_embeddings=True,
+            vector = (
+                self.model.encode(
+                    [query],
+                    normalize_embeddings=True,
+                )
             )
 
-            _, ids = self.index.search(
-                np.asarray(
-                    vector,
-                    dtype="float32",
-                ),
-                min(
-                    top_k,
-                    len(self.rows),
-                ),
+            _, ids = (
+                self.index.search(
+                    np.asarray(
+                        vector,
+                        dtype="float32",
+                    ),
+                    min(
+                        top_k,
+                        len(
+                            self.rows
+                        ),
+                    ),
+                )
             )
 
         recipes = []
@@ -369,17 +585,42 @@ class RecipeEngine:
             if index < 0:
                 continue
 
-            row = self.rows[int(index)]
+            row = self.rows[
+                int(index)
+            ]
+
+            image_name = (
+                row.get(
+                    "Image_Name",
+                    "",
+                )
+                or ""
+            ).strip()
 
             recipes.append(
                 {
-                    "id": row["recipe_id"],
-                    "title": row["Title"],
+                    "id": (
+                        row[
+                            "recipe_id"
+                        ]
+                    ),
+                    "title": (
+                        row["Title"]
+                    ),
                     "ingredients": (
-                        row["ingredient_text"]
+                        row[
+                            "ingredient_text"
+                        ]
                     ),
                     "instructions": (
-                        row["Instructions"]
+                        row[
+                            "Instructions"
+                        ]
+                    ),
+                    "image_name": (
+                        image_name
+                        if image_name
+                        else None
                     ),
                 }
             )
@@ -393,13 +634,16 @@ class RecipeEngine:
         page: int,
         limit: int,
     ):
-        normalized_query = normalize_catalog_query(
-            query
+        normalized_query = (
+            normalize_catalog_query(
+                query
+            )
         )
 
         query_terms = [
             term
-            for term in normalized_query.split()
+            for term
+            in normalized_query.split()
             if term
         ]
 
@@ -439,7 +683,10 @@ class RecipeEngine:
                 or ""
             ).strip()
 
-            title_lower = title.lower()
+            title_lower = (
+                title.lower()
+            )
+
             ingredients_lower = (
                 ingredients.lower()
             )
@@ -448,7 +695,6 @@ class RecipeEngine:
                 f"{title_lower} "
                 f"{ingredients_lower}"
             )
-
 
             if category_keywords:
                 category_match = any(
@@ -463,13 +709,14 @@ class RecipeEngine:
                 if not category_match:
                     continue
 
-
             score = 0
 
             if query_terms:
                 if not all(
-                    term in search_text
-                    for term in query_terms
+                    term
+                    in search_text
+                    for term
+                    in query_terms
                 ):
                     continue
 
@@ -486,7 +733,10 @@ class RecipeEngine:
                     score += 40
 
                 for term in query_terms:
-                    if term in title_lower:
+                    if (
+                        term
+                        in title_lower
+                    ):
                         score += 8
 
                     if (
@@ -507,24 +757,30 @@ class RecipeEngine:
                 [
                     item
                     for item
-                    in ingredients.split(",")
+                    in ingredients.split(
+                        ","
+                    )
                     if item.strip()
                 ]
             )
 
             recipe = {
-                "id": row["recipe_id"],
+                "id": (
+                    row["recipe_id"]
+                ),
                 "title": title,
-                "ingredients": ingredients,
-                "instructions": instructions,
+                "ingredients": (
+                    ingredients
+                ),
+                "instructions": (
+                    instructions
+                ),
                 "image_name": (
                     image_name
                     if image_name
                     else None
                 ),
-
                 "image_url": None,
-
                 "ingredient_count": (
                     ingredient_count
                 ),
@@ -548,10 +804,14 @@ class RecipeEngine:
 
         else:
             matches.sort(
-                key=lambda item: item[1]
+                key=lambda item: (
+                    item[1]
+                )
             )
 
-        total = len(matches)
+        total = len(
+            matches
+        )
 
         start = (
             page - 1
@@ -564,10 +824,16 @@ class RecipeEngine:
 
         recipes = [
             item[2]
-            for item in matches[start:end]
+            for item
+            in matches[
+                start:end
+            ]
         ]
 
-        return recipes, total
+        return (
+            recipes,
+            total,
+        )
 
 
 class ChatRequest(BaseModel):
@@ -582,14 +848,20 @@ class ChatRequest(BaseModel):
         le=5,
     )
 
-    @field_validator("message")
+    @field_validator(
+        "message"
+    )
     @classmethod
-    def strip_message(cls, value):
+    def strip_message(
+        cls,
+        value,
+    ):
         value = value.strip()
 
         if not value:
             raise ValueError(
-                "Pertanyaan tidak boleh kosong."
+                "Pertanyaan tidak "
+                "boleh kosong."
             )
 
         return value
@@ -600,12 +872,22 @@ class RecipeSource(BaseModel):
     title: str
     ingredients: str
     instructions: str
+    image_name: (
+        str | None
+    ) = None
+    image_url: (
+        str | None
+    ) = None
 
 
 class ChatResponse(BaseModel):
     text: str
-    recipes: list[RecipeSource]
-    generation: str = "retrieval_only"
+    recipes: list[
+        RecipeSource
+    ]
+    generation: str = (
+        "retrieval_only"
+    )
 
 
 class CatalogRecipe(BaseModel):
@@ -613,13 +895,19 @@ class CatalogRecipe(BaseModel):
     title: str
     ingredients: str
     instructions: str
-    image_name: str | None = None
-    image_url: str | None = None
+    image_name: (
+        str | None
+    ) = None
+    image_url: (
+        str | None
+    ) = None
     ingredient_count: int
 
 
 class CatalogResponse(BaseModel):
-    recipes: list[CatalogRecipe]
+    recipes: list[
+        CatalogRecipe
+    ]
     page: int
     limit: int
     total: int
@@ -629,15 +917,65 @@ class CatalogResponse(BaseModel):
 def create_app(
     engine_factory=None,
     generator_factory=None,
+    image_directory=None,
 ):
+    configured_image_directory = (
+        Path(
+            image_directory
+            if image_directory
+            is not None
+            else os.getenv(
+                "RECIPE_IMAGE_DIR",
+                str(
+                    DEFAULT_IMAGE_DIR
+                ),
+            )
+        )
+        .expanduser()
+        .resolve()
+    )
+
     @asynccontextmanager
     async def lifespan(api):
         api.state.engine = None
-        api.state.load_error = None
-        api.state.generator = None
+        api.state.load_error = (
+            None
+        )
+
+        api.state.generator = (
+            None
+        )
+
         api.state.generation_status = (
             "not_configured"
         )
+
+        api.state.image_index = (
+            build_image_index(
+                configured_image_directory
+            )
+        )
+
+        api.state.image_status = (
+            "ready"
+            if api.state.image_index
+            else "not_found"
+        )
+
+        if api.state.image_index:
+            log.info(
+                "Recipe images ready: %s",
+                len(
+                    api.state.image_index
+                ),
+            )
+
+        else:
+            log.warning(
+                "Folder gambar resep "
+                "tidak ditemukan atau kosong: %s",
+                configured_image_directory,
+            )
 
         key = os.getenv(
             "GEMINI_API_KEY",
@@ -649,8 +987,12 @@ def create_app(
             "",
         ).strip()
 
-        if generator_factory or (
-            key and model
+        if (
+            generator_factory
+            or (
+                key
+                and model
+            )
         ):
             try:
                 api.state.generator = (
@@ -688,8 +1030,8 @@ def create_app(
             )
 
         except Exception as error:
-            api.state.load_error = str(
-                error
+            api.state.load_error = (
+                str(error)
             )
 
             log.exception(
@@ -702,6 +1044,20 @@ def create_app(
         title="RacikAI",
         lifespan=lifespan,
     )
+
+    if (
+        configured_image_directory
+        .is_dir()
+    ):
+        api.mount(
+            IMAGE_ROUTE,
+            StaticFiles(
+                directory=str(
+                    configured_image_directory
+                )
+            ),
+            name="recipe-images",
+        )
 
     api.add_middleware(
         CORSMiddleware,
@@ -725,7 +1081,9 @@ def create_app(
         ],
     )
 
-    @api.get("/health")
+    @api.get(
+        "/health"
+    )
     def health():
         ready = (
             api.state.engine
@@ -742,8 +1100,19 @@ def create_app(
                 api.state.load_error
             ),
             "generation": (
-                api.state.generation_status
+                api.state
+                .generation_status
             ),
+            "images": {
+                "status": (
+                    api.state
+                    .image_status
+                ),
+                "count": len(
+                    api.state
+                    .image_index
+                ),
+            },
         }
 
     @api.get(
@@ -751,15 +1120,20 @@ def create_app(
         response_model=CatalogResponse,
     )
     def recipes(
+        request: Request,
         q: str = "",
         category: str = "Semua",
         page: int = 1,
         limit: int = 24,
     ):
-        if api.state.engine is None:
+        if (
+            api.state.engine
+            is None
+        ):
             raise HTTPException(
                 503,
-                "Katalog resep belum siap.",
+                "Katalog resep "
+                "belum siap.",
             )
 
         page = max(
@@ -784,12 +1158,22 @@ def create_app(
 
         try:
             results, total = (
-                api.state.engine
+                api.state
+                .engine
                 .search_catalog(
                     query=q,
                     category=category,
                     page=page,
                     limit=limit,
+                )
+            )
+
+            results = (
+                enrich_recipes_with_images(
+                    results,
+                    api.state
+                    .image_index,
+                    request,
                 )
             )
 
@@ -800,7 +1184,8 @@ def create_app(
 
             raise HTTPException(
                 500,
-                "Katalog resep gagal dimuat.",
+                "Katalog resep "
+                "gagal dimuat.",
             ) from None
 
         return {
@@ -817,11 +1202,16 @@ def create_app(
     @api.post(
         "/chat",
         response_model=ChatResponse,
+        response_model_exclude_none=True,
     )
     def chat(
         request: ChatRequest,
+        http_request: Request,
     ):
-        if api.state.engine is None:
+        if (
+            api.state.engine
+            is None
+        ):
             raise HTTPException(
                 503,
                 (
@@ -831,12 +1221,15 @@ def create_app(
                 ),
             )
 
-        search_query = request.message
+        search_query = (
+            request.message
+        )
 
         if api.state.generator:
             try:
                 search_query = (
-                    api.state.generator
+                    api.state
+                    .generator
                     .rewrite_query(
                         request.message
                     )
@@ -860,7 +1253,9 @@ def create_app(
 
         try:
             recipes = (
-                api.state.engine.search(
+                api.state
+                .engine
+                .search(
                     search_query,
                     request.top_k,
                 )
@@ -878,6 +1273,7 @@ def create_app(
                     "Silakan coba lagi."
                 ),
             ) from None
+
 
         text = (
             (
@@ -906,14 +1302,17 @@ def create_app(
         ):
             try:
                 text = (
-                    api.state.generator
+                    api.state
+                    .generator
                     .generate(
                         request.message,
                         recipes,
                     )
                 )
 
-                generation = "gemini"
+                generation = (
+                    "gemini"
+                )
 
             except Exception:
                 log.warning(
@@ -941,10 +1340,23 @@ def create_app(
                 + text
             )
 
+        response_recipes = (
+            enrich_recipes_with_images(
+                recipes,
+                api.state
+                .image_index,
+                http_request,
+            )
+        )
+
         return {
             "text": text,
-            "recipes": recipes,
-            "generation": generation,
+            "recipes": (
+                response_recipes
+            ),
+            "generation": (
+                generation
+            ),
         }
 
     return api
