@@ -15,21 +15,46 @@ class AiRecipeDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    final screenWidth = MediaQuery.sizeOf(context).width;
 
     final ingredients = _parseIngredients(recipe.ingredients);
     final steps = _parseInstructions(recipe.instructions);
+
+    final heroHeight = screenWidth >= 700 ? 360.0 : 300.0;
 
     return Scaffold(
       backgroundColor: colors.surface,
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
-            expandedHeight: 280,
+            expandedHeight: heroHeight,
             pinned: true,
+            stretch: true,
+            elevation: 0,
+            scrolledUnderElevation: 0,
+            surfaceTintColor: Colors.transparent,
             backgroundColor: colors.surface,
             foregroundColor: colors.onSurface,
+
+            leadingWidth: 64,
+            leading: Padding(
+              padding: const EdgeInsets.all(9),
+              child: _HeroActionButton(
+                icon: Icons.arrow_back_rounded,
+                tooltip: 'Kembali',
+                onPressed: () {
+                  Navigator.of(context).maybePop();
+                },
+              ),
+            ),
+
             flexibleSpace: FlexibleSpaceBar(
-              background: _RecipeHero(imageUrl: recipe.imageUrl),
+              collapseMode: CollapseMode.parallax,
+              stretchModes: const [StretchMode.zoomBackground],
+              background: _RecipeHero(
+                imageUrl: recipe.imageUrl,
+                recipeTitle: recipe.title,
+              ),
             ),
           ),
 
@@ -224,6 +249,7 @@ class AiRecipeDetailScreen extends StatelessWidget {
     final cleaned = raw
         .replaceAll('â€“', '–')
         .replaceAll('â€”', '—')
+        .replaceAll('â€™', '’')
         .replaceAll('Â°F', '°F');
 
     final matches = RegExp(r'[^.!?]+(?:[.!?]+|$)').allMatches(cleaned);
@@ -235,24 +261,111 @@ class AiRecipeDetailScreen extends StatelessWidget {
   }
 }
 
-class _RecipeHero extends StatelessWidget {
-  final String? imageUrl;
+class _HeroActionButton extends StatelessWidget {
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback onPressed;
 
-  const _RecipeHero({required this.imageUrl});
+  const _HeroActionButton({
+    required this.icon,
+    required this.tooltip,
+    required this.onPressed,
+  });
 
   @override
   Widget build(BuildContext context) {
-    if (imageUrl != null && imageUrl!.isNotEmpty) {
-      return Image.network(
-        imageUrl!,
-        fit: BoxFit.cover,
-        errorBuilder: (_, _, _) {
-          return _placeholder(context);
-        },
-      );
-    }
+    final colors = Theme.of(context).colorScheme;
 
-    return _placeholder(context);
+    return Material(
+      color: colors.surface.withValues(alpha: 0.92),
+      shape: const CircleBorder(),
+      elevation: 3,
+      shadowColor: Colors.black.withValues(alpha: 0.25),
+      clipBehavior: Clip.antiAlias,
+      child: IconButton(
+        tooltip: tooltip,
+        onPressed: onPressed,
+        icon: Icon(icon, color: colors.onSurface),
+      ),
+    );
+  }
+}
+
+class _RecipeHero extends StatelessWidget {
+  final String? imageUrl;
+  final String recipeTitle;
+
+  const _RecipeHero({required this.imageUrl, required this.recipeTitle});
+
+  @override
+  Widget build(BuildContext context) {
+    final hasImage = imageUrl != null && imageUrl!.trim().isNotEmpty;
+
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        if (hasImage)
+          Image.network(
+            imageUrl!,
+            fit: BoxFit.cover,
+            semanticLabel: 'Gambar resep $recipeTitle',
+            loadingBuilder: (context, child, loadingProgress) {
+              if (loadingProgress == null) {
+                return child;
+              }
+
+              return _loadingPlaceholder(context, loadingProgress);
+            },
+            errorBuilder: (_, _, _) {
+              return _placeholder(context);
+            },
+          )
+        else
+          _placeholder(context),
+
+        IgnorePointer(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.center,
+                colors: [
+                  Colors.black.withValues(alpha: 0.28),
+                  Colors.transparent,
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _loadingPlaceholder(
+    BuildContext context,
+    ImageChunkEvent loadingProgress,
+  ) {
+    final colors = Theme.of(context).colorScheme;
+
+    final expectedBytes = loadingProgress.expectedTotalBytes;
+
+    final progress = expectedBytes != null
+        ? loadingProgress.cumulativeBytesLoaded / expectedBytes
+        : null;
+
+    return Container(
+      color: colors.surfaceContainerHighest,
+      alignment: Alignment.center,
+      child: SizedBox(
+        width: 32,
+        height: 32,
+        child: CircularProgressIndicator(
+          value: progress,
+          strokeWidth: 3,
+          color: colors.primary,
+        ),
+      ),
+    );
   }
 
   Widget _placeholder(BuildContext context) {
@@ -271,7 +384,7 @@ class _RecipeHero extends StatelessWidget {
           width: 92,
           height: 92,
           decoration: BoxDecoration(
-            color: colors.surface.withValues(alpha: 0.85),
+            color: colors.surface.withValues(alpha: 0.88),
             shape: BoxShape.circle,
           ),
           child: Icon(
@@ -319,22 +432,29 @@ class _InfoCard extends StatelessWidget {
             child: Icon(icon, size: 21, color: colors.primary),
           ),
           const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                value,
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w900,
-                  color: colors.onSurface,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  value,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
+                    color: colors.onSurface,
+                  ),
                 ),
-              ),
-              Text(
-                label,
-                style: TextStyle(fontSize: 12, color: colors.onSurfaceVariant),
-              ),
-            ],
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: colors.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
