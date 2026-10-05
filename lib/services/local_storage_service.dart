@@ -1,5 +1,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../models/saved_recipe.dart';
+
 import 'dart:convert';
 
 class LocalStorageService {
@@ -9,6 +11,8 @@ class LocalStorageService {
   static const String _subscriptionPlanKey = 'subscription_plan';
 
   static const String _favoriteIdsKey = 'favorite_ids';
+
+  static const String _savedBackendRecipesKey = 'saved_backend_recipes_v1';
 
   static const String _aiUsageKey = 'ai_usage';
 
@@ -61,6 +65,42 @@ class LocalStorageService {
     final values = favoriteIds.toList()..sort();
 
     await _preferences.setStringList(_favoriteIdsKey, values);
+  }
+
+  static List<SavedRecipe> get savedBackendRecipes {
+    final storedData = _preferences.getString(_savedBackendRecipesKey);
+
+    if (storedData == null || storedData.isEmpty) {
+      return [];
+    }
+
+    try {
+      final decoded = jsonDecode(storedData);
+
+      if (decoded is! List) {
+        return [];
+      }
+
+      final recipes = <SavedRecipe>[];
+
+      for (final item in decoded) {
+        if (item is Map) {
+          recipes.add(SavedRecipe.fromJson(Map<String, dynamic>.from(item)));
+        }
+      }
+
+      return recipes;
+    } catch (_) {
+      return [];
+    }
+  }
+
+  static Future<void> saveBackendRecipes(List<SavedRecipe> recipes) async {
+    final encoded = jsonEncode(
+      recipes.map((recipe) => recipe.toJson()).toList(),
+    );
+
+    await _preferences.setString(_savedBackendRecipesKey, encoded);
   }
 
   static int get aiUsage {
