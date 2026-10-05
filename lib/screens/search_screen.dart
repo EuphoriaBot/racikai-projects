@@ -1,8 +1,13 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
+import '../cubits/favorite/favorite_cubit.dart';
+import '../cubits/favorite/favorite_state.dart';
 import '../models/catalog_recipe.dart';
+import '../models/saved_recipe.dart';
 import '../services/recipe_catalog_service.dart';
 import 'ai_recipe_detail_screen.dart';
 
@@ -171,199 +176,234 @@ class _SearchScreenState extends State<SearchScreen> {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-
     final backgroundColor = Theme.of(context).scaffoldBackgroundColor;
 
-    return Scaffold(
-      backgroundColor: backgroundColor,
-      body: SafeArea(
-        child: RefreshIndicator(
-          onRefresh: () => _loadRecipes(reset: true),
-          child: CustomScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            slivers: [
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _SearchField(
-                        controller: _searchController,
-                        query: _searchQuery,
-                        onChanged: _onSearchChanged,
-                        onClear: () {
-                          _searchController.clear();
+    return BlocListener<FavoriteCubit, FavoriteState>(
+      listenWhen: (previous, current) {
+        return previous.actionId != current.actionId;
+      },
+      listener: (context, state) {
+        if (state.action == FavoriteAction.limitReached) {
+          _showFavoriteLimitDialog(context);
+          return;
+        }
 
-                          _onSearchChanged('');
-                        },
-                      ),
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
-                      const SizedBox(height: 18),
+        if (state.action == FavoriteAction.added) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              duration: Duration(milliseconds: 900),
+              content: Text('Resep disimpan'),
+            ),
+          );
+        }
 
-                      SizedBox(
-                        height: 46,
-                        child: ListView.separated(
-                          scrollDirection: Axis.horizontal,
-                          itemCount: _categories.length,
-                          separatorBuilder: (_, _) => const SizedBox(width: 10),
-                          itemBuilder: (context, index) {
-                            final category = _categories[index];
-
-                            final selected = _selectedCategory == category;
-
-                            return ChoiceChip(
-                              label: Text(category),
-                              selected: selected,
-                              showCheckmark: false,
-                              onSelected: (_) {
-                                _selectCategory(category);
-                              },
-                              selectedColor: colors.primary,
-                              backgroundColor: colors.surface,
-                              labelStyle: TextStyle(
-                                fontWeight: FontWeight.w600,
-                                color: selected
-                                    ? colors.onPrimary
-                                    : colors.onSurface,
-                              ),
-                              side: BorderSide(
-                                color: selected
-                                    ? colors.primary
-                                    : colors.outlineVariant,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(14),
-                              ),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 10,
-                              ),
-                            );
+        if (state.action == FavoriteAction.removed) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              duration: Duration(milliseconds: 900),
+              content: Text('Resep dihapus dari tersimpan'),
+            ),
+          );
+        }
+      },
+      child: Scaffold(
+        backgroundColor: backgroundColor,
+        body: SafeArea(
+          child: RefreshIndicator(
+            onRefresh: () => _loadRecipes(reset: true),
+            child: CustomScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              slivers: [
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _SearchField(
+                          controller: _searchController,
+                          query: _searchQuery,
+                          onChanged: _onSearchChanged,
+                          onClear: () {
+                            _searchController.clear();
+                            _onSearchChanged('');
                           },
                         ),
-                      ),
 
-                      const SizedBox(height: 24),
+                        const SizedBox(height: 18),
 
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              _headingText,
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w800,
-                                color: colors.onSurface,
-                              ),
-                            ),
-                          ),
+                        SizedBox(
+                          height: 46,
+                          child: ListView.separated(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: _categories.length,
+                            separatorBuilder: (_, _) {
+                              return const SizedBox(width: 10);
+                            },
+                            itemBuilder: (context, index) {
+                              final category = _categories[index];
 
-                          if (!_isLoading &&
-                              _errorMessage == null &&
-                              _total > 0)
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 6,
-                              ),
-                              decoration: BoxDecoration(
-                                color: colors.surfaceContainerHighest,
-                                borderRadius: BorderRadius.circular(100),
-                              ),
-                              child: Text(
-                                '$_total resep',
-                                style: TextStyle(
-                                  fontSize: 11,
+                              final selected = _selectedCategory == category;
+
+                              return ChoiceChip(
+                                label: Text(category),
+                                selected: selected,
+                                showCheckmark: false,
+                                onSelected: (_) {
+                                  _selectCategory(category);
+                                },
+                                selectedColor: colors.primary,
+                                backgroundColor: colors.surface,
+                                labelStyle: TextStyle(
                                   fontWeight: FontWeight.w600,
-                                  color: colors.onSurfaceVariant,
+                                  color: selected
+                                      ? colors.onPrimary
+                                      : colors.onSurface,
+                                ),
+                                side: BorderSide(
+                                  color: selected
+                                      ? colors.primary
+                                      : colors.outlineVariant,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 10,
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+
+                        const SizedBox(height: 24),
+
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                _headingText,
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w800,
+                                  color: colors.onSurface,
                                 ),
                               ),
                             ),
-                        ],
-                      ),
 
-                      const SizedBox(height: 14),
-                    ],
-                  ),
-                ),
-              ),
-
-              if (_isLoading)
-                const SliverFillRemaining(
-                  hasScrollBody: false,
-                  child: Center(child: CircularProgressIndicator()),
-                )
-              else if (_errorMessage != null)
-                SliverFillRemaining(
-                  hasScrollBody: false,
-                  child: _SearchError(
-                    message: _errorMessage!,
-                    onRetry: () {
-                      _loadRecipes(reset: true);
-                    },
-                  ),
-                )
-              else if (_recipes.isEmpty)
-                SliverFillRemaining(
-                  hasScrollBody: false,
-                  child: _EmptySearchResult(searchQuery: _searchQuery),
-                )
-              else ...[
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                  sliver: SliverLayoutBuilder(
-                    builder: (context, constraints) {
-                      final width = constraints.crossAxisExtent;
-
-                      int columns;
-
-                      if (width >= 1100) {
-                        columns = 4;
-                      } else if (width >= 700) {
-                        columns = 3;
-                      } else {
-                        columns = 2;
-                      }
-
-                      return SliverGrid(
-                        delegate: SliverChildBuilderDelegate((context, index) {
-                          final recipe = _recipes[index];
-
-                          return _CatalogRecipeCard(
-                            recipe: recipe,
-                            onTap: () {
-                              _openRecipe(recipe);
-                            },
-                          );
-                        }, childCount: _recipes.length),
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: columns,
-                          crossAxisSpacing: 14,
-                          mainAxisSpacing: 14,
-                          mainAxisExtent: 300,
+                            if (!_isLoading &&
+                                _errorMessage == null &&
+                                _total > 0)
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: colors.surfaceContainerHighest,
+                                  borderRadius: BorderRadius.circular(100),
+                                ),
+                                child: Text(
+                                  '$_total resep',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    color: colors.onSurfaceVariant,
+                                  ),
+                                ),
+                              ),
+                          ],
                         ),
-                      );
-                    },
-                  ),
-                ),
 
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 4, 20, 36),
-                    child: _LoadMoreArea(
-                      hasMore: _hasMore,
-                      isLoading: _isLoadingMore,
-                      loaded: _recipes.length,
-                      total: _total,
-                      onPressed: () {
-                        _loadRecipes(reset: false);
-                      },
+                        const SizedBox(height: 14),
+                      ],
                     ),
                   ),
                 ),
+
+                if (_isLoading)
+                  const SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: Center(child: CircularProgressIndicator()),
+                  )
+                else if (_errorMessage != null)
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: _SearchError(
+                      message: _errorMessage!,
+                      onRetry: () {
+                        _loadRecipes(reset: true);
+                      },
+                    ),
+                  )
+                else if (_recipes.isEmpty)
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: _EmptySearchResult(searchQuery: _searchQuery),
+                  )
+                else ...[
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                    sliver: SliverLayoutBuilder(
+                      builder: (context, constraints) {
+                        final width = constraints.crossAxisExtent;
+
+                        int columns;
+
+                        if (width >= 1100) {
+                          columns = 4;
+                        } else if (width >= 700) {
+                          columns = 3;
+                        } else {
+                          columns = 2;
+                        }
+
+                        return SliverGrid(
+                          delegate: SliverChildBuilderDelegate((
+                            context,
+                            index,
+                          ) {
+                            final recipe = _recipes[index];
+
+                            return _CatalogRecipeCard(
+                              recipe: recipe,
+                              onTap: () {
+                                _openRecipe(recipe);
+                              },
+                            );
+                          }, childCount: _recipes.length),
+                          gridDelegate:
+                              SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: columns,
+                                crossAxisSpacing: 14,
+                                mainAxisSpacing: 14,
+                                mainAxisExtent: 300,
+                              ),
+                        );
+                      },
+                    ),
+                  ),
+
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 4, 20, 36),
+                      child: _LoadMoreArea(
+                        hasMore: _hasMore,
+                        isLoading: _isLoadingMore,
+                        loaded: _recipes.length,
+                        total: _total,
+                        onPressed: () {
+                          _loadRecipes(reset: false);
+                        },
+                      ),
+                    ),
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),
@@ -379,13 +419,48 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 }
 
+void _showFavoriteLimitDialog(BuildContext context) {
+  showDialog(
+    context: context,
+    builder: (dialogContext) {
+      final colors = Theme.of(dialogContext).colorScheme;
+
+      return AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+        icon: Icon(Icons.favorite_rounded, size: 42, color: colors.primary),
+        title: const Text('Batas Resep Tersimpan', textAlign: TextAlign.center),
+        content: Text(
+          'Akun Free dapat menyimpan maksimal '
+          '${FavoriteCubit.freeFavoriteLimit} resep. '
+          'Upgrade ke Premium untuk menyimpan resep tanpa batas.',
+          textAlign: TextAlign.center,
+        ),
+        actionsAlignment: MainAxisAlignment.center,
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(dialogContext);
+            },
+            child: const Text('Nanti'),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.pop(dialogContext);
+
+              context.push('/premium');
+            },
+            child: const Text('Upgrade Premium'),
+          ),
+        ],
+      );
+    },
+  );
+}
+
 class _SearchField extends StatelessWidget {
   final TextEditingController controller;
-
   final String query;
-
   final ValueChanged<String> onChanged;
-
   final VoidCallback onClear;
 
   const _SearchField({
@@ -458,7 +533,56 @@ class _CatalogRecipeCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(child: _RecipeImage(imageUrl: recipe.imageUrl)),
+              Expanded(
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    _RecipeImage(imageUrl: recipe.imageUrl),
+
+                    Positioned(
+                      top: 12,
+                      right: 12,
+                      child: BlocBuilder<FavoriteCubit, FavoriteState>(
+                        buildWhen: (previous, current) {
+                          return previous.favoriteIds != current.favoriteIds;
+                        },
+                        builder: (context, favoriteState) {
+                          final isFavorite = favoriteState.isFavorite(
+                            recipe.id,
+                          );
+
+                          return Material(
+                            color: colors.surface.withValues(alpha: 0.94),
+                            shape: const CircleBorder(),
+                            elevation: 2,
+                            clipBehavior: Clip.antiAlias,
+                            child: IconButton(
+                              tooltip: isFavorite
+                                  ? 'Hapus dari tersimpan'
+                                  : 'Simpan resep',
+                              onPressed: () {
+                                context
+                                    .read<FavoriteCubit>()
+                                    .toggleBackendFavorite(
+                                      SavedRecipe.fromCatalogRecipe(recipe),
+                                    );
+                              },
+                              icon: Icon(
+                                isFavorite
+                                    ? Icons.favorite_rounded
+                                    : Icons.favorite_border_rounded,
+                                color: isFavorite
+                                    ? colors.primary
+                                    : colors.onSurfaceVariant,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
 
               Padding(
                 padding: const EdgeInsets.all(14),
