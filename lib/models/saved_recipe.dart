@@ -32,6 +32,23 @@ class SavedRecipe {
     );
   }
 
+  factory SavedRecipe.fromAiRecipe(AiRecipe recipe) {
+    final ingredientCount = recipe.ingredients
+        .split(',')
+        .map((item) => item.trim())
+        .where((item) => item.isNotEmpty)
+        .length;
+
+    return SavedRecipe(
+      id: recipe.id,
+      title: recipe.title,
+      ingredients: recipe.ingredients,
+      instructions: recipe.instructions,
+      imageUrl: recipe.imageUrl,
+      ingredientCount: ingredientCount,
+    );
+  }
+
   factory SavedRecipe.fromJson(Map<String, dynamic> json) {
     return SavedRecipe(
       id: json['id'] as String,

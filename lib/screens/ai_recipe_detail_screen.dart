@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
+import '../cubits/favorite/favorite_cubit.dart';
+import '../cubits/favorite/favorite_state.dart';
 import '../models/chat_message.dart';
+import '../models/saved_recipe.dart';
 
 class AiRecipeDetailScreen extends StatelessWidget {
   final AiRecipe recipe;
@@ -22,217 +27,278 @@ class AiRecipeDetailScreen extends StatelessWidget {
 
     final heroHeight = screenWidth >= 700 ? 360.0 : 300.0;
 
-    return Scaffold(
-      backgroundColor: colors.surface,
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar(
-            expandedHeight: heroHeight,
-            pinned: true,
-            stretch: true,
-            elevation: 0,
-            scrolledUnderElevation: 0,
-            surfaceTintColor: Colors.transparent,
-            backgroundColor: colors.surface,
-            foregroundColor: colors.onSurface,
+    return BlocListener<FavoriteCubit, FavoriteState>(
+      listenWhen: (previous, current) {
+        return previous.actionId != current.actionId;
+      },
+      listener: (context, state) {
+        if (state.action == FavoriteAction.limitReached) {
+          _showFavoriteLimitDialog(context);
+          return;
+        }
 
-            leadingWidth: 64,
-            leading: Padding(
-              padding: const EdgeInsets.all(9),
-              child: _HeroActionButton(
-                icon: Icons.arrow_back_rounded,
-                tooltip: 'Kembali',
-                onPressed: () {
-                  Navigator.of(context).maybePop();
-                },
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+        if (state.action == FavoriteAction.added) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              duration: Duration(milliseconds: 900),
+              content: Text('Resep disimpan'),
+            ),
+          );
+        }
+
+        if (state.action == FavoriteAction.removed) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              duration: Duration(milliseconds: 900),
+              content: Text('Resep dihapus dari tersimpan'),
+            ),
+          );
+        }
+      },
+      child: Scaffold(
+        backgroundColor: colors.surface,
+        body: CustomScrollView(
+          slivers: [
+            SliverAppBar(
+              expandedHeight: heroHeight,
+              pinned: true,
+              stretch: true,
+              elevation: 0,
+              scrolledUnderElevation: 0,
+              surfaceTintColor: Colors.transparent,
+              backgroundColor: colors.surface,
+              foregroundColor: colors.onSurface,
+              leadingWidth: 64,
+              leading: Padding(
+                padding: const EdgeInsets.all(9),
+                child: _HeroActionButton(
+                  icon: Icons.arrow_back_rounded,
+                  tooltip: 'Kembali',
+                  onPressed: () {
+                    Navigator.of(context).maybePop();
+                  },
+                ),
+              ),
+              actions: [
+                Padding(
+                  padding: const EdgeInsets.all(9),
+                  child: BlocBuilder<FavoriteCubit, FavoriteState>(
+                    buildWhen: (previous, current) {
+                      return previous.favoriteIds != current.favoriteIds;
+                    },
+                    builder: (context, favoriteState) {
+                      final isFavorite = favoriteState.isFavorite(recipe.id);
+
+                      return _HeroActionButton(
+                        icon: isFavorite
+                            ? Icons.favorite_rounded
+                            : Icons.favorite_border_rounded,
+                        tooltip: isFavorite
+                            ? 'Hapus dari tersimpan'
+                            : 'Simpan resep',
+                        iconColor: isFavorite
+                            ? colors.primary
+                            : colors.onSurface,
+                        onPressed: () {
+                          context.read<FavoriteCubit>().toggleBackendFavorite(
+                            SavedRecipe.fromAiRecipe(recipe),
+                          );
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ],
+              flexibleSpace: FlexibleSpaceBar(
+                collapseMode: CollapseMode.parallax,
+                stretchModes: const [StretchMode.zoomBackground],
+                background: _RecipeHero(
+                  imageUrl: recipe.imageUrl,
+                  recipeTitle: recipe.title,
+                ),
               ),
             ),
 
-            flexibleSpace: FlexibleSpaceBar(
-              collapseMode: CollapseMode.parallax,
-              stretchModes: const [StretchMode.zoomBackground],
-              background: _RecipeHero(
-                imageUrl: recipe.imageUrl,
-                recipeTitle: recipe.title,
-              ),
-            ),
-          ),
-
-          SliverToBoxAdapter(
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 850),
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 24, 20, 40),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: colors.primaryContainer,
-                          borderRadius: BorderRadius.circular(100),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.auto_awesome_rounded,
-                              size: 15,
-                              color: colors.primary,
-                            ),
-                            const SizedBox(width: 5),
-                            Text(
-                              isAiRecommendation
-                                  ? 'Rekomendasi RacikAI'
-                                  : 'Resep RacikAI',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w700,
+            SliverToBoxAdapter(
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 850),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 24, 20, 40),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: colors.primaryContainer,
+                            borderRadius: BorderRadius.circular(100),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.auto_awesome_rounded,
+                                size: 15,
                                 color: colors.primary,
                               ),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      const SizedBox(height: 14),
-
-                      Text(
-                        recipe.title,
-                        style: TextStyle(
-                          fontSize: 30,
-                          height: 1.15,
-                          fontWeight: FontWeight.w900,
-                          color: colors.onSurface,
-                        ),
-                      ),
-
-                      const SizedBox(height: 12),
-
-                      Text(
-                        isAiRecommendation
-                            ? 'Resep ini direkomendasikan RacikAI berdasarkan '
-                                  'bahan dan kebutuhan yang kamu tanyakan.'
-                            : 'Resep dari koleksi RacikAI. Lihat bahan dan '
-                                  'ikuti langkah memasaknya di bawah.',
-                        style: TextStyle(
-                          fontSize: 14,
-                          height: 1.55,
-                          color: colors.onSurfaceVariant,
-                        ),
-                      ),
-
-                      const SizedBox(height: 24),
-
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _InfoCard(
-                              icon: Icons.restaurant_menu_rounded,
-                              value: '${ingredients.length}',
-                              label: 'Bahan',
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: _InfoCard(
-                              icon: Icons.format_list_numbered_rounded,
-                              value: '${steps.length}',
-                              label: 'Langkah',
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      const SizedBox(height: 34),
-
-                      _SectionHeader(
-                        icon: Icons.restaurant_rounded,
-                        title: 'Bahan',
-                        subtitle: 'Siapkan bahan berikut sebelum memasak.',
-                      ),
-
-                      const SizedBox(height: 14),
-
-                      Container(
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          color: colors.surfaceContainerLow,
-                          borderRadius: BorderRadius.circular(22),
-                          border: Border.all(color: colors.outlineVariant),
-                        ),
-                        child: Column(
-                          children: [
-                            for (int i = 0; i < ingredients.length; i++)
-                              _IngredientTile(
-                                ingredient: ingredients[i],
-                                showDivider: i != ingredients.length - 1,
+                              const SizedBox(width: 5),
+                              Text(
+                                isAiRecommendation
+                                    ? 'Rekomendasi RacikAI'
+                                    : 'Resep RacikAI',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  color: colors.primary,
+                                ),
                               ),
-                          ],
-                        ),
-                      ),
-
-                      const SizedBox(height: 38),
-
-                      _SectionHeader(
-                        icon: Icons.format_list_numbered_rounded,
-                        title: 'Langkah Memasak',
-                        subtitle: 'Ikuti langkah secara berurutan untuk hasil terbaik.',
-                      ),
-
-                      const SizedBox(height: 16),
-
-                      ...List.generate(
-                        steps.length,
-                        (index) =>
-                            _CookingStep(number: index + 1, text: steps[index]),
-                      ),
-
-                      const SizedBox(height: 22),
-
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(18),
-                        decoration: BoxDecoration(
-                          color: colors.primaryContainer.withValues(
-                            alpha: 0.45,
+                            ],
                           ),
-                          borderRadius: BorderRadius.circular(20),
                         ),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+
+                        const SizedBox(height: 14),
+
+                        Text(
+                          recipe.title,
+                          style: TextStyle(
+                            fontSize: 30,
+                            height: 1.15,
+                            fontWeight: FontWeight.w900,
+                            color: colors.onSurface,
+                          ),
+                        ),
+
+                        const SizedBox(height: 12),
+
+                        Text(
+                          isAiRecommendation
+                              ? 'Resep ini direkomendasikan RacikAI berdasarkan '
+                                    'bahan dan kebutuhan yang kamu tanyakan.'
+                              : 'Resep dari koleksi RacikAI. Lihat bahan dan '
+                                    'ikuti langkah memasaknya di bawah.',
+                          style: TextStyle(
+                            fontSize: 14,
+                            height: 1.55,
+                            color: colors.onSurfaceVariant,
+                          ),
+                        ),
+
+                        const SizedBox(height: 24),
+
+                        Row(
                           children: [
-                            Icon(
-                              Icons.info_outline_rounded,
-                              color: colors.primary,
+                            Expanded(
+                              child: _InfoCard(
+                                icon: Icons.restaurant_menu_rounded,
+                                value: '${ingredients.length}',
+                                label: 'Bahan',
+                              ),
                             ),
                             const SizedBox(width: 12),
                             Expanded(
-                              child: Text(
-                                'Resep berasal dari dataset RacikAI. '
-                                'Sesuaikan jumlah bahan, waktu memasak, '
-                                'dan kebutuhan makananmu jika diperlukan.',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  height: 1.5,
-                                  color: colors.onSurfaceVariant,
-                                ),
+                              child: _InfoCard(
+                                icon: Icons.format_list_numbered_rounded,
+                                value: '${steps.length}',
+                                label: 'Langkah',
                               ),
                             ),
                           ],
                         ),
-                      ),
-                    ],
+
+                        const SizedBox(height: 34),
+
+                        _SectionHeader(
+                          icon: Icons.restaurant_rounded,
+                          title: 'Bahan',
+                          subtitle: 'Siapkan bahan berikut sebelum memasak.',
+                        ),
+
+                        const SizedBox(height: 14),
+
+                        Container(
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            color: colors.surfaceContainerLow,
+                            borderRadius: BorderRadius.circular(22),
+                            border: Border.all(color: colors.outlineVariant),
+                          ),
+                          child: Column(
+                            children: [
+                              for (int i = 0; i < ingredients.length; i++)
+                                _IngredientTile(
+                                  ingredient: ingredients[i],
+                                  showDivider: i != ingredients.length - 1,
+                                ),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(height: 38),
+
+                        _SectionHeader(
+                          icon: Icons.format_list_numbered_rounded,
+                          title: 'Langkah Memasak',
+                          subtitle: 'Ikuti langkah secara berurutan untuk hasil terbaik.',
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        ...List.generate(
+                          steps.length,
+                          (index) => _CookingStep(
+                            number: index + 1,
+                            text: steps[index],
+                          ),
+                        ),
+
+                        const SizedBox(height: 22),
+
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(18),
+                          decoration: BoxDecoration(
+                            color: colors.primaryContainer.withValues(
+                              alpha: 0.45,
+                            ),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Icon(
+                                Icons.info_outline_rounded,
+                                color: colors.primary,
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  'Resep berasal dari dataset RacikAI. '
+                                  'Sesuaikan jumlah bahan, waktu memasak, '
+                                  'dan kebutuhan makananmu jika diperlukan.',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    height: 1.5,
+                                    color: colors.onSurfaceVariant,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -261,15 +327,54 @@ class AiRecipeDetailScreen extends StatelessWidget {
   }
 }
 
+void _showFavoriteLimitDialog(BuildContext context) {
+  showDialog(
+    context: context,
+    builder: (dialogContext) {
+      final colors = Theme.of(dialogContext).colorScheme;
+
+      return AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+        icon: Icon(Icons.favorite_rounded, size: 42, color: colors.primary),
+        title: const Text('Batas Resep Tersimpan', textAlign: TextAlign.center),
+        content: Text(
+          'Akun Free dapat menyimpan maksimal '
+          '${FavoriteCubit.freeFavoriteLimit} resep. '
+          'Upgrade ke Premium untuk menyimpan resep tanpa batas.',
+          textAlign: TextAlign.center,
+        ),
+        actionsAlignment: MainAxisAlignment.center,
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(dialogContext);
+            },
+            child: const Text('Nanti'),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.pop(dialogContext);
+              context.push('/premium');
+            },
+            child: const Text('Upgrade Premium'),
+          ),
+        ],
+      );
+    },
+  );
+}
+
 class _HeroActionButton extends StatelessWidget {
   final IconData icon;
   final String tooltip;
   final VoidCallback onPressed;
+  final Color? iconColor;
 
   const _HeroActionButton({
     required this.icon,
     required this.tooltip,
     required this.onPressed,
+    this.iconColor,
   });
 
   @override
@@ -285,7 +390,7 @@ class _HeroActionButton extends StatelessWidget {
       child: IconButton(
         tooltip: tooltip,
         onPressed: onPressed,
-        icon: Icon(icon, color: colors.onSurface),
+        icon: Icon(icon, color: iconColor ?? colors.onSurface),
       ),
     );
   }
