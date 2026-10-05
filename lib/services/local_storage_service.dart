@@ -43,14 +43,22 @@ class LocalStorageService {
     }
   }
 
-  static List<int> get favoriteIds {
+  static List<String> get favoriteIds {
     final storedIds = _preferences.getStringList(_favoriteIdsKey) ?? [];
 
-    return storedIds.map(int.tryParse).whereType<int>().toList();
+    return storedIds.map((id) => id.trim()).where((id) => id.isNotEmpty).map((
+      id,
+    ) {
+      if (id.startsWith('local:') || id.startsWith('backend:')) {
+        return id;
+      }
+
+      return 'local:$id';
+    }).toList();
   }
 
-  static Future<void> saveFavoriteIds(Set<int> favoriteIds) async {
-    final values = favoriteIds.map((id) => id.toString()).toList();
+  static Future<void> saveFavoriteIds(Set<String> favoriteIds) async {
+    final values = favoriteIds.toList()..sort();
 
     await _preferences.setStringList(_favoriteIdsKey, values);
   }

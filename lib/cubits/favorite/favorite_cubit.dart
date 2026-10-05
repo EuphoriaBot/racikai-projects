@@ -12,20 +12,22 @@ class FavoriteCubit extends Cubit<FavoriteState> {
   void loadFromStorage() {
     final savedFavorites = LocalStorageService.favoriteIds;
 
-    emit(FavoriteState(favoriteIds: Set<int>.unmodifiable(savedFavorites)));
+    emit(FavoriteState(favoriteIds: Set<String>.unmodifiable(savedFavorites)));
   }
 
-  void toggleFavorite(int recipeId) {
-    final updatedIds = Set<int>.from(state.favoriteIds);
+  void toggleFavorite(Object recipeId) {
+    final favoriteKey = favoriteKeyFor(recipeId);
 
-    if (updatedIds.contains(recipeId)) {
-      updatedIds.remove(recipeId);
+    final updatedIds = Set<String>.from(state.favoriteIds);
+
+    if (updatedIds.contains(favoriteKey)) {
+      updatedIds.remove(favoriteKey);
 
       LocalStorageService.saveFavoriteIds(updatedIds);
 
       emit(
         FavoriteState(
-          favoriteIds: Set<int>.unmodifiable(updatedIds),
+          favoriteIds: Set<String>.unmodifiable(updatedIds),
           action: FavoriteAction.removed,
           actionId: state.actionId + 1,
         ),
@@ -47,13 +49,13 @@ class FavoriteCubit extends Cubit<FavoriteState> {
       return;
     }
 
-    updatedIds.add(recipeId);
+    updatedIds.add(favoriteKey);
 
     LocalStorageService.saveFavoriteIds(updatedIds);
 
     emit(
       FavoriteState(
-        favoriteIds: Set<int>.unmodifiable(updatedIds),
+        favoriteIds: Set<String>.unmodifiable(updatedIds),
         action: FavoriteAction.added,
         actionId: state.actionId + 1,
       ),

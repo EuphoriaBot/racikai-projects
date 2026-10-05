@@ -53,9 +53,7 @@ class _SavedContent extends StatelessWidget {
             return BlocBuilder<FavoriteCubit, FavoriteState>(
               builder: (context, favoriteState) {
                 final favorites = recipeState.recipes
-                    .where(
-                      (recipe) => favoriteState.favoriteIds.contains(recipe.id),
-                    )
+                    .where((recipe) => favoriteState.isFavorite(recipe.id))
                     .toList();
 
                 if (favorites.isEmpty) {
