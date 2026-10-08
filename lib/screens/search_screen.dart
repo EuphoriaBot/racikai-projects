@@ -9,7 +9,7 @@ import '../cubits/favorite/favorite_state.dart';
 import '../models/catalog_recipe.dart';
 import '../models/saved_recipe.dart';
 import '../services/recipe_catalog_service.dart';
-import 'ai_recipe_detail_screen.dart';
+import '../core/router/recipe_detail_route_args.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -163,12 +163,11 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   void _openRecipe(CatalogRecipe recipe) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => AiRecipeDetailScreen(
-          recipe: recipe.toAiRecipe(),
-          isAiRecommendation: false,
-        ),
+    context.push(
+      '/catalog-recipe/${recipe.id}',
+      extra: RecipeDetailRouteArgs(
+        recipe: recipe.toAiRecipe(),
+        isAiRecommendation: false,
       ),
     );
   }

@@ -7,7 +7,7 @@ import '../cubits/favorite/favorite_state.dart';
 import '../models/catalog_recipe.dart';
 import '../models/saved_recipe.dart';
 import '../services/recipe_catalog_service.dart';
-import 'ai_recipe_detail_screen.dart';
+import '../core/router/recipe_detail_route_args.dart';
 
 class IngredientResultScreen extends StatefulWidget {
   final List<String> selectedIngredients;
@@ -153,12 +153,11 @@ class _IngredientResultScreenState extends State<IngredientResultScreen> {
   }
 
   void _openRecipe(CatalogRecipe recipe) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => AiRecipeDetailScreen(
-          recipe: recipe.toAiRecipe(),
-          isAiRecommendation: false,
-        ),
+    context.push(
+      '/catalog-recipe/${recipe.id}',
+      extra: RecipeDetailRouteArgs(
+        recipe: recipe.toAiRecipe(),
+        isAiRecommendation: false,
       ),
     );
   }

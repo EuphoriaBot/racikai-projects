@@ -12,6 +12,8 @@ import '../../screens/main_screen.dart';
 import '../../screens/meal_planner_screen.dart';
 import '../../screens/premium_screen.dart';
 import '../../screens/recipe_detail_screen.dart';
+import '../../screens/ai_recipe_detail_screen.dart';
+import 'recipe_detail_route_args.dart';
 
 final GoRouter appRouter = GoRouter(
   initialLocation: '/',
@@ -80,6 +82,27 @@ final GoRouter appRouter = GoRouter(
           initialName: data['name'] ?? 'Guest User',
           initialEmail: data['email'] ?? 'guest@racikai.app',
           initialPreference: data['preference'] ?? 'Tidak ada',
+        );
+      },
+    ),
+
+    GoRoute(
+      path: '/catalog-recipe/:id',
+      builder: (context, state) {
+        final id = state.pathParameters['id'];
+        final extra = state.extra;
+
+        if (extra is! RecipeDetailRouteArgs) {
+          return const _RouteErrorScreen(message: 'Data resep tidak tersedia.');
+        }
+
+        if (id == null || id != extra.recipe.id) {
+          return const _RouteErrorScreen(message: 'Resep tidak ditemukan.');
+        }
+
+        return AiRecipeDetailScreen(
+          recipe: extra.recipe,
+          isAiRecommendation: extra.isAiRecommendation,
         );
       },
     ),

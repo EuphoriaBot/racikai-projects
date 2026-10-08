@@ -10,7 +10,7 @@ import '../features/recipe/presentation/cubit/recipe_cubit.dart';
 import '../features/recipe/presentation/cubit/recipe_state.dart';
 import '../models/chat_message.dart';
 import '../services/ai_service.dart';
-import 'ai_recipe_detail_screen.dart';
+import '../core/router/recipe_detail_route_args.dart';
 
 class AiScreen extends StatelessWidget {
   const AiScreen({super.key});
@@ -598,8 +598,9 @@ class _AiRecipeCard extends StatelessWidget {
   const _AiRecipeCard({required this.recipe});
 
   void _openDetail(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => AiRecipeDetailScreen(recipe: recipe)),
+    context.push(
+      '/catalog-recipe/${recipe.id}',
+      extra: RecipeDetailRouteArgs(recipe: recipe, isAiRecommendation: true),
     );
   }
 

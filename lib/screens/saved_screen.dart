@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 import '../cubits/favorite/favorite_cubit.dart';
 import '../cubits/favorite/favorite_state.dart';
 import '../models/saved_recipe.dart';
 import '../services/local_storage_service.dart';
-import 'ai_recipe_detail_screen.dart';
+import '../core/router/recipe_detail_route_args.dart';
 
 class SavedScreen extends StatelessWidget {
   const SavedScreen({super.key});
@@ -145,12 +146,11 @@ class _SavedRecipeCard extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) => AiRecipeDetailScreen(
-                recipe: recipe.toAiRecipe(),
-                isAiRecommendation: false,
-              ),
+          context.push(
+            '/catalog-recipe/${recipe.id}',
+            extra: RecipeDetailRouteArgs(
+              recipe: recipe.toAiRecipe(),
+              isAiRecommendation: false,
             ),
           );
         },
