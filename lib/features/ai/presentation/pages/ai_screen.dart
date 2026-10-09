@@ -2,15 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../controllers/subscription_controller.dart';
-import '../controllers/usage_controller.dart';
-import '../core/di/service_locator.dart';
-import '../features/recipe/domain/entities/recipe_entity.dart';
-import '../features/recipe/presentation/cubit/recipe_cubit.dart';
-import '../features/recipe/presentation/cubit/recipe_state.dart';
-import '../features/ai/data/models/chat_message.dart';
-import '../features/ai/data/datasources/ai_service.dart';
-import '../core/router/recipe_detail_route_args.dart';
+import '../../../../controllers/subscription_controller.dart';
+import '../../../../controllers/usage_controller.dart';
+import '../../../../core/di/service_locator.dart';
+import '../../../recipe/domain/entities/recipe_entity.dart';
+import '../../../recipe/presentation/cubit/recipe_cubit.dart';
+import '../../../recipe/presentation/cubit/recipe_state.dart';
+import '../../data/models/chat_message.dart';
+import '../../data/datasources/ai_service.dart';
+import '../../../../core/router/recipe_detail_route_args.dart';
 
 class AiScreen extends StatelessWidget {
   const AiScreen({super.key});

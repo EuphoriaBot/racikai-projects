@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../features/favorite/presentation/cubit/favorite_cubit.dart';
 import '../features/favorite/presentation/cubit/favorite_state.dart';
-import 'ai_screen.dart';
+import '../features/ai/presentation/pages/ai_screen.dart';
 import 'home_screen.dart';
 import 'profile_screen.dart';
 import '../features/favorite/presentation/pages/saved_screen.dart';
