@@ -1,4 +1,4 @@
-import '../features/recipe/data/models/recipe_model.dart';
+import '../models/recipe_model.dart';
 
 const List<RecipeModel> dummyRecipes = [
   RecipeModel(

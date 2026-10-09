@@ -1,4 +1,4 @@
-import '../../../../data/dummy_recipes.dart';
+import 'recipe_seed_data.dart';
 import '../models/recipe_model.dart';
 
 abstract class RecipeLocalDataSource {
