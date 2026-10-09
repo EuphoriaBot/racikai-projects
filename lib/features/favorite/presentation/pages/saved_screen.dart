@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../features/favorite/presentation/cubit/favorite_cubit.dart';
-import '../features/favorite/presentation/cubit/favorite_state.dart';
-import '../features/favorite/data/models/saved_recipe.dart';
-import '../services/local_storage_service.dart';
-import '../core/router/recipe_detail_route_args.dart';
+import '../cubit/favorite_cubit.dart';
+import '../cubit/favorite_state.dart';
+import '../../data/models/saved_recipe.dart';
+import '../../../../services/local_storage_service.dart';
+import '../../../../core/router/recipe_detail_route_args.dart';
 
 class SavedScreen extends StatelessWidget {
   const SavedScreen({super.key});

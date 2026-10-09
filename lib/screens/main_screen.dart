@@ -6,7 +6,7 @@ import '../features/favorite/presentation/cubit/favorite_state.dart';
 import 'ai_screen.dart';
 import 'home_screen.dart';
 import 'profile_screen.dart';
-import 'saved_screen.dart';
+import '../features/favorite/presentation/pages/saved_screen.dart';
 import 'search_screen.dart';
 
 class MainScreen extends StatefulWidget {
