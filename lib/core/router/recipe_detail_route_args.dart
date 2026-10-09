@@ -1,4 +1,4 @@
-import '../../models/chat_message.dart';
+import '../../features/favorite/ai/data/models/chat_message.dart';
 
 class RecipeDetailRouteArgs {
   final AiRecipe recipe;

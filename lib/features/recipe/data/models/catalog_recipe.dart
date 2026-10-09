@@ -1,4 +1,4 @@
-import '../../../../models/chat_message.dart';
+import '../../../favorite/ai/data/models/chat_message.dart';
 
 class CatalogRecipe {
   final String id;

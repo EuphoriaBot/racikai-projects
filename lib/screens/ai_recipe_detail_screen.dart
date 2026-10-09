@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../features/favorite/presentation/cubit/favorite_cubit.dart';
 import '../features/favorite/presentation/cubit/favorite_state.dart';
-import '../models/chat_message.dart';
+import '../features/favorite/ai/data/models/chat_message.dart';
 import '../features/favorite/data/models/saved_recipe.dart';
 
 class AiRecipeDetailScreen extends StatelessWidget {
