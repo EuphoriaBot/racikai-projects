@@ -1,8 +1,8 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../controllers/subscription_controller.dart';
-import '../../models/saved_recipe.dart';
-import '../../services/local_storage_service.dart';
+import '../../../../controllers/subscription_controller.dart';
+import '../../data/models/saved_recipe.dart';
+import '../../../../services/local_storage_service.dart';
 import 'favorite_state.dart';
 
 class FavoriteCubit extends Cubit<FavoriteState> {

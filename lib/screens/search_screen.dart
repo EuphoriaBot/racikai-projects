@@ -4,10 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../cubits/favorite/favorite_cubit.dart';
-import '../cubits/favorite/favorite_state.dart';
+import '../features/favorite/presentation/cubit/favorite_cubit.dart';
+import '../features/favorite/presentation/cubit/favorite_state.dart';
 import '../features/recipe/data/models/catalog_recipe.dart';
-import '../models/saved_recipe.dart';
+import '../features/favorite/data/models/saved_recipe.dart';
 import '../services/recipe_catalog_service.dart';
 import '../core/router/recipe_detail_route_args.dart';
 

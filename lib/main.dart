@@ -8,7 +8,7 @@ import 'controllers/meal_planner_controller.dart';
 import 'core/theme/app_theme.dart';
 import 'controllers/theme_controller.dart';
 import 'core/router/app_router.dart';
-import 'cubits/favorite/favorite_cubit.dart';
+import 'features/favorite/presentation/cubit/favorite_cubit.dart';
 import 'core/di/service_locator.dart';
 
 Future<void> main() async {

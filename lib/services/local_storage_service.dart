@@ -1,6 +1,6 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../models/saved_recipe.dart';
+import '../features/favorite/data/models/saved_recipe.dart';
 
 import 'dart:convert';
 

@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../cubits/favorite/favorite_cubit.dart';
-import '../cubits/favorite/favorite_state.dart';
+import '../features/favorite/presentation/cubit/favorite_cubit.dart';
+import '../features/favorite/presentation/cubit/favorite_state.dart';
 import '../features/recipe/domain/entities/recipe_entity.dart';
 
 class RecipeDetailScreen extends StatelessWidget {
