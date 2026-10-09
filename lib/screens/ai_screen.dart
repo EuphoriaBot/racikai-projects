@@ -8,8 +8,8 @@ import '../core/di/service_locator.dart';
 import '../features/recipe/domain/entities/recipe_entity.dart';
 import '../features/recipe/presentation/cubit/recipe_cubit.dart';
 import '../features/recipe/presentation/cubit/recipe_state.dart';
-import '../features/favorite/ai/data/models/chat_message.dart';
-import '../services/ai_service.dart';
+import '../features/ai/data/models/chat_message.dart';
+import '../features/ai/data/datasources/ai_service.dart';
 import '../core/router/recipe_detail_route_args.dart';
 
 class AiScreen extends StatelessWidget {

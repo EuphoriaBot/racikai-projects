@@ -4,7 +4,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
-import '../features/favorite/ai/data/models/chat_message.dart';
+import '../models/chat_message.dart';
 
 class AiServiceException implements Exception {
   final String message;
