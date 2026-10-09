@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../controllers/subscription_controller.dart';
 import '../cubits/favorite/favorite_cubit.dart';
 import '../cubits/favorite/favorite_state.dart';
-import '../models/catalog_recipe.dart';
+import '../features/recipe/data/models/catalog_recipe.dart';
 import '../models/saved_recipe.dart';
 import '../services/recipe_catalog_service.dart';
 import '../core/router/recipe_detail_route_args.dart';

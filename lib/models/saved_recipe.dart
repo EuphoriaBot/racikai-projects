@@ -1,4 +1,4 @@
-import 'catalog_recipe.dart';
+import '../features/recipe/data/models/catalog_recipe.dart';
 import 'chat_message.dart';
 
 class SavedRecipe {

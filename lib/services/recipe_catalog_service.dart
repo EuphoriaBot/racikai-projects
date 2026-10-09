@@ -4,7 +4,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
-import '../models/catalog_recipe.dart';
+import '../features/recipe/data/models/catalog_recipe.dart';
 
 class RecipeCatalogException implements Exception {
   final String message;
