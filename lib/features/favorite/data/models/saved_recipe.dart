@@ -1,10 +1,11 @@
-import '../../../recipe/data/models/catalog_recipe.dart';
 import '../../../ai/data/models/chat_message.dart';
+import '../../../recipe/data/models/catalog_recipe.dart';
 
 class SavedRecipe {
   final String id;
   final String title;
   final String ingredients;
+  final List<String> ingredientList;
   final String instructions;
   final String? imageName;
   final String? imageUrl;
@@ -15,9 +16,10 @@ class SavedRecipe {
     required this.title,
     required this.ingredients,
     required this.instructions,
+    required this.ingredientCount,
+    this.ingredientList = const [],
     this.imageName,
     this.imageUrl,
-    required this.ingredientCount,
   });
 
   factory SavedRecipe.fromCatalogRecipe(CatalogRecipe recipe) {
@@ -25,6 +27,7 @@ class SavedRecipe {
       id: recipe.id,
       title: recipe.title,
       ingredients: recipe.ingredients,
+      ingredientList: recipe.ingredientList,
       instructions: recipe.instructions,
       imageName: recipe.imageName,
       imageUrl: recipe.imageUrl,
@@ -33,31 +36,38 @@ class SavedRecipe {
   }
 
   factory SavedRecipe.fromAiRecipe(AiRecipe recipe) {
-    final ingredientCount = recipe.ingredients
-        .split(',')
-        .map((item) => item.trim())
-        .where((item) => item.isNotEmpty)
-        .length;
-
     return SavedRecipe(
       id: recipe.id,
       title: recipe.title,
       ingredients: recipe.ingredients,
+      ingredientList: recipe.ingredientList,
       instructions: recipe.instructions,
       imageUrl: recipe.imageUrl,
-      ingredientCount: ingredientCount,
+      ingredientCount: recipe.ingredientList.length,
     );
   }
 
   factory SavedRecipe.fromJson(Map<String, dynamic> json) {
+    final rawIngredientList = json['ingredient_list'];
+
+    final ingredientList = rawIngredientList is List
+        ? rawIngredientList
+              .map((item) => item.toString().trim())
+              .where((item) => item.isNotEmpty)
+              .toList()
+        : <String>[];
+
+    final savedIngredientCount = (json['ingredient_count'] as num?)?.toInt();
+
     return SavedRecipe(
       id: json['id'] as String,
       title: json['title'] as String,
       ingredients: json['ingredients'] as String,
+      ingredientList: ingredientList,
       instructions: json['instructions'] as String,
       imageName: json['image_name'] as String?,
       imageUrl: json['image_url'] as String?,
-      ingredientCount: (json['ingredient_count'] as num?)?.toInt() ?? 0,
+      ingredientCount: savedIngredientCount ?? ingredientList.length,
     );
   }
 
@@ -66,6 +76,7 @@ class SavedRecipe {
       'id': id,
       'title': title,
       'ingredients': ingredients,
+      'ingredient_list': ingredientList,
       'instructions': instructions,
       'image_name': imageName,
       'image_url': imageUrl,
@@ -78,6 +89,7 @@ class SavedRecipe {
       id: id,
       title: title,
       ingredients: ingredients,
+      ingredientList: ingredientList,
       instructions: instructions,
       imageUrl: imageUrl,
     );

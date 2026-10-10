@@ -22,7 +22,12 @@ class AiRecipeDetailScreen extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
     final screenWidth = MediaQuery.sizeOf(context).width;
 
-    final ingredients = _parseIngredients(recipe.ingredients);
+    final ingredients = recipe.ingredientList.isNotEmpty
+        ? recipe.ingredientList
+        : (recipe.ingredients.trim().isEmpty
+              ? <String>[]
+              : <String>[recipe.ingredients.trim()]);
+
     final steps = _parseInstructions(recipe.instructions);
 
     final heroHeight = screenWidth >= 700 ? 360.0 : 300.0;
@@ -301,14 +306,6 @@ class AiRecipeDetailScreen extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  List<String> _parseIngredients(String raw) {
-    return raw
-        .split(',')
-        .map((item) => item.trim())
-        .where((item) => item.isNotEmpty)
-        .toList();
   }
 
   List<String> _parseInstructions(String raw) {

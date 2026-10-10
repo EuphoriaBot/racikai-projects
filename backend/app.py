@@ -4,6 +4,7 @@ import logging
 import os
 import re
 import struct
+
 from contextlib import asynccontextmanager
 from pathlib import Path
 from threading import Lock
@@ -19,13 +20,19 @@ from generation import GeminiGenerator
 
 log = logging.getLogger(__name__)
 
-
 DEFAULT_WORKSPACE_DIR = Path(__file__).resolve().parents[2]
-DEFAULT_ASSET_ROOT = DEFAULT_WORKSPACE_DIR / "file ai"
+
+DEFAULT_ASSET_ROOT = (
+    DEFAULT_WORKSPACE_DIR
+    / "file ai"
+)
 
 DEFAULT_AI_DIR = DEFAULT_ASSET_ROOT
 
-if (DEFAULT_ASSET_ROOT / "recovered-kaggle").is_dir():
+if (
+    DEFAULT_ASSET_ROOT
+    / "recovered-kaggle"
+).is_dir():
     DEFAULT_AI_DIR = (
         DEFAULT_ASSET_ROOT
         / "recovered-kaggle"
@@ -45,7 +52,6 @@ IMAGE_EXTENSIONS = {
     ".png",
     ".webp",
 }
-
 
 CATALOG_QUERY_TRANSLATIONS = {
     "kecap manis": "sweet soy sauce",
@@ -142,11 +148,12 @@ CATEGORY_KEYWORDS = {
     ),
 }
 
-
 def normalize_catalog_query(
     query: str,
 ) -> str:
-    """Normalize simple Indonesian catalog queries."""
+    """
+    Normalize simple Indonesian catalog queries.
+    """
 
     result = query.strip().lower()
 
@@ -169,8 +176,7 @@ def normalize_catalog_query(
             r"[a-z0-9]+",
             result,
         )
-        if word
-        not in CATALOG_STOP_WORDS
+        if word not in CATALOG_STOP_WORDS
     ]
 
     return " ".join(words)
@@ -180,7 +186,9 @@ def _contains_catalog_keyword(
     text: str,
     keyword: str,
 ) -> bool:
-    """Check category keyword using word boundaries."""
+    """
+    Check category keyword using word boundaries.
+    """
 
     return (
         re.search(
@@ -316,7 +324,6 @@ def enrich_recipes_with_images(
 
     return enriched
 
-
 def validate_assets(
     directory: Path,
 ):
@@ -340,8 +347,7 @@ def validate_assets(
     for name in required:
         root = (
             directory
-            if name
-            in {
+            if name in {
                 "recipe_faiss.index",
                 "recipe_metadata.csv",
             }
@@ -391,10 +397,8 @@ def validate_assets(
         + length
         + max(
             item["data_offsets"][1]
-            for key, item
-            in header.items()
-            if key
-            != "__metadata__"
+            for key, item in header.items()
+            if key != "__metadata__"
         )
     )
 
@@ -436,6 +440,38 @@ def validate_assets(
 
     return model_directory
 
+def parse_ingredient_list(
+    value: str,
+) -> list[str]:
+    """
+    Membaca ingredient_list yang disimpan sebagai JSON
+    di dalam recipe_metadata.csv.
+    """
+
+    if not value:
+        return []
+
+    try:
+        parsed = json.loads(value)
+
+    except (
+        json.JSONDecodeError,
+        TypeError,
+    ):
+        return []
+
+    if not isinstance(
+        parsed,
+        list,
+    ):
+        return []
+
+    return [
+        str(item).strip()
+        for item in parsed
+        if str(item).strip()
+    ]
+
 class RecipeEngine:
     def __init__(
         self,
@@ -448,11 +484,13 @@ class RecipeEngine:
         )
 
         import faiss
+
         from sentence_transformers import (
             SentenceTransformer,
         )
 
         self.faiss = faiss
+
         self.lock = Lock()
 
         self.index = (
@@ -489,6 +527,7 @@ class RecipeEngine:
                 "recipe_id",
                 "Title",
                 "ingredient_text",
+                "ingredient_list",
                 "Instructions",
             }
 
@@ -525,13 +564,11 @@ class RecipeEngine:
             )
         )
 
-        self.model.max_seq_length = (
-            384
-        )
+        self.model.max_seq_length = 384
 
         if (
             self.model
-            .get_embedding_dimension()
+            .get_sentence_embedding_dimension()
             != self.index.d
         ):
             raise ValueError(
@@ -589,6 +626,15 @@ class RecipeEngine:
                 int(index)
             ]
 
+            ingredient_list = (
+                parse_ingredient_list(
+                    row.get(
+                        "ingredient_list",
+                        "",
+                    )
+                )
+            )
+
             image_name = (
                 row.get(
                     "Image_Name",
@@ -599,29 +645,27 @@ class RecipeEngine:
 
             recipes.append(
                 {
-                    "id": (
-                        row[
-                            "recipe_id"
-                        ]
+                    "id": row[
+                        "recipe_id"
+                    ],
+                    "title": row[
+                        "Title"
+                    ],
+                    "ingredients": row[
+                        "ingredient_text"
+                    ],
+                    "ingredient_list": (
+                        ingredient_list
                     ),
-                    "title": (
-                        row["Title"]
-                    ),
-                    "ingredients": (
-                        row[
-                            "ingredient_text"
-                        ]
-                    ),
-                    "instructions": (
-                        row[
-                            "Instructions"
-                        ]
-                    ),
+                    "instructions": row[
+                        "Instructions"
+                    ],
                     "image_name": (
                         image_name
                         if image_name
                         else None
                     ),
+                    "image_url": None,
                 }
             )
 
@@ -713,10 +757,8 @@ class RecipeEngine:
 
             if query_terms:
                 if not all(
-                    term
-                    in search_text
-                    for term
-                    in query_terms
+                    term in search_text
+                    for term in query_terms
                 ):
                     continue
 
@@ -753,24 +795,28 @@ class RecipeEngine:
                 or ""
             ).strip()
 
-            ingredient_count = len(
-                [
-                    item
-                    for item
-                    in ingredients.split(
-                        ","
+            ingredient_list = (
+                parse_ingredient_list(
+                    row.get(
+                        "ingredient_list",
+                        "",
                     )
-                    if item.strip()
-                ]
+                )
+            )
+
+            # Hitung dari list asli, BUKAN split(",")
+            ingredient_count = len(
+                ingredient_list
             )
 
             recipe = {
-                "id": (
-                    row["recipe_id"]
-                ),
+                "id": row[
+                    "recipe_id"
+                ],
                 "title": title,
-                "ingredients": (
-                    ingredients
+                "ingredients": ingredients,
+                "ingredient_list": (
+                    ingredient_list
                 ),
                 "instructions": (
                     instructions
@@ -835,8 +881,9 @@ class RecipeEngine:
             total,
         )
 
-
-class ChatRequest(BaseModel):
+class ChatRequest(
+    BaseModel
+):
     message: str = Field(
         min_length=1,
         max_length=2000,
@@ -856,7 +903,9 @@ class ChatRequest(BaseModel):
         cls,
         value,
     ):
-        value = value.strip()
+        value = (
+            value.strip()
+        )
 
         if not value:
             raise ValueError(
@@ -867,52 +916,76 @@ class ChatRequest(BaseModel):
         return value
 
 
-class RecipeSource(BaseModel):
+class RecipeSource(
+    BaseModel
+):
     id: str
+
     title: str
+
     ingredients: str
+
+    ingredient_list: list[str] = Field(
+        default_factory=list
+    )
+
     instructions: str
-    image_name: (
-        str | None
-    ) = None
-    image_url: (
-        str | None
-    ) = None
+
+    image_name: str | None = None
+
+    image_url: str | None = None
 
 
-class ChatResponse(BaseModel):
+class ChatResponse(
+    BaseModel
+):
     text: str
+
     recipes: list[
         RecipeSource
     ]
+
     generation: str = (
         "retrieval_only"
     )
 
 
-class CatalogRecipe(BaseModel):
+class CatalogRecipe(
+    BaseModel
+):
     id: str
+
     title: str
+
     ingredients: str
+
+    ingredient_list: list[str] = Field(
+        default_factory=list
+    )
+
     instructions: str
-    image_name: (
-        str | None
-    ) = None
-    image_url: (
-        str | None
-    ) = None
+
+    image_name: str | None = None
+
+    image_url: str | None = None
+
     ingredient_count: int
 
 
-class CatalogResponse(BaseModel):
+class CatalogResponse(
+    BaseModel
+):
     recipes: list[
         CatalogRecipe
     ]
-    page: int
-    limit: int
-    total: int
-    has_more: bool
 
+    page: int
+
+    limit: int
+
+    total: int
+
+    has_more: bool
 
 def create_app(
     engine_factory=None,
@@ -936,15 +1009,14 @@ def create_app(
     )
 
     @asynccontextmanager
-    async def lifespan(api):
+    async def lifespan(
+        api,
+    ):
         api.state.engine = None
-        api.state.load_error = (
-            None
-        )
 
-        api.state.generator = (
-            None
-        )
+        api.state.load_error = None
+
+        api.state.generator = None
 
         api.state.generation_status = (
             "not_configured"
@@ -1063,7 +1135,8 @@ def create_app(
         CORSMiddleware,
         allow_origins=[
             item.strip()
-            for item in os.getenv(
+            for item
+            in os.getenv(
                 "CORS_ORIGINS",
                 (
                     "http://localhost:3000,"
@@ -1274,7 +1347,6 @@ def create_app(
                 ),
             ) from None
 
-
         text = (
             (
                 "Berikut resep terdekat "
@@ -1360,6 +1432,5 @@ def create_app(
         }
 
     return api
-
 
 app = create_app()
