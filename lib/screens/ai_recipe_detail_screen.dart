@@ -624,11 +624,24 @@ class _SectionHeader extends StatelessWidget {
   }
 }
 
-class _IngredientTile extends StatelessWidget {
+class _IngredientTile extends StatefulWidget {
   final String ingredient;
   final bool showDivider;
 
   const _IngredientTile({required this.ingredient, required this.showDivider});
+
+  @override
+  State<_IngredientTile> createState() => _IngredientTileState();
+}
+
+class _IngredientTileState extends State<_IngredientTile> {
+  bool _isPrepared = false;
+
+  void _togglePrepared() {
+    setState(() {
+      _isPrepared = !_isPrepared;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -636,36 +649,67 @@ class _IngredientTile extends StatelessWidget {
 
     return Column(
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                margin: const EdgeInsets.only(top: 4),
-                width: 20,
-                height: 20,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: colors.primary, width: 1.7),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  ingredient,
-                  style: TextStyle(
-                    fontSize: 14,
-                    height: 1.45,
-                    color: colors.onSurface,
+        Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: _togglePrepared,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 180),
+                    curve: Curves.easeOut,
+                    margin: const EdgeInsets.only(top: 3),
+                    width: 22,
+                    height: 22,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: _isPrepared ? colors.primary : Colors.transparent,
+                      border: Border.all(
+                        color: _isPrepared ? colors.primary : colors.primary,
+                        width: 1.7,
+                      ),
+                    ),
+                    child: _isPrepared
+                        ? Icon(
+                            Icons.check_rounded,
+                            size: 15,
+                            color: colors.onPrimary,
+                          )
+                        : null,
                   ),
-                ),
+
+                  const SizedBox(width: 12),
+
+                  Expanded(
+                    child: AnimatedDefaultTextStyle(
+                      duration: const Duration(milliseconds: 180),
+                      curve: Curves.easeOut,
+                      style: TextStyle(
+                        fontSize: 14,
+                        height: 1.45,
+                        color: _isPrepared
+                            ? colors.onSurfaceVariant
+                            : colors.onSurface,
+                        decoration: _isPrepared
+                            ? TextDecoration.lineThrough
+                            : TextDecoration.none,
+                        decorationColor: colors.onSurfaceVariant,
+                        decorationThickness: 1.5,
+                      ),
+                      child: Text(widget.ingredient),
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
-        if (showDivider)
-          Divider(height: 1, indent: 48, color: colors.outlineVariant),
+
+        if (widget.showDivider)
+          Divider(height: 1, indent: 50, color: colors.outlineVariant),
       ],
     );
   }
