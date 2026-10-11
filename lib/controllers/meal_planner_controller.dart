@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../features/recipe/data/models/catalog_recipe.dart';
 import '../services/local_storage_service.dart';
 
 class MealPlannerController extends ChangeNotifier {
@@ -7,7 +8,7 @@ class MealPlannerController extends ChangeNotifier {
 
   static final MealPlannerController instance = MealPlannerController._();
 
-  final Map<String, int> _mealPlan = {};
+  final Map<String, CatalogRecipe> _mealPlan = {};
 
   final List<String> days = const [
     'Senin',
@@ -19,6 +20,8 @@ class MealPlannerController extends ChangeNotifier {
     'Minggu',
   ];
 
+  bool get hasMeals => _mealPlan.isNotEmpty;
+
   Future<void> loadFromStorage() async {
     _mealPlan
       ..clear()
@@ -27,12 +30,16 @@ class MealPlannerController extends ChangeNotifier {
     notifyListeners();
   }
 
-  int? recipeIdForDay(String day) {
+  CatalogRecipe? recipeForDay(String day) {
     return _mealPlan[day];
   }
 
-  void setRecipeForDay(String day, int recipeId) {
-    _mealPlan[day] = recipeId;
+  String? recipeIdForDay(String day) {
+    return _mealPlan[day]?.id;
+  }
+
+  void setRecipeForDay(String day, CatalogRecipe recipe) {
+    _mealPlan[day] = recipe;
 
     LocalStorageService.saveMealPlan(_mealPlan);
 

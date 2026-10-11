@@ -1,8 +1,9 @@
+import 'dart:convert';
+
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../features/favorite/data/models/saved_recipe.dart';
-
-import 'dart:convert';
+import '../features/recipe/data/models/catalog_recipe.dart';
 
 class LocalStorageService {
   static late SharedPreferences _preferences;
@@ -18,12 +19,20 @@ class LocalStorageService {
 
   static const String _lastUsageDateKey = 'last_usage_date';
 
-  static const String _mealPlanKey = 'meal_plan';
+  // Meal Planner lama memakai ID dummy berbentuk int.
+  static const String _legacyMealPlanKey = 'meal_plan';
+
+  // Meal Planner baru menyimpan snapshot CatalogRecipe backend.
+  static const String _mealPlanKey = 'meal_plan_backend_v1';
 
   static const String _themeModeKey = 'theme_mode';
 
   static Future<void> init() async {
     _preferences = await SharedPreferences.getInstance();
+
+    if (_preferences.containsKey(_legacyMealPlanKey)) {
+      await _preferences.remove(_legacyMealPlanKey);
+    }
   }
 
   static bool get isPremium {
@@ -126,28 +135,65 @@ class LocalStorageService {
     await _preferences.setString(_lastUsageDateKey, date.toIso8601String());
   }
 
-  static Map<String, int> get mealPlan {
+  static Map<String, CatalogRecipe> get mealPlan {
     final storedData = _preferences.getString(_mealPlanKey);
 
-    if (storedData == null) {
+    if (storedData == null || storedData.isEmpty) {
       return {};
     }
 
     try {
-      final decoded = jsonDecode(storedData) as Map<String, dynamic>;
+      final decoded = jsonDecode(storedData);
 
-      return decoded.map((key, value) => MapEntry(key, value as int));
+      if (decoded is! Map) {
+        return {};
+      }
+
+      final result = <String, CatalogRecipe>{};
+
+      for (final entry in decoded.entries) {
+        final value = entry.value;
+
+        if (value is! Map) {
+          continue;
+        }
+
+        result[entry.key.toString()] = CatalogRecipe.fromJson(
+          Map<String, dynamic>.from(value),
+        );
+      }
+
+      return result;
     } catch (_) {
       return {};
     }
   }
 
-  static Future<void> saveMealPlan(Map<String, int> mealPlan) async {
-    await _preferences.setString(_mealPlanKey, jsonEncode(mealPlan));
+  static Future<void> saveMealPlan(Map<String, CatalogRecipe> mealPlan) async {
+    final encodedPlan = <String, dynamic>{};
+
+    for (final entry in mealPlan.entries) {
+      final recipe = entry.value;
+
+      encodedPlan[entry.key] = {
+        'id': recipe.id,
+        'title': recipe.title,
+        'ingredients': recipe.ingredients,
+        'ingredient_list': recipe.ingredientList,
+        'instructions': recipe.instructions,
+        'image_name': recipe.imageName,
+        'image_url': recipe.imageUrl,
+        'ingredient_count': recipe.ingredientCount,
+      };
+    }
+
+    await _preferences.setString(_mealPlanKey, jsonEncode(encodedPlan));
   }
 
   static Future<void> clearMealPlan() async {
     await _preferences.remove(_mealPlanKey);
+
+    await _preferences.remove(_legacyMealPlanKey);
   }
 
   static String? get themeMode {
