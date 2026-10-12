@@ -256,11 +256,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(height: 24),
 
                   _HomeHeroCard(
-                    onMealPlannerTap: _openMealPlanner,
                     onIngredientTap: () {
                       context.push('/ingredients');
                     },
                   ),
+
+                  const SizedBox(height: 24),
+
+                  _MealPlannerSection(onTap: _openMealPlanner),
 
                   const SizedBox(height: 30),
 
@@ -419,13 +422,9 @@ class _HomeScreenState extends State<HomeScreen> {
 }
 
 class _HomeHeroCard extends StatelessWidget {
-  final VoidCallback onMealPlannerTap;
   final VoidCallback onIngredientTap;
 
-  const _HomeHeroCard({
-    required this.onMealPlannerTap,
-    required this.onIngredientTap,
-  });
+  const _HomeHeroCard({required this.onIngredientTap});
 
   @override
   Widget build(BuildContext context) {
@@ -436,19 +435,29 @@ class _HomeHeroCard extends StatelessWidget {
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
         color: colors.primaryContainer,
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(24),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 54,
-            height: 54,
-            decoration: BoxDecoration(
-              color: colors.surface,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Icon(Icons.auto_awesome, color: colors.primary),
+          Row(
+            children: [
+              Icon(
+                Icons.kitchen_outlined,
+                size: 19,
+                color: colors.onPrimaryContainer.withValues(alpha: 0.72),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'MASAK DARI BAHAN',
+                style: TextStyle(
+                  fontSize: 11,
+                  letterSpacing: 0.9,
+                  fontWeight: FontWeight.w800,
+                  color: colors.onPrimaryContainer.withValues(alpha: 0.72),
+                ),
+              ),
+            ],
           ),
 
           const SizedBox(height: 18),
@@ -456,7 +465,7 @@ class _HomeHeroCard extends StatelessWidget {
           Text(
             'Punya bahan di rumah?',
             style: TextStyle(
-              fontSize: 28,
+              fontSize: 27,
               height: 1.15,
               fontWeight: FontWeight.w800,
               color: colors.onPrimaryContainer,
@@ -466,8 +475,8 @@ class _HomeHeroCard extends StatelessWidget {
           const SizedBox(height: 10),
 
           Text(
-            'Beritahu RacikAI bahan yang kamu punya '
-            'dan temukan resep yang cocok untuk dibuat.',
+            'Temukan resep dari bahan yang tersedia '
+            'di dapurmu.',
             style: TextStyle(
               fontSize: 14,
               height: 1.5,
@@ -475,89 +484,127 @@ class _HomeHeroCard extends StatelessWidget {
             ),
           ),
 
-          const SizedBox(height: 18),
+          const SizedBox(height: 20),
 
           FilledButton.icon(
             onPressed: onIngredientTap,
-            icon: const Icon(Icons.auto_awesome, size: 18),
-            label: const Text('Cari dari Bahan'),
+            icon: const Icon(Icons.search_rounded, size: 19),
+            label: const Text('Cari dari bahan'),
             style: FilledButton.styleFrom(
               backgroundColor: colors.surface,
-              foregroundColor: colors.primary,
+              foregroundColor: colors.onSurface,
               padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(14),
               ),
-            ),
-          ),
-
-          const SizedBox(height: 20),
-
-          Material(
-            color: Colors.transparent,
-            child: InkWell(
-              borderRadius: BorderRadius.circular(22),
-              onTap: onMealPlannerTap,
-              child: Container(
-                padding: const EdgeInsets.all(18),
-                decoration: BoxDecoration(
-                  color: colors.surface,
-                  borderRadius: BorderRadius.circular(22),
-                  border: Border.all(color: colors.outlineVariant),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 52,
-                      height: 52,
-                      decoration: BoxDecoration(
-                        color: colors.primaryContainer,
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      child: Icon(
-                        Icons.calendar_month_rounded,
-                        color: colors.primary,
-                      ),
-                    ),
-
-                    const SizedBox(width: 14),
-
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Meal Planner',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                              color: colors.onSurface,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Rencanakan menu untuk 7 hari',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: colors.onSurfaceVariant,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    Icon(
-                      Icons.arrow_forward_ios_rounded,
-                      size: 15,
-                      color: colors.onSurfaceVariant,
-                    ),
-                  ],
-                ),
-              ),
+              elevation: 0,
             ),
           ),
         ],
       ),
+    );
+  }
+}
+
+class _MealPlannerSection extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _MealPlannerSection({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Rencana makan',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+            color: colors.onSurface,
+          ),
+        ),
+
+        const SizedBox(height: 5),
+
+        Text(
+          'Susun menu untuk seminggu ke depan.',
+          style: TextStyle(fontSize: 13, color: colors.onSurfaceVariant),
+        ),
+
+        const SizedBox(height: 14),
+
+        Material(
+          color: colors.surface,
+          borderRadius: BorderRadius.circular(18),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: onTap,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 17),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: colors.outlineVariant),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.calendar_today_outlined,
+                    size: 25,
+                    color: colors.primary,
+                  ),
+
+                  const SizedBox(width: 16),
+
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Rencana Mingguan',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: colors.onSurface,
+                          ),
+                        ),
+
+                        const SizedBox(height: 4),
+
+                        Text(
+                          'Atur menu Senin sampai Minggu',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: colors.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(width: 12),
+
+                  Container(
+                    width: 34,
+                    height: 34,
+                    decoration: BoxDecoration(
+                      color: colors.surfaceContainerHighest,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.arrow_forward_rounded,
+                      size: 18,
+                      color: colors.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
