@@ -3,12 +3,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../controllers/subscription_controller.dart';
+import '../core/router/recipe_detail_route_args.dart';
+import '../features/favorite/data/models/saved_recipe.dart';
 import '../features/favorite/presentation/cubit/favorite_cubit.dart';
 import '../features/favorite/presentation/cubit/favorite_state.dart';
 import '../features/recipe/data/models/catalog_recipe.dart';
-import '../features/favorite/data/models/saved_recipe.dart';
 import '../services/recipe_catalog_service.dart';
-import '../core/router/recipe_detail_route_args.dart';
 
 class HomeScreen extends StatefulWidget {
   final VoidCallback onSearchTap;
@@ -23,10 +23,10 @@ class _HomeScreenState extends State<HomeScreen> {
   final RecipeCatalogService _catalogService = RecipeCatalogService();
 
   final List<Map<String, Object>> _categories = const [
-    {'name': 'Ayam', 'icon': Icons.set_meal},
-    {'name': 'Daging', 'icon': Icons.restaurant},
-    {'name': 'Sayur', 'icon': Icons.eco},
-    {'name': 'Pasta', 'icon': Icons.ramen_dining},
+    {'name': 'Ayam', 'icon': Icons.set_meal_outlined},
+    {'name': 'Daging', 'icon': Icons.restaurant_outlined},
+    {'name': 'Sayur', 'icon': Icons.eco_outlined},
+    {'name': 'Pasta', 'icon': Icons.ramen_dining_outlined},
     {'name': 'Dessert', 'icon': Icons.cake_outlined},
   ];
 
@@ -85,7 +85,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
       setState(() {
         _featuredRecipes = orderedRecipes.take(6).toList();
-
         _errorMessage = null;
       });
     } on RecipeCatalogException catch (error) {
@@ -115,30 +114,33 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  void _openIngredientFinder() {
+    context.push('/ingredients');
+  }
+
   void _openMealPlanner() {
     final isPremium = SubscriptionController.instance.isPremium;
 
     if (isPremium) {
       context.push('/meal-planner');
-
       return;
     }
-
-    final colors = Theme.of(context).colorScheme;
 
     showDialog(
       context: context,
       builder: (dialogContext) {
+        final colors = Theme.of(dialogContext).colorScheme;
+
         return AlertDialog(
           icon: Icon(
-            Icons.calendar_month_rounded,
-            size: 42,
+            Icons.calendar_month_outlined,
+            size: 40,
             color: colors.primary,
           ),
           title: const Text('Fitur Premium'),
           content: const Text(
-            'Meal Planner tersedia untuk pengguna '
-            'RacikAI Premium.',
+            'Rencana makan mingguan tersedia '
+            'untuk pengguna RacikAI Premium.',
             textAlign: TextAlign.center,
           ),
           actionsAlignment: MainAxisAlignment.center,
@@ -163,17 +165,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _showNotificationMessage() {
-    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        duration: Duration(milliseconds: 1000),
-        content: Text('Belum ada notifikasi baru.'),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
@@ -183,170 +174,67 @@ class _HomeScreenState extends State<HomeScreen> {
         onRefresh: _loadFeaturedRecipes,
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+          padding: const EdgeInsets.fromLTRB(16, 18, 16, 36),
           child: Center(
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 1100),
+              constraints: const BoxConstraints(maxWidth: 900),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'RacikAI',
-                        style: TextStyle(
-                          fontSize: 26,
-                          fontWeight: FontWeight.w800,
-                          color: colors.onSurface,
-                        ),
-                      ),
-                      Container(
-                        width: 50,
-                        height: 50,
-                        decoration: BoxDecoration(
-                          color: colors.surface,
-                          borderRadius: BorderRadius.circular(18),
-                          border: Border.all(color: colors.outlineVariant),
-                        ),
-                        child: IconButton(
-                          tooltip: 'Notifikasi',
-                          onPressed: _showNotificationMessage,
-                          icon: Icon(
-                            Icons.notifications_none_rounded,
-                            color: colors.onSurfaceVariant,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  InkWell(
-                    onTap: widget.onSearchTap,
-                    borderRadius: BorderRadius.circular(18),
-                    child: Container(
-                      height: 58,
-                      padding: const EdgeInsets.symmetric(horizontal: 18),
-                      decoration: BoxDecoration(
-                        color: colors.surface,
-                        borderRadius: BorderRadius.circular(18),
-                        border: Border.all(color: colors.outlineVariant),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.search_rounded,
-                            color: colors.onSurfaceVariant,
-                          ),
-                          const SizedBox(width: 12),
-                          Text(
-                            'Cari resep...',
-                            style: TextStyle(
-                              color: colors.onSurfaceVariant,
-                              fontSize: 15,
-                            ),
-                          ),
-                        ],
-                      ),
+                  Text(
+                    'RacikAI',
+                    style: TextStyle(
+                      fontSize: 29,
+                      height: 1,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: -0.8,
+                      color: colors.onSurface,
                     ),
                   ),
 
-                  const SizedBox(height: 24),
-
-                  _HomeHeroCard(
-                    onIngredientTap: () {
-                      context.push('/ingredients');
-                    },
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  _MealPlannerSection(onTap: _openMealPlanner),
-
-                  const SizedBox(height: 30),
-
-                  _SectionHeader(
-                    title: 'Kategori',
-                    actionLabel: 'Lihat Semua',
-                    onTap: widget.onSearchTap,
-                  ),
-
-                  const SizedBox(height: 14),
-
-                  SizedBox(
-                    height: 92,
-                    child: ListView.separated(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: _categories.length,
-                      separatorBuilder: (_, _) => const SizedBox(width: 14),
-                      itemBuilder: (context, index) {
-                        final category = _categories[index];
-
-                        return InkWell(
-                          borderRadius: BorderRadius.circular(30),
-                          onTap: widget.onSearchTap,
-                          child: SizedBox(
-                            width: 72,
-                            child: Column(
-                              children: [
-                                Container(
-                                  width: 58,
-                                  height: 58,
-                                  decoration: BoxDecoration(
-                                    color: colors.surface,
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                      color: colors.outlineVariant,
-                                    ),
-                                  ),
-                                  child: Icon(
-                                    category['icon'] as IconData,
-                                    color: colors.primary,
-                                  ),
-                                ),
-                                const SizedBox(height: 7),
-                                Text(
-                                  category['name'] as String,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w500,
-                                    color: colors.onSurface,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-
-                  const SizedBox(height: 28),
-
-                  _SectionHeader(
-                    title: 'Pilihan RacikAI',
-                    actionLabel: 'Lihat Semua',
-                    onTap: widget.onSearchTap,
-                  ),
-
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 8),
 
                   Text(
-                    'Jelajahi beberapa resep dari '
-                    'koleksi RacikAI.',
+                    'Mau masak apa hari ini?',
                     style: TextStyle(
-                      fontSize: 13,
+                      fontSize: 15,
                       color: colors.onSurfaceVariant,
                     ),
                   ),
 
+                  const SizedBox(height: 22),
+
+                  _HomeSearchBar(onTap: widget.onSearchTap),
+
+                  const SizedBox(height: 30),
+
+                  const _SectionTitle(title: 'Masak lebih mudah'),
+
                   const SizedBox(height: 14),
 
-                  _buildFeaturedSection(context),
+                  _QuickActions(
+                    onIngredientTap: _openIngredientFinder,
+                    onMealPlannerTap: _openMealPlanner,
+                  ),
+
+                  const SizedBox(height: 32),
+
+                  _SectionTitle(
+                    title: 'Kategori',
+                    actionLabel: 'Lihat semua',
+                    onActionTap: widget.onSearchTap,
+                  ),
+
+                  const SizedBox(height: 14),
+
+                  _CategoryList(
+                    categories: _categories,
+                    onCategoryTap: widget.onSearchTap,
+                  ),
+
+                  const SizedBox(height: 34),
+
+                  _buildRecipeContent(context),
                 ],
               ),
             ),
@@ -356,12 +244,12 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildFeaturedSection(BuildContext context) {
+  Widget _buildRecipeContent(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
 
     if (_isLoading) {
       return SizedBox(
-        height: 280,
+        height: 320,
         child: Center(child: CircularProgressIndicator(color: colors.primary)),
       );
     }
@@ -374,131 +262,328 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     if (_featuredRecipes.isEmpty) {
-      return Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: colors.surface,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: colors.outlineVariant),
-        ),
-        child: Column(
-          children: [
-            Icon(
-              Icons.restaurant_menu_rounded,
-              size: 38,
-              color: colors.onSurfaceVariant,
-            ),
-            const SizedBox(height: 10),
-            Text(
-              'Belum ada resep untuk ditampilkan.',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: colors.onSurfaceVariant),
-            ),
-          ],
-        ),
-      );
+      return _EmptyRecipes(onRetry: _loadFeaturedRecipes);
     }
 
-    return SizedBox(
-      height: 286,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: _featuredRecipes.length,
-        separatorBuilder: (_, _) => const SizedBox(width: 14),
-        itemBuilder: (context, index) {
-          final recipe = _featuredRecipes[index];
+    final featuredRecipe = _featuredRecipes.first;
 
-          return _HomeRecipeCard(
-            recipe: recipe,
-            onTap: () {
-              _openRecipe(recipe);
-            },
-          );
-        },
-      ),
+    final otherRecipes = _featuredRecipes.skip(1).toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _SectionTitle(
+          title: 'Inspirasi hari ini',
+          actionLabel: 'Lihat semua',
+          onActionTap: widget.onSearchTap,
+        ),
+
+        const SizedBox(height: 6),
+
+        Text(
+          'Temukan sesuatu yang menarik '
+          'untuk dimasak hari ini.',
+          style: TextStyle(
+            fontSize: 13,
+            height: 1.4,
+            color: colors.onSurfaceVariant,
+          ),
+        ),
+
+        const SizedBox(height: 16),
+
+        _FeaturedRecipeCard(
+          recipe: featuredRecipe,
+          onTap: () {
+            _openRecipe(featuredRecipe);
+          },
+        ),
+
+        if (otherRecipes.isNotEmpty) ...[
+          const SizedBox(height: 32),
+
+          _SectionTitle(
+            title: 'Resep lainnya',
+            actionLabel: 'Jelajahi',
+            onActionTap: widget.onSearchTap,
+          ),
+
+          const SizedBox(height: 16),
+
+          SizedBox(
+            height: 245,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: otherRecipes.length,
+              separatorBuilder: (_, _) => const SizedBox(width: 14),
+              itemBuilder: (context, index) {
+                final recipe = otherRecipes[index];
+
+                return _CompactRecipeCard(
+                  recipe: recipe,
+                  onTap: () {
+                    _openRecipe(recipe);
+                  },
+                );
+              },
+            ),
+          ),
+        ],
+      ],
     );
   }
 }
 
-class _HomeHeroCard extends StatelessWidget {
-  final VoidCallback onIngredientTap;
+class _HomeSearchBar extends StatelessWidget {
+  final VoidCallback onTap;
 
-  const _HomeHeroCard({required this.onIngredientTap});
+  const _HomeSearchBar({required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
 
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
-        color: colors.primaryContainer,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(17),
+        boxShadow: [
+          BoxShadow(
+            color: colors.shadow.withValues(alpha: 0.045),
+            blurRadius: 20,
+            offset: const Offset(0, 7),
+          ),
+        ],
       ),
+      child: Material(
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(17),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(17),
+          child: SizedBox(
+            height: 58,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 17),
+              child: Row(
+                children: [
+                  Icon(Icons.search_rounded, color: colors.onSurfaceVariant),
+
+                  const SizedBox(width: 12),
+
+                  Expanded(
+                    child: Text(
+                      'Cari resep atau bahan...',
+                      style: TextStyle(
+                        fontSize: 15,
+                        color: colors.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+
+                  Icon(
+                    Icons.arrow_forward_rounded,
+                    size: 19,
+                    color: colors.onSurfaceVariant,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _QuickActions extends StatelessWidget {
+  final VoidCallback onIngredientTap;
+  final VoidCallback onMealPlannerTap;
+
+  const _QuickActions({
+    required this.onIngredientTap,
+    required this.onMealPlannerTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isWide = constraints.maxWidth >= 650;
+
+        return Row(
+          children: [
+            Expanded(
+              child: SizedBox(
+                height: isWide ? 112 : 146,
+                child: _QuickActionCard(
+                  icon: Icons.kitchen_outlined,
+                  title: 'Dari bahan',
+                  subtitle: 'Cari resep dari isi dapurmu',
+                  backgroundColor: colors.primaryContainer,
+                  iconBackgroundColor: colors.surface.withValues(alpha: 0.55),
+                  iconColor: colors.primary,
+                  foregroundColor: colors.onPrimaryContainer,
+                  horizontal: isWide,
+                  onTap: onIngredientTap,
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: SizedBox(
+                height: isWide ? 112 : 146,
+                child: _QuickActionCard(
+                  icon: Icons.calendar_today_outlined,
+                  title: 'Rencana makan',
+                  subtitle: 'Susun menu untuk 7 hari',
+                  backgroundColor: colors.secondaryContainer,
+                  iconBackgroundColor: colors.surface.withValues(alpha: 0.55),
+                  iconColor: colors.secondary,
+                  foregroundColor: colors.onSecondaryContainer,
+                  horizontal: isWide,
+                  onTap: onMealPlannerTap,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _QuickActionCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final Color backgroundColor;
+  final Color iconBackgroundColor;
+  final Color iconColor;
+  final Color foregroundColor;
+  final bool horizontal;
+  final VoidCallback onTap;
+
+  const _QuickActionCard({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.backgroundColor,
+    required this.iconBackgroundColor,
+    required this.iconColor,
+    required this.foregroundColor,
+    required this.horizontal,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: backgroundColor,
+      borderRadius: BorderRadius.circular(20),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: horizontal ? _buildHorizontal() : _buildMobile(),
+      ),
+    );
+  }
+
+  Widget _buildMobile() {
+    return Padding(
+      padding: const EdgeInsets.all(14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(
-                Icons.kitchen_outlined,
-                size: 19,
-                color: colors.onPrimaryContainer.withValues(alpha: 0.72),
+              _ActionIcon(
+                icon: icon,
+                backgroundColor: iconBackgroundColor,
+                iconColor: iconColor,
               ),
-              const SizedBox(width: 8),
-              Text(
-                'MASAK DARI BAHAN',
-                style: TextStyle(
-                  fontSize: 11,
-                  letterSpacing: 0.9,
-                  fontWeight: FontWeight.w800,
-                  color: colors.onPrimaryContainer.withValues(alpha: 0.72),
-                ),
+              const Spacer(),
+              Icon(
+                Icons.arrow_forward_rounded,
+                size: 19,
+                color: foregroundColor.withValues(alpha: 0.65),
               ),
             ],
           ),
-
-          const SizedBox(height: 18),
-
+          const SizedBox(height: 13),
           Text(
-            'Punya bahan di rumah?',
+            title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              fontSize: 27,
-              height: 1.15,
+              fontSize: 15,
+              height: 1.2,
               fontWeight: FontWeight.w800,
-              color: colors.onPrimaryContainer,
+              color: foregroundColor,
             ),
           ),
-
-          const SizedBox(height: 10),
-
+          const SizedBox(height: 5),
           Text(
-            'Temukan resep dari bahan yang tersedia '
-            'di dapurmu.',
+            subtitle,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              fontSize: 14,
-              height: 1.5,
-              color: colors.onPrimaryContainer.withValues(alpha: 0.78),
+              fontSize: 11.5,
+              height: 1.35,
+              color: foregroundColor.withValues(alpha: 0.68),
             ),
           ),
+        ],
+      ),
+    );
+  }
 
-          const SizedBox(height: 20),
-
-          FilledButton.icon(
-            onPressed: onIngredientTap,
-            icon: const Icon(Icons.search_rounded, size: 19),
-            label: const Text('Cari dari bahan'),
-            style: FilledButton.styleFrom(
-              backgroundColor: colors.surface,
-              foregroundColor: colors.onSurface,
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
-              ),
-              elevation: 0,
+  Widget _buildHorizontal() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+      child: Row(
+        children: [
+          _ActionIcon(
+            icon: icon,
+            backgroundColor: iconBackgroundColor,
+            iconColor: iconColor,
+            size: 46,
+          ),
+          const SizedBox(width: 15),
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                    color: foregroundColor,
+                  ),
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  subtitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    color: foregroundColor.withValues(alpha: 0.68),
+                  ),
+                ),
+              ],
             ),
+          ),
+          const SizedBox(width: 12),
+          Icon(
+            Icons.arrow_forward_rounded,
+            size: 20,
+            color: foregroundColor.withValues(alpha: 0.65),
           ),
         ],
       ),
@@ -506,241 +591,204 @@ class _HomeHeroCard extends StatelessWidget {
   }
 }
 
-class _MealPlannerSection extends StatelessWidget {
-  final VoidCallback onTap;
+class _ActionIcon extends StatelessWidget {
+  final IconData icon;
+  final Color backgroundColor;
+  final Color iconColor;
+  final double size;
 
-  const _MealPlannerSection({required this.onTap});
+  const _ActionIcon({
+    required this.icon,
+    required this.backgroundColor,
+    required this.iconColor,
+    this.size = 40,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Rencana makan',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w700,
-            color: colors.onSurface,
-          ),
-        ),
-
-        const SizedBox(height: 5),
-
-        Text(
-          'Susun menu untuk seminggu ke depan.',
-          style: TextStyle(fontSize: 13, color: colors.onSurfaceVariant),
-        ),
-
-        const SizedBox(height: 14),
-
-        Material(
-          color: colors.surface,
-          borderRadius: BorderRadius.circular(18),
-          clipBehavior: Clip.antiAlias,
-          child: InkWell(
-            onTap: onTap,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 17),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: colors.outlineVariant),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.calendar_today_outlined,
-                    size: 25,
-                    color: colors.primary,
-                  ),
-
-                  const SizedBox(width: 16),
-
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Rencana Mingguan',
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                            color: colors.onSurface,
-                          ),
-                        ),
-
-                        const SizedBox(height: 4),
-
-                        Text(
-                          'Atur menu Senin sampai Minggu',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: colors.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(width: 12),
-
-                  Container(
-                    width: 34,
-                    height: 34,
-                    decoration: BoxDecoration(
-                      color: colors.surfaceContainerHighest,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Icons.arrow_forward_rounded,
-                      size: 18,
-                      color: colors.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ],
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(13),
+      ),
+      alignment: Alignment.center,
+      child: Icon(icon, size: 21, color: iconColor),
     );
   }
 }
 
-class _HomeRecipeCard extends StatelessWidget {
-  final CatalogRecipe recipe;
-  final VoidCallback onTap;
+class _CategoryList extends StatelessWidget {
+  final List<Map<String, Object>> categories;
 
-  const _HomeRecipeCard({required this.recipe, required this.onTap});
+  final VoidCallback onCategoryTap;
+
+  const _CategoryList({required this.categories, required this.onCategoryTap});
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
 
     return SizedBox(
-      width: 220,
+      height: 43,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: categories.length,
+        separatorBuilder: (_, _) => const SizedBox(width: 9),
+        itemBuilder: (context, index) {
+          final category = categories[index];
+
+          return Material(
+            color: colors.surface,
+            borderRadius: BorderRadius.circular(14),
+            child: InkWell(
+              onTap: onCategoryTap,
+              borderRadius: BorderRadius.circular(14),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      category['icon'] as IconData,
+                      size: 17,
+                      color: colors.primary,
+                    ),
+
+                    const SizedBox(width: 7),
+
+                    Text(
+                      category['name'] as String,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: colors.onSurface,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _FeaturedRecipeCard extends StatelessWidget {
+  final CatalogRecipe recipe;
+  final VoidCallback onTap;
+
+  const _FeaturedRecipeCard({required this.recipe, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: colors.shadow.withValues(alpha: 0.055),
+            blurRadius: 25,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
       child: Material(
         color: colors.surface,
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(24),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: onTap,
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(22),
-              border: Border.all(color: colors.outlineVariant),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SizedBox(
-                  height: 150,
-                  width: double.infinity,
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      _HomeRecipeImage(imageUrl: recipe.imageUrl),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                width: double.infinity,
+                height: 225,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    _RecipeImage(imageUrl: recipe.imageUrl),
 
-                      Positioned(
-                        top: 10,
-                        right: 10,
-                        child: BlocBuilder<FavoriteCubit, FavoriteState>(
-                          buildWhen: (previous, current) {
-                            return previous.favoriteIds != current.favoriteIds;
-                          },
-                          builder: (context, state) {
-                            final isFavorite = state.isFavorite(recipe.id);
-
-                            return Material(
-                              color: colors.surface.withValues(alpha: 0.94),
-                              shape: const CircleBorder(),
-                              elevation: 2,
-                              clipBehavior: Clip.antiAlias,
-                              child: IconButton(
-                                tooltip: isFavorite
-                                    ? 'Hapus dari tersimpan'
-                                    : 'Simpan resep',
-                                onPressed: () {
-                                  context
-                                      .read<FavoriteCubit>()
-                                      .toggleBackendFavorite(
-                                        SavedRecipe.fromCatalogRecipe(recipe),
-                                      );
-                                },
-                                icon: Icon(
-                                  isFavorite
-                                      ? Icons.favorite_rounded
-                                      : Icons.favorite_border_rounded,
-                                  size: 20,
-                                  color: isFavorite
-                                      ? colors.primary
-                                      : colors.onSurfaceVariant,
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
+                    Positioned(
+                      top: 14,
+                      right: 14,
+                      child: _FavoriteRecipeButton(recipe: recipe, large: true),
+                    ),
+                  ],
                 ),
+              ),
 
-                Padding(
-                  padding: const EdgeInsets.all(14),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        recipe.title,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 15,
-                          height: 1.25,
-                          fontWeight: FontWeight.w800,
-                          color: colors.onSurface,
-                        ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      recipe.title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 19,
+                        height: 1.25,
+                        fontWeight: FontWeight.w800,
+                        color: colors.onSurface,
                       ),
+                    ),
 
-                      const SizedBox(height: 12),
+                    const SizedBox(height: 10),
 
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.restaurant_menu_rounded,
-                            size: 16,
-                            color: colors.primary,
-                          ),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.restaurant_menu_outlined,
+                          size: 16,
+                          color: colors.primary,
+                        ),
 
-                          const SizedBox(width: 6),
+                        const SizedBox(width: 6),
 
-                          Expanded(
-                            child: Text(
-                              '${recipe.ingredientCount} bahan',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                                color: colors.onSurfaceVariant,
-                              ),
-                            ),
-                          ),
-
-                          Icon(
-                            Icons.arrow_forward_ios_rounded,
-                            size: 13,
+                        Text(
+                          '${recipe.ingredientCount} bahan',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
                             color: colors.onSurfaceVariant,
                           ),
-                        ],
-                      ),
-                    ],
-                  ),
+                        ),
+
+                        const Spacer(),
+
+                        Text(
+                          'Lihat resep',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: colors.primary,
+                          ),
+                        ),
+
+                        const SizedBox(width: 4),
+
+                        Icon(
+                          Icons.arrow_forward_rounded,
+                          size: 17,
+                          color: colors.primary,
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
@@ -748,10 +796,144 @@ class _HomeRecipeCard extends StatelessWidget {
   }
 }
 
-class _HomeRecipeImage extends StatelessWidget {
+class _CompactRecipeCard extends StatelessWidget {
+  final CatalogRecipe recipe;
+  final VoidCallback onTap;
+
+  const _CompactRecipeCard({required this.recipe, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return SizedBox(
+      width: 180,
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(18),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(18),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(18),
+                child: SizedBox(
+                  width: 180,
+                  height: 135,
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      _RecipeImage(imageUrl: recipe.imageUrl),
+
+                      Positioned(
+                        top: 9,
+                        right: 9,
+                        child: _FavoriteRecipeButton(recipe: recipe),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 11),
+
+              Text(
+                recipe.title,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 14,
+                  height: 1.25,
+                  fontWeight: FontWeight.w700,
+                  color: colors.onSurface,
+                ),
+              ),
+
+              const SizedBox(height: 7),
+
+              Row(
+                children: [
+                  Icon(
+                    Icons.restaurant_menu_outlined,
+                    size: 14,
+                    color: colors.primary,
+                  ),
+
+                  const SizedBox(width: 5),
+
+                  Expanded(
+                    child: Text(
+                      '${recipe.ingredientCount} bahan',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        color: colors.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FavoriteRecipeButton extends StatelessWidget {
+  final CatalogRecipe recipe;
+  final bool large;
+
+  const _FavoriteRecipeButton({required this.recipe, this.large = false});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return BlocBuilder<FavoriteCubit, FavoriteState>(
+      buildWhen: (previous, current) {
+        return previous.favoriteIds != current.favoriteIds;
+      },
+      builder: (context, state) {
+        final isFavorite = state.isFavorite(recipe.id);
+
+        return Material(
+          color: colors.surface.withValues(alpha: 0.94),
+          shape: const CircleBorder(),
+          elevation: 1,
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: () {
+              context.read<FavoriteCubit>().toggleBackendFavorite(
+                SavedRecipe.fromCatalogRecipe(recipe),
+              );
+            },
+            child: SizedBox(
+              width: large ? 42 : 36,
+              height: large ? 42 : 36,
+              child: Icon(
+                isFavorite
+                    ? Icons.favorite_rounded
+                    : Icons.favorite_border_rounded,
+                size: large ? 21 : 19,
+                color: isFavorite ? colors.secondary : colors.onSurfaceVariant,
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _RecipeImage extends StatelessWidget {
   final String? imageUrl;
 
-  const _HomeRecipeImage({required this.imageUrl});
+  const _RecipeImage({required this.imageUrl});
 
   @override
   Widget build(BuildContext context) {
@@ -770,8 +952,8 @@ class _HomeRecipeImage extends StatelessWidget {
             color: colors.surfaceContainerHighest,
             alignment: Alignment.center,
             child: const SizedBox(
-              width: 26,
-              height: 26,
+              width: 25,
+              height: 25,
               child: CircularProgressIndicator(strokeWidth: 2),
             ),
           );
@@ -787,15 +969,63 @@ class _HomeRecipeImage extends StatelessWidget {
 
   Widget _placeholder(ColorScheme colors) {
     return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [colors.primaryContainer, colors.secondaryContainer],
-        ),
-      ),
+      color: colors.surfaceContainerHighest,
       alignment: Alignment.center,
-      child: Icon(Icons.restaurant_rounded, size: 42, color: colors.primary),
+      child: Icon(
+        Icons.restaurant_outlined,
+        size: 40,
+        color: colors.primary.withValues(alpha: 0.75),
+      ),
+    );
+  }
+}
+
+class _SectionTitle extends StatelessWidget {
+  final String title;
+  final String? actionLabel;
+  final VoidCallback? onActionTap;
+
+  const _SectionTitle({
+    required this.title,
+    this.actionLabel,
+    this.onActionTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            title,
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.25,
+              color: colors.onSurface,
+            ),
+          ),
+        ),
+
+        if (actionLabel != null && onActionTap != null)
+          TextButton(
+            onPressed: onActionTap,
+            style: TextButton.styleFrom(
+              visualDensity: VisualDensity.compact,
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            ),
+            child: Text(
+              actionLabel!,
+              style: TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w700,
+                color: colors.primary,
+              ),
+            ),
+          ),
+      ],
     );
   }
 }
@@ -812,28 +1042,27 @@ class _FeaturedError extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(22),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: colors.surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: colors.outlineVariant),
       ),
       child: Column(
         children: [
-          Icon(Icons.cloud_off_rounded, size: 38, color: colors.error),
+          Icon(Icons.cloud_off_outlined, size: 38, color: colors.error),
 
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
 
           Text(
-            'Resep pilihan gagal dimuat',
+            'Resep gagal dimuat',
             style: TextStyle(
-              fontSize: 15,
+              fontSize: 16,
               fontWeight: FontWeight.w700,
               color: colors.onSurface,
             ),
           ),
 
-          const SizedBox(height: 6),
+          const SizedBox(height: 7),
 
           Text(
             message,
@@ -841,7 +1070,7 @@ class _FeaturedError extends StatelessWidget {
             style: TextStyle(fontSize: 13, color: colors.onSurfaceVariant),
           ),
 
-          const SizedBox(height: 14),
+          const SizedBox(height: 16),
 
           OutlinedButton.icon(
             onPressed: onRetry,
@@ -854,43 +1083,58 @@ class _FeaturedError extends StatelessWidget {
   }
 }
 
-class _SectionHeader extends StatelessWidget {
-  final String title;
-  final String actionLabel;
-  final VoidCallback onTap;
+class _EmptyRecipes extends StatelessWidget {
+  final VoidCallback onRetry;
 
-  const _SectionHeader({
-    required this.title,
-    required this.actionLabel,
-    required this.onTap,
-  });
+  const _EmptyRecipes({required this.onRetry});
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          title,
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w700,
-            color: colors.onSurface,
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 34),
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        children: [
+          Icon(
+            Icons.restaurant_outlined,
+            size: 40,
+            color: colors.onSurfaceVariant,
           ),
-        ),
-        TextButton(
-          onPressed: onTap,
-          child: Text(
-            actionLabel,
+
+          const SizedBox(height: 12),
+
+          Text(
+            'Belum ada resep',
             style: TextStyle(
-              color: colors.primary,
-              fontWeight: FontWeight.w600,
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: colors.onSurface,
             ),
           ),
-        ),
-      ],
+
+          const SizedBox(height: 6),
+
+          Text(
+            'Coba muat kembali koleksi resep.',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 13, color: colors.onSurfaceVariant),
+          ),
+
+          const SizedBox(height: 16),
+
+          TextButton.icon(
+            onPressed: onRetry,
+            icon: const Icon(Icons.refresh_rounded),
+            label: const Text('Muat ulang'),
+          ),
+        ],
+      ),
     );
   }
 }
