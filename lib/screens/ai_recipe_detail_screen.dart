@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../features/favorite/presentation/cubit/favorite_cubit.dart';
-import '../features/favorite/presentation/cubit/favorite_state.dart';
 import '../features/ai/data/models/chat_message.dart';
 import '../features/favorite/data/models/saved_recipe.dart';
+import '../features/favorite/presentation/cubit/favorite_cubit.dart';
+import '../features/favorite/presentation/cubit/favorite_state.dart';
 
 class AiRecipeDetailScreen extends StatelessWidget {
   final AiRecipe recipe;
@@ -19,8 +19,7 @@ class AiRecipeDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-    final screenWidth = MediaQuery.sizeOf(context).width;
+    final backgroundColor = Theme.of(context).scaffoldBackgroundColor;
 
     final ingredients = recipe.ingredientList.isNotEmpty
         ? recipe.ingredientList
@@ -29,8 +28,6 @@ class AiRecipeDetailScreen extends StatelessWidget {
               : <String>[recipe.ingredients.trim()]);
 
     final steps = _parseInstructions(recipe.instructions);
-
-    final heroHeight = screenWidth >= 700 ? 360.0 : 300.0;
 
     return BlocListener<FavoriteCubit, FavoriteState>(
       listenWhen: (previous, current) {
@@ -63,246 +60,91 @@ class AiRecipeDetailScreen extends StatelessWidget {
         }
       },
       child: Scaffold(
-        backgroundColor: colors.surface,
-        body: CustomScrollView(
-          slivers: [
-            SliverAppBar(
-              expandedHeight: heroHeight,
-              pinned: true,
-              stretch: true,
-              elevation: 0,
-              scrolledUnderElevation: 0,
-              surfaceTintColor: Colors.transparent,
-              backgroundColor: colors.surface,
-              foregroundColor: colors.onSurface,
-              leadingWidth: 64,
-              leading: Padding(
-                padding: const EdgeInsets.all(9),
-                child: _HeroActionButton(
-                  icon: Icons.arrow_back_rounded,
-                  tooltip: 'Kembali',
-                  onPressed: () {
-                    Navigator.of(context).maybePop();
-                  },
-                ),
-              ),
-              actions: [
-                Padding(
-                  padding: const EdgeInsets.all(9),
-                  child: BlocBuilder<FavoriteCubit, FavoriteState>(
-                    buildWhen: (previous, current) {
-                      return previous.favoriteIds != current.favoriteIds;
-                    },
-                    builder: (context, favoriteState) {
-                      final isFavorite = favoriteState.isFavorite(recipe.id);
+        backgroundColor: backgroundColor,
+        body: SafeArea(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final isWide = constraints.maxWidth >= 820;
 
-                      return _HeroActionButton(
-                        icon: isFavorite
-                            ? Icons.favorite_rounded
-                            : Icons.favorite_border_rounded,
-                        tooltip: isFavorite
-                            ? 'Hapus dari tersimpan'
-                            : 'Simpan resep',
-                        iconColor: isFavorite
-                            ? colors.primary
-                            : colors.onSurface,
-                        onPressed: () {
-                          context.read<FavoriteCubit>().toggleBackendFavorite(
-                            SavedRecipe.fromAiRecipe(recipe),
-                          );
-                        },
-                      );
-                    },
-                  ),
-                ),
-              ],
-              flexibleSpace: FlexibleSpaceBar(
-                collapseMode: CollapseMode.parallax,
-                stretchModes: const [StretchMode.zoomBackground],
-                background: _RecipeHero(
-                  imageUrl: recipe.imageUrl,
-                  recipeTitle: recipe.title,
-                ),
-              ),
-            ),
+              return SingleChildScrollView(
+                padding: const EdgeInsets.only(bottom: 42),
+                child: Column(
+                  children: [
+                    if (isWide)
+                      _DesktopTopSection(
+                        recipe: recipe,
+                        ingredientsCount: ingredients.length,
+                        stepsCount: steps.length,
+                        isAiRecommendation: isAiRecommendation,
+                      )
+                    else ...[
+                      _MobileHero(recipe: recipe),
+                      _MobileSummary(
+                        recipe: recipe,
+                        ingredientsCount: ingredients.length,
+                        stepsCount: steps.length,
+                        isAiRecommendation: isAiRecommendation,
+                      ),
+                    ],
 
-            SliverToBoxAdapter(
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 850),
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 24, 20, 40),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 6,
+                    const SizedBox(height: 26),
+
+                    Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 1100),
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: isWide ? 24 : 16,
                           ),
-                          decoration: BoxDecoration(
-                            color: colors.primaryContainer,
-                            borderRadius: BorderRadius.circular(100),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.auto_awesome_rounded,
-                                size: 15,
-                                color: colors.primary,
-                              ),
-                              const SizedBox(width: 5),
-                              Text(
-                                isAiRecommendation
-                                    ? 'Rekomendasi RacikAI'
-                                    : 'Resep RacikAI',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w700,
-                                  color: colors.primary,
+                          child: isWide
+                              ? Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Expanded(
+                                      flex: 5,
+                                      child: _IngredientsSection(
+                                        ingredients: ingredients,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 42),
+                                    Expanded(
+                                      flex: 6,
+                                      child: _StepsSection(steps: steps),
+                                    ),
+                                  ],
+                                )
+                              : Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    _IngredientsSection(
+                                      ingredients: ingredients,
+                                    ),
+                                    const SizedBox(height: 38),
+                                    _StepsSection(steps: steps),
+                                  ],
                                 ),
-                              ),
-                            ],
-                          ),
                         ),
-
-                        const SizedBox(height: 14),
-
-                        Text(
-                          recipe.title,
-                          style: TextStyle(
-                            fontSize: 30,
-                            height: 1.15,
-                            fontWeight: FontWeight.w900,
-                            color: colors.onSurface,
-                          ),
-                        ),
-
-                        const SizedBox(height: 12),
-
-                        Text(
-                          isAiRecommendation
-                              ? 'Resep ini direkomendasikan RacikAI berdasarkan '
-                                    'bahan dan kebutuhan yang kamu tanyakan.'
-                              : 'Resep dari koleksi RacikAI. Lihat bahan dan '
-                                    'ikuti langkah memasaknya di bawah.',
-                          style: TextStyle(
-                            fontSize: 14,
-                            height: 1.55,
-                            color: colors.onSurfaceVariant,
-                          ),
-                        ),
-
-                        const SizedBox(height: 24),
-
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _InfoCard(
-                                icon: Icons.restaurant_menu_rounded,
-                                value: '${ingredients.length}',
-                                label: 'Bahan',
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: _InfoCard(
-                                icon: Icons.format_list_numbered_rounded,
-                                value: '${steps.length}',
-                                label: 'Langkah',
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        const SizedBox(height: 34),
-
-                        _SectionHeader(
-                          icon: Icons.restaurant_rounded,
-                          title: 'Bahan',
-                          subtitle: 'Siapkan bahan berikut sebelum memasak.',
-                        ),
-
-                        const SizedBox(height: 14),
-
-                        Container(
-                          width: double.infinity,
-                          decoration: BoxDecoration(
-                            color: colors.surfaceContainerLow,
-                            borderRadius: BorderRadius.circular(22),
-                            border: Border.all(color: colors.outlineVariant),
-                          ),
-                          child: Column(
-                            children: [
-                              for (int i = 0; i < ingredients.length; i++)
-                                _IngredientTile(
-                                  ingredient: ingredients[i],
-                                  showDivider: i != ingredients.length - 1,
-                                ),
-                            ],
-                          ),
-                        ),
-
-                        const SizedBox(height: 38),
-
-                        _SectionHeader(
-                          icon: Icons.format_list_numbered_rounded,
-                          title: 'Langkah Memasak',
-                          subtitle: 'Ikuti langkah secara berurutan untuk hasil terbaik.',
-                        ),
-
-                        const SizedBox(height: 16),
-
-                        ...List.generate(
-                          steps.length,
-                          (index) => _CookingStep(
-                            number: index + 1,
-                            text: steps[index],
-                          ),
-                        ),
-
-                        const SizedBox(height: 22),
-
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(18),
-                          decoration: BoxDecoration(
-                            color: colors.primaryContainer.withValues(
-                              alpha: 0.45,
-                            ),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Icon(
-                                Icons.info_outline_rounded,
-                                color: colors.primary,
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  'Resep berasal dari dataset RacikAI. '
-                                  'Sesuaikan jumlah bahan, waktu memasak, '
-                                  'dan kebutuhan makananmu jika diperlukan.',
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    height: 1.5,
-                                    color: colors.onSurfaceVariant,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
-                  ),
+
+                    const SizedBox(height: 34),
+
+                    Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 1100),
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: isWide ? 24 : 16,
+                          ),
+                          child: const _DatasetNote(),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-            ),
-          ],
+              );
+            },
+          ),
         ),
       ),
     );
@@ -324,50 +166,376 @@ class AiRecipeDetailScreen extends StatelessWidget {
   }
 }
 
-void _showFavoriteLimitDialog(BuildContext context) {
-  showDialog(
-    context: context,
-    builder: (dialogContext) {
-      final colors = Theme.of(dialogContext).colorScheme;
+class _DesktopTopSection extends StatelessWidget {
+  final AiRecipe recipe;
+  final int ingredientsCount;
+  final int stepsCount;
+  final bool isAiRecommendation;
 
-      return AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
-        icon: Icon(Icons.favorite_rounded, size: 42, color: colors.primary),
-        title: const Text('Batas Resep Tersimpan', textAlign: TextAlign.center),
-        content: Text(
-          'Akun Free dapat menyimpan maksimal '
-          '${FavoriteCubit.freeFavoriteLimit} resep. '
-          'Upgrade ke Premium untuk menyimpan resep tanpa batas.',
-          textAlign: TextAlign.center,
+  const _DesktopTopSection({
+    required this.recipe,
+    required this.ingredientsCount,
+    required this.stepsCount,
+    required this.isAiRecommendation,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 1100),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                flex: 6,
+                child: AspectRatio(
+                  aspectRatio: 1.18,
+                  child: _RecipeHero(recipe: recipe, borderRadius: 28),
+                ),
+              ),
+              const SizedBox(width: 42),
+              Expanded(
+                flex: 5,
+                child: _RecipeSummary(
+                  recipe: recipe,
+                  ingredientsCount: ingredientsCount,
+                  stepsCount: stepsCount,
+                  isAiRecommendation: isAiRecommendation,
+                  large: true,
+                ),
+              ),
+            ],
+          ),
         ),
-        actionsAlignment: MainAxisAlignment.center,
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(dialogContext);
-            },
-            child: const Text('Nanti'),
-          ),
-          FilledButton(
-            onPressed: () {
-              Navigator.pop(dialogContext);
-              context.push('/premium');
-            },
-            child: const Text('Upgrade Premium'),
-          ),
-        ],
-      );
-    },
-  );
+      ),
+    );
+  }
 }
 
-class _HeroActionButton extends StatelessWidget {
+class _MobileHero extends StatelessWidget {
+  final AiRecipe recipe;
+
+  const _MobileHero({required this.recipe});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      height: 305,
+      child: _RecipeHero(recipe: recipe, borderRadius: 0, bottomRadius: 26),
+    );
+  }
+}
+
+class _MobileSummary extends StatelessWidget {
+  final AiRecipe recipe;
+  final int ingredientsCount;
+  final int stepsCount;
+  final bool isAiRecommendation;
+
+  const _MobileSummary({
+    required this.recipe,
+    required this.ingredientsCount,
+    required this.stepsCount,
+    required this.isAiRecommendation,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 720),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 22, 16, 0),
+          child: _RecipeSummary(
+            recipe: recipe,
+            ingredientsCount: ingredientsCount,
+            stepsCount: stepsCount,
+            isAiRecommendation: isAiRecommendation,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _RecipeSummary extends StatelessWidget {
+  final AiRecipe recipe;
+  final int ingredientsCount;
+  final int stepsCount;
+  final bool isAiRecommendation;
+  final bool large;
+
+  const _RecipeSummary({
+    required this.recipe,
+    required this.ingredientsCount,
+    required this.stepsCount,
+    required this.isAiRecommendation,
+    this.large = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (isAiRecommendation) ...[
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
+            decoration: BoxDecoration(
+              color: colors.primaryContainer,
+              borderRadius: BorderRadius.circular(100),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.auto_awesome_rounded,
+                  size: 15,
+                  color: colors.primary,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  'Rekomendasi RacikAI',
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w700,
+                    color: colors.primary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+        ],
+
+        Text(
+          recipe.title,
+          style: TextStyle(
+            fontSize: large ? 37 : 28,
+            height: 1.12,
+            letterSpacing: large ? -0.9 : -0.55,
+            fontWeight: FontWeight.w900,
+            color: colors.onSurface,
+          ),
+        ),
+
+        if (isAiRecommendation) ...[
+          const SizedBox(height: 13),
+          Text(
+            'Direkomendasikan berdasarkan bahan dan '
+            'kebutuhan yang kamu tanyakan.',
+            style: TextStyle(
+              fontSize: 14,
+              height: 1.55,
+              color: colors.onSurfaceVariant,
+            ),
+          ),
+        ],
+
+        const SizedBox(height: 22),
+
+        Wrap(
+          spacing: 18,
+          runSpacing: 10,
+          children: [
+            _RecipeMetadata(
+              icon: Icons.restaurant_menu_outlined,
+              text: '$ingredientsCount bahan',
+            ),
+            _RecipeMetadata(
+              icon: Icons.format_list_numbered_rounded,
+              text: '$stepsCount langkah',
+            ),
+          ],
+        ),
+
+        if (large) ...[
+          const SizedBox(height: 28),
+          Text(
+            'Siapkan bahan terlebih dahulu, lalu ikuti '
+            'langkah memasak secara berurutan.',
+            style: TextStyle(
+              fontSize: 13.5,
+              height: 1.55,
+              color: colors.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _RecipeMetadata extends StatelessWidget {
+  final IconData icon;
+  final String text;
+
+  const _RecipeMetadata({required this.icon, required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 17, color: colors.primary),
+        const SizedBox(width: 7),
+        Text(
+          text,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: colors.onSurfaceVariant,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _RecipeHero extends StatelessWidget {
+  final AiRecipe recipe;
+  final double borderRadius;
+  final double? bottomRadius;
+
+  const _RecipeHero({
+    required this.recipe,
+    required this.borderRadius,
+    this.bottomRadius,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    final hasImage =
+        recipe.imageUrl != null && recipe.imageUrl!.trim().isNotEmpty;
+
+    final radius = BorderRadius.only(
+      topLeft: Radius.circular(borderRadius),
+      topRight: Radius.circular(borderRadius),
+      bottomLeft: Radius.circular(bottomRadius ?? borderRadius),
+      bottomRight: Radius.circular(bottomRadius ?? borderRadius),
+    );
+
+    return ClipRRect(
+      borderRadius: radius,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          if (hasImage)
+            Image.network(
+              recipe.imageUrl!,
+              fit: BoxFit.cover,
+              semanticLabel: 'Gambar resep ${recipe.title}',
+              loadingBuilder: (context, child, loadingProgress) {
+                if (loadingProgress == null) {
+                  return child;
+                }
+
+                return Container(
+                  color: colors.surfaceContainerHighest,
+                  alignment: Alignment.center,
+                  child: const SizedBox(
+                    width: 28,
+                    height: 28,
+                    child: CircularProgressIndicator(strokeWidth: 2.5),
+                  ),
+                );
+              },
+              errorBuilder: (_, _, _) {
+                return _imagePlaceholder(context);
+              },
+            )
+          else
+            _imagePlaceholder(context),
+
+          IgnorePointer(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.center,
+                  colors: [
+                    Colors.black.withValues(alpha: 0.34),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          Positioned(
+            top: 14,
+            left: 14,
+            child: _HeroCircleButton(
+              icon: Icons.arrow_back_rounded,
+              tooltip: 'Kembali',
+              onPressed: () {
+                Navigator.of(context).maybePop();
+              },
+            ),
+          ),
+
+          Positioned(
+            top: 14,
+            right: 14,
+            child: BlocBuilder<FavoriteCubit, FavoriteState>(
+              buildWhen: (previous, current) {
+                return previous.favoriteIds != current.favoriteIds;
+              },
+              builder: (context, state) {
+                final isFavorite = state.isFavorite(recipe.id);
+
+                return _HeroCircleButton(
+                  icon: isFavorite
+                      ? Icons.favorite_rounded
+                      : Icons.favorite_border_rounded,
+                  tooltip: isFavorite ? 'Hapus dari tersimpan' : 'Simpan resep',
+                  iconColor: isFavorite ? colors.secondary : colors.onSurface,
+                  onPressed: () {
+                    context.read<FavoriteCubit>().toggleBackendFavorite(
+                      SavedRecipe.fromAiRecipe(recipe),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _imagePlaceholder(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return Container(
+      color: colors.surfaceContainerHighest,
+      alignment: Alignment.center,
+      child: Icon(
+        Icons.restaurant_outlined,
+        size: 58,
+        color: colors.primary.withValues(alpha: 0.72),
+      ),
+    );
+  }
+}
+
+class _HeroCircleButton extends StatelessWidget {
   final IconData icon;
   final String tooltip;
   final VoidCallback onPressed;
   final Color? iconColor;
 
-  const _HeroActionButton({
+  const _HeroCircleButton({
     required this.icon,
     required this.tooltip,
     required this.onPressed,
@@ -379,241 +547,156 @@ class _HeroActionButton extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
 
     return Material(
-      color: colors.surface.withValues(alpha: 0.92),
+      color: colors.surface.withValues(alpha: 0.94),
       shape: const CircleBorder(),
-      elevation: 3,
-      shadowColor: Colors.black.withValues(alpha: 0.25),
+      elevation: 1,
       clipBehavior: Clip.antiAlias,
       child: IconButton(
         tooltip: tooltip,
         onPressed: onPressed,
-        icon: Icon(icon, color: iconColor ?? colors.onSurface),
+        icon: Icon(icon, size: 21, color: iconColor ?? colors.onSurface),
       ),
     );
   }
 }
 
-class _RecipeHero extends StatelessWidget {
-  final String? imageUrl;
-  final String recipeTitle;
+class _IngredientsSection extends StatelessWidget {
+  final List<String> ingredients;
 
-  const _RecipeHero({required this.imageUrl, required this.recipeTitle});
+  const _IngredientsSection({required this.ingredients});
 
   @override
   Widget build(BuildContext context) {
-    final hasImage = imageUrl != null && imageUrl!.trim().isNotEmpty;
+    final colors = Theme.of(context).colorScheme;
 
-    return Stack(
-      fit: StackFit.expand,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (hasImage)
-          Image.network(
-            imageUrl!,
-            fit: BoxFit.cover,
-            semanticLabel: 'Gambar resep $recipeTitle',
-            loadingBuilder: (context, child, loadingProgress) {
-              if (loadingProgress == null) {
-                return child;
-              }
+        _ContentSectionHeader(
+          title: 'Bahan',
+          subtitle: ingredients.isEmpty
+              ? 'Informasi bahan belum tersedia.'
+              : 'Centang bahan yang sudah kamu siapkan.',
+          trailing: ingredients.isEmpty ? null : '${ingredients.length} bahan',
+        ),
 
-              return _loadingPlaceholder(context, loadingProgress);
-            },
-            errorBuilder: (_, _, _) {
-              return _placeholder(context);
-            },
+        const SizedBox(height: 15),
+
+        if (ingredients.isEmpty)
+          _EmptyContent(
+            icon: Icons.restaurant_outlined,
+            text: 'Daftar bahan belum tersedia.',
           )
         else
-          _placeholder(context),
-
-        IgnorePointer(
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.center,
-                colors: [
-                  Colors.black.withValues(alpha: 0.28),
-                  Colors.transparent,
-                ],
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _loadingPlaceholder(
-    BuildContext context,
-    ImageChunkEvent loadingProgress,
-  ) {
-    final colors = Theme.of(context).colorScheme;
-
-    final expectedBytes = loadingProgress.expectedTotalBytes;
-
-    final progress = expectedBytes != null
-        ? loadingProgress.cumulativeBytesLoaded / expectedBytes
-        : null;
-
-    return Container(
-      color: colors.surfaceContainerHighest,
-      alignment: Alignment.center,
-      child: SizedBox(
-        width: 32,
-        height: 32,
-        child: CircularProgressIndicator(
-          value: progress,
-          strokeWidth: 3,
-          color: colors.primary,
-        ),
-      ),
-    );
-  }
-
-  Widget _placeholder(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [colors.primaryContainer, colors.secondaryContainer],
-        ),
-      ),
-      child: Center(
-        child: Container(
-          width: 92,
-          height: 92,
-          decoration: BoxDecoration(
-            color: colors.surface.withValues(alpha: 0.88),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(
-            Icons.restaurant_rounded,
-            size: 45,
-            color: colors.primary,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _InfoCard extends StatelessWidget {
-  final IconData icon;
-  final String value;
-  final String label;
-
-  const _InfoCard({
-    required this.icon,
-    required this.value,
-    required this.label,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
-        color: colors.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: colors.outlineVariant),
-      ),
-      child: Row(
-        children: [
           Container(
-            width: 42,
-            height: 42,
+            width: double.infinity,
             decoration: BoxDecoration(
-              color: colors.primaryContainer,
-              borderRadius: BorderRadius.circular(13),
+              color: colors.surface,
+              borderRadius: BorderRadius.circular(20),
             ),
-            child: Icon(icon, size: 21, color: colors.primary),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  value,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w900,
-                    color: colors.onSurface,
+                for (int i = 0; i < ingredients.length; i++)
+                  _IngredientTile(
+                    ingredient: ingredients[i],
+                    showDivider: i != ingredients.length - 1,
                   ),
-                ),
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: colors.onSurfaceVariant,
-                  ),
-                ),
               ],
             ),
           ),
-        ],
-      ),
+      ],
     );
   }
 }
 
-class _SectionHeader extends StatelessWidget {
-  final IconData icon;
+class _StepsSection extends StatelessWidget {
+  final List<String> steps;
+
+  const _StepsSection({required this.steps});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _ContentSectionHeader(
+          title: 'Cara membuat',
+          subtitle: steps.isEmpty
+              ? 'Instruksi memasak belum tersedia.'
+              : 'Ikuti langkah berikut secara berurutan.',
+          trailing: steps.isEmpty ? null : '${steps.length} langkah',
+        ),
+
+        const SizedBox(height: 18),
+
+        if (steps.isEmpty)
+          const _EmptyContent(
+            icon: Icons.format_list_numbered_rounded,
+            text: 'Instruksi memasak belum tersedia.',
+          )
+        else
+          ...List.generate(steps.length, (index) {
+            return _CookingStep(
+              number: index + 1,
+              text: steps[index],
+              isLast: index == steps.length - 1,
+            );
+          }),
+      ],
+    );
+  }
+}
+
+class _ContentSectionHeader extends StatelessWidget {
   final String title;
   final String subtitle;
+  final String? trailing;
 
-  const _SectionHeader({
-    required this.icon,
+  const _ContentSectionHeader({
     required this.title,
     required this.subtitle,
+    this.trailing,
   });
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
 
-    return Row(
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          width: 44,
-          height: 44,
-          decoration: BoxDecoration(
-            color: colors.primaryContainer,
-            borderRadius: BorderRadius.circular(14),
-          ),
-          child: Icon(icon, color: colors.primary),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              child: Text(
                 title,
                 style: TextStyle(
-                  fontSize: 20,
+                  fontSize: 21,
                   fontWeight: FontWeight.w800,
+                  letterSpacing: -0.3,
                   color: colors.onSurface,
                 ),
               ),
-              const SizedBox(height: 3),
+            ),
+            if (trailing != null)
               Text(
-                subtitle,
+                trailing!,
                 style: TextStyle(
-                  fontSize: 13,
-                  height: 1.4,
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w600,
                   color: colors.onSurfaceVariant,
                 ),
               ),
-            ],
+          ],
+        ),
+        const SizedBox(height: 5),
+        Text(
+          subtitle,
+          style: TextStyle(
+            fontSize: 13,
+            height: 1.4,
+            color: colors.onSurfaceVariant,
           ),
         ),
       ],
@@ -651,22 +734,22 @@ class _IngredientTileState extends State<_IngredientTile> {
           child: InkWell(
             onTap: _togglePrepared,
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 14),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   AnimatedContainer(
-                    duration: const Duration(milliseconds: 180),
+                    duration: const Duration(milliseconds: 170),
                     curve: Curves.easeOut,
-                    margin: const EdgeInsets.only(top: 3),
+                    margin: const EdgeInsets.only(top: 2),
                     width: 22,
                     height: 22,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: _isPrepared ? colors.primary : Colors.transparent,
                       border: Border.all(
-                        color: _isPrepared ? colors.primary : colors.primary,
-                        width: 1.7,
+                        color: _isPrepared ? colors.primary : colors.outline,
+                        width: 1.6,
                       ),
                     ),
                     child: _isPrepared
@@ -677,16 +760,14 @@ class _IngredientTileState extends State<_IngredientTile> {
                           )
                         : null,
                   ),
-
                   const SizedBox(width: 12),
-
                   Expanded(
                     child: AnimatedDefaultTextStyle(
-                      duration: const Duration(milliseconds: 180),
+                      duration: const Duration(milliseconds: 170),
                       curve: Curves.easeOut,
                       style: TextStyle(
-                        fontSize: 14,
-                        height: 1.45,
+                        fontSize: 13.5,
+                        height: 1.48,
                         color: _isPrepared
                             ? colors.onSurfaceVariant
                             : colors.onSurface,
@@ -694,7 +775,7 @@ class _IngredientTileState extends State<_IngredientTile> {
                             ? TextDecoration.lineThrough
                             : TextDecoration.none,
                         decorationColor: colors.onSurfaceVariant,
-                        decorationThickness: 1.5,
+                        decorationThickness: 1.4,
                       ),
                       child: Text(widget.ingredient),
                     ),
@@ -704,9 +785,8 @@ class _IngredientTileState extends State<_IngredientTile> {
             ),
           ),
         ),
-
         if (widget.showDivider)
-          Divider(height: 1, indent: 50, color: colors.outlineVariant),
+          Divider(height: 1, indent: 49, color: colors.outlineVariant),
       ],
     );
   }
@@ -715,50 +795,169 @@ class _IngredientTileState extends State<_IngredientTile> {
 class _CookingStep extends StatelessWidget {
   final int number;
   final String text;
+  final bool isLast;
 
-  const _CookingStep({required this.number, required this.text});
+  const _CookingStep({
+    required this.number,
+    required this.text,
+    required this.isLast,
+  });
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 18),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(
-              color: colors.primary,
-              shape: BoxShape.circle,
-            ),
-            alignment: Alignment.center,
-            child: Text(
-              '$number',
-              style: TextStyle(
-                color: colors.onPrimary,
-                fontWeight: FontWeight.w800,
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Column(
+          children: [
+            Container(
+              width: 34,
+              height: 34,
+              decoration: BoxDecoration(
+                color: colors.primaryContainer,
+                shape: BoxShape.circle,
               ),
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.only(top: 7),
+              alignment: Alignment.center,
               child: Text(
-                text,
+                '$number',
                 style: TextStyle(
-                  fontSize: 14,
-                  height: 1.6,
-                  color: colors.onSurface,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                  color: colors.primary,
                 ),
               ),
             ),
+
+            if (!isLast)
+              Container(
+                width: 1,
+                height: 34,
+                margin: const EdgeInsets.symmetric(vertical: 6),
+                color: colors.outlineVariant,
+              ),
+          ],
+        ),
+
+        const SizedBox(width: 13),
+
+        Expanded(
+          child: Padding(
+            padding: EdgeInsets.only(top: 6, bottom: isLast ? 0 : 18),
+            child: Text(
+              text,
+              style: TextStyle(
+                fontSize: 14,
+                height: 1.6,
+                color: colors.onSurface,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _EmptyContent extends StatelessWidget {
+  final IconData icon;
+  final String text;
+
+  const _EmptyContent({required this.icon, required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 26),
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, size: 30, color: colors.onSurfaceVariant),
+          const SizedBox(height: 9),
+          Text(
+            text,
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 13, color: colors.onSurfaceVariant),
           ),
         ],
       ),
     );
   }
+}
+
+class _DatasetNote extends StatelessWidget {
+  const _DatasetNote();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(
+          Icons.info_outline_rounded,
+          size: 18,
+          color: colors.onSurfaceVariant,
+        ),
+        const SizedBox(width: 9),
+        Expanded(
+          child: Text(
+            'Resep berasal dari koleksi dataset RacikAI. '
+            'Sesuaikan jumlah bahan dan kebutuhan makananmu '
+            'jika diperlukan.',
+            style: TextStyle(
+              fontSize: 11.5,
+              height: 1.5,
+              color: colors.onSurfaceVariant,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+void _showFavoriteLimitDialog(BuildContext context) {
+  showDialog(
+    context: context,
+    builder: (dialogContext) {
+      final colors = Theme.of(dialogContext).colorScheme;
+
+      return AlertDialog(
+        icon: Icon(Icons.favorite_rounded, size: 40, color: colors.primary),
+        title: const Text('Batas Resep Tersimpan', textAlign: TextAlign.center),
+        content: Text(
+          'Akun Free dapat menyimpan maksimal '
+          '${FavoriteCubit.freeFavoriteLimit} resep. '
+          'Upgrade ke Premium untuk menyimpan resep tanpa batas.',
+          textAlign: TextAlign.center,
+        ),
+        actionsAlignment: MainAxisAlignment.center,
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(dialogContext);
+            },
+            child: const Text('Nanti'),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.pop(dialogContext);
+
+              context.push('/premium');
+            },
+            child: const Text('Upgrade Premium'),
+          ),
+        ],
+      );
+    },
+  );
 }
