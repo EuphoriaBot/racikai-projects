@@ -4,12 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../core/router/recipe_detail_route_args.dart';
+import '../features/favorite/data/models/saved_recipe.dart';
 import '../features/favorite/presentation/cubit/favorite_cubit.dart';
 import '../features/favorite/presentation/cubit/favorite_state.dart';
 import '../features/recipe/data/models/catalog_recipe.dart';
-import '../features/favorite/data/models/saved_recipe.dart';
 import '../services/recipe_catalog_service.dart';
-import '../core/router/recipe_detail_route_args.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -174,7 +174,6 @@ class _SearchScreenState extends State<SearchScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
     final backgroundColor = Theme.of(context).scaffoldBackgroundColor;
 
     return BlocListener<FavoriteCubit, FavoriteState>(
@@ -216,109 +215,49 @@ class _SearchScreenState extends State<SearchScreen> {
               physics: const AlwaysScrollableScrollPhysics(),
               slivers: [
                 SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _SearchField(
-                          controller: _searchController,
-                          query: _searchQuery,
-                          onChanged: _onSearchChanged,
-                          onClear: () {
-                            _searchController.clear();
-                            _onSearchChanged('');
-                          },
-                        ),
-
-                        const SizedBox(height: 18),
-
-                        SizedBox(
-                          height: 46,
-                          child: ListView.separated(
-                            scrollDirection: Axis.horizontal,
-                            itemCount: _categories.length,
-                            separatorBuilder: (_, _) {
-                              return const SizedBox(width: 10);
-                            },
-                            itemBuilder: (context, index) {
-                              final category = _categories[index];
-
-                              final selected = _selectedCategory == category;
-
-                              return ChoiceChip(
-                                label: Text(category),
-                                selected: selected,
-                                showCheckmark: false,
-                                onSelected: (_) {
-                                  _selectCategory(category);
-                                },
-                                selectedColor: colors.primary,
-                                backgroundColor: colors.surface,
-                                labelStyle: TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  color: selected
-                                      ? colors.onPrimary
-                                      : colors.onSurface,
-                                ),
-                                side: BorderSide(
-                                  color: selected
-                                      ? colors.primary
-                                      : colors.outlineVariant,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(14),
-                                ),
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 10,
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-
-                        const SizedBox(height: 24),
-
-                        Row(
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 1100),
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Expanded(
-                              child: Text(
-                                _headingText,
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w800,
-                                  color: colors.onSurface,
-                                ),
-                              ),
+                            const _SearchHeader(),
+
+                            const SizedBox(height: 22),
+
+                            _SearchField(
+                              controller: _searchController,
+                              query: _searchQuery,
+                              onChanged: _onSearchChanged,
+                              onClear: () {
+                                _searchController.clear();
+                                _onSearchChanged('');
+                              },
                             ),
 
-                            if (!_isLoading &&
-                                _errorMessage == null &&
-                                _total > 0)
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 6,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: colors.surfaceContainerHighest,
-                                  borderRadius: BorderRadius.circular(100),
-                                ),
-                                child: Text(
-                                  '$_total resep',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
-                                    color: colors.onSurfaceVariant,
-                                  ),
-                                ),
-                              ),
+                            const SizedBox(height: 18),
+
+                            _CategoryChips(
+                              categories: _categories,
+                              selectedCategory: _selectedCategory,
+                              onSelected: _selectCategory,
+                            ),
+
+                            const SizedBox(height: 28),
+
+                            _ResultHeader(
+                              heading: _headingText,
+                              total: _total,
+                              isLoading: _isLoading,
+                              hasError: _errorMessage != null,
+                            ),
+
+                            const SizedBox(height: 16),
                           ],
                         ),
-
-                        const SizedBox(height: 14),
-                      ],
+                      ),
                     ),
                   ),
                 ),
@@ -344,23 +283,39 @@ class _SearchScreenState extends State<SearchScreen> {
                     child: _EmptySearchResult(searchQuery: _searchQuery),
                   )
                 else ...[
-                  SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                    sliver: SliverLayoutBuilder(
-                      builder: (context, constraints) {
-                        final width = constraints.crossAxisExtent;
+                  SliverLayoutBuilder(
+                    builder: (context, constraints) {
+                      final screenWidth = constraints.crossAxisExtent;
 
-                        int columns;
+                      final horizontalPadding = _horizontalPadding(screenWidth);
 
-                        if (width >= 1100) {
-                          columns = 4;
-                        } else if (width >= 700) {
-                          columns = 3;
-                        } else {
-                          columns = 2;
-                        }
+                      final usableWidth = screenWidth - (horizontalPadding * 2);
 
-                        return SliverGrid(
+                      int columns;
+
+                      if (usableWidth >= 900) {
+                        columns = 4;
+                      } else if (usableWidth >= 600) {
+                        columns = 3;
+                      } else {
+                        columns = 2;
+                      }
+
+                      const spacing = 14.0;
+
+                      final itemWidth =
+                          (usableWidth - ((columns - 1) * spacing)) / columns;
+
+                      final itemHeight = (itemWidth * 0.72) + 82;
+
+                      return SliverPadding(
+                        padding: EdgeInsets.fromLTRB(
+                          horizontalPadding,
+                          0,
+                          horizontalPadding,
+                          20,
+                        ),
+                        sliver: SliverGrid(
                           delegate: SliverChildBuilderDelegate((
                             context,
                             index,
@@ -377,26 +332,31 @@ class _SearchScreenState extends State<SearchScreen> {
                           gridDelegate:
                               SliverGridDelegateWithFixedCrossAxisCount(
                                 crossAxisCount: columns,
-                                crossAxisSpacing: 14,
-                                mainAxisSpacing: 14,
-                                mainAxisExtent: 300,
+                                crossAxisSpacing: spacing,
+                                mainAxisSpacing: 22,
+                                mainAxisExtent: itemHeight,
                               ),
-                        );
-                      },
-                    ),
+                        ),
+                      );
+                    },
                   ),
 
                   SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 4, 20, 36),
-                      child: _LoadMoreArea(
-                        hasMore: _hasMore,
-                        isLoading: _isLoadingMore,
-                        loaded: _recipes.length,
-                        total: _total,
-                        onPressed: () {
-                          _loadRecipes(reset: false);
-                        },
+                    child: Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 1100),
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 12, 16, 36),
+                          child: _LoadMoreArea(
+                            hasMore: _hasMore,
+                            isLoading: _isLoadingMore,
+                            loaded: _recipes.length,
+                            total: _total,
+                            onPressed: () {
+                              _loadRecipes(reset: false);
+                            },
+                          ),
+                        ),
                       ),
                     ),
                   ),
@@ -409,12 +369,410 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 
+  double _horizontalPadding(double width) {
+    if (width > 1132) {
+      return (width - 1100) / 2;
+    }
+
+    if (width >= 600) {
+      return 24;
+    }
+
+    return 16;
+  }
+
   String get _headingText {
     if (_searchQuery.trim().isNotEmpty || _selectedCategory != 'Semua') {
       return 'Hasil pencarian';
     }
 
-    return 'Jelajahi resep';
+    return 'Semua resep';
+  }
+}
+
+class _SearchHeader extends StatelessWidget {
+  const _SearchHeader();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Jelajahi resep',
+          style: TextStyle(
+            fontSize: 28,
+            height: 1.05,
+            fontWeight: FontWeight.w900,
+            letterSpacing: -0.7,
+            color: colors.onSurface,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Temukan inspirasi dari koleksi resep RacikAI.',
+          style: TextStyle(
+            fontSize: 14,
+            height: 1.4,
+            color: colors.onSurfaceVariant,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _SearchField extends StatelessWidget {
+  final TextEditingController controller;
+  final String query;
+  final ValueChanged<String> onChanged;
+  final VoidCallback onClear;
+
+  const _SearchField({
+    required this.controller,
+    required this.query,
+    required this.onChanged,
+    required this.onClear,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(17),
+        boxShadow: [
+          BoxShadow(
+            color: colors.shadow.withValues(alpha: 0.04),
+            blurRadius: 18,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: TextField(
+        controller: controller,
+        textInputAction: TextInputAction.search,
+        onChanged: onChanged,
+        decoration: InputDecoration(
+          hintText: 'Cari resep atau bahan...',
+          hintStyle: TextStyle(color: colors.onSurfaceVariant),
+          prefixIcon: Icon(
+            Icons.search_rounded,
+            color: colors.onSurfaceVariant,
+          ),
+          suffixIcon: query.isEmpty
+              ? null
+              : IconButton(
+                  tooltip: 'Hapus pencarian',
+                  onPressed: onClear,
+                  icon: Icon(
+                    Icons.close_rounded,
+                    color: colors.onSurfaceVariant,
+                  ),
+                ),
+          filled: false,
+          border: InputBorder.none,
+          enabledBorder: InputBorder.none,
+          focusedBorder: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(vertical: 18),
+        ),
+      ),
+    );
+  }
+}
+
+class _CategoryChips extends StatelessWidget {
+  final List<String> categories;
+  final String selectedCategory;
+  final ValueChanged<String> onSelected;
+
+  const _CategoryChips({
+    required this.categories,
+    required this.selectedCategory,
+    required this.onSelected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return SizedBox(
+      height: 42,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: categories.length,
+        separatorBuilder: (_, _) {
+          return const SizedBox(width: 9);
+        },
+        itemBuilder: (context, index) {
+          final category = categories[index];
+
+          final selected = selectedCategory == category;
+
+          return Material(
+            color: selected ? colors.primaryContainer : colors.surface,
+            borderRadius: BorderRadius.circular(14),
+            child: InkWell(
+              onTap: () {
+                onSelected(category);
+              },
+              borderRadius: BorderRadius.circular(14),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
+                child: Text(
+                  category,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
+                    color: selected ? colors.primary : colors.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _ResultHeader extends StatelessWidget {
+  final String heading;
+  final int total;
+  final bool isLoading;
+  final bool hasError;
+
+  const _ResultHeader({
+    required this.heading,
+    required this.total,
+    required this.isLoading,
+    required this.hasError,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Expanded(
+          child: Text(
+            heading,
+            style: TextStyle(
+              fontSize: 20,
+              height: 1.2,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.25,
+              color: colors.onSurface,
+            ),
+          ),
+        ),
+        if (!isLoading && !hasError && total > 0)
+          Text(
+            '${_formatNumber(total)} resep',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: colors.onSurfaceVariant,
+            ),
+          ),
+      ],
+    );
+  }
+
+  static String _formatNumber(int value) {
+    final source = value.toString();
+
+    return source.replaceAllMapped(RegExp(r'(?=(\d{3})+(?!\d))'), (_) => '.');
+  }
+}
+
+class _CatalogRecipeCard extends StatelessWidget {
+  final CatalogRecipe recipe;
+  final VoidCallback onTap;
+
+  const _CatalogRecipeCard({required this.recipe, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final imageHeight = constraints.maxWidth * 0.72;
+
+        return Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(18),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(18),
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: imageHeight,
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        _RecipeImage(imageUrl: recipe.imageUrl),
+                        Positioned(
+                          top: 9,
+                          right: 9,
+                          child: _FavoriteButton(recipe: recipe),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  recipe.title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 14,
+                    height: 1.25,
+                    fontWeight: FontWeight.w700,
+                    color: colors.onSurface,
+                  ),
+                ),
+                const SizedBox(height: 7),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.restaurant_menu_outlined,
+                      size: 14,
+                      color: colors.primary,
+                    ),
+                    const SizedBox(width: 5),
+                    Expanded(
+                      child: Text(
+                        '${recipe.ingredientCount} bahan',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w500,
+                          color: colors.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _FavoriteButton extends StatelessWidget {
+  final CatalogRecipe recipe;
+
+  const _FavoriteButton({required this.recipe});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return BlocBuilder<FavoriteCubit, FavoriteState>(
+      buildWhen: (previous, current) {
+        return previous.favoriteIds != current.favoriteIds;
+      },
+      builder: (context, state) {
+        final isFavorite = state.isFavorite(recipe.id);
+
+        return Material(
+          color: colors.surface.withValues(alpha: 0.94),
+          shape: const CircleBorder(),
+          elevation: 1,
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: () {
+              context.read<FavoriteCubit>().toggleBackendFavorite(
+                SavedRecipe.fromCatalogRecipe(recipe),
+              );
+            },
+            child: SizedBox(
+              width: 36,
+              height: 36,
+              child: Icon(
+                isFavorite
+                    ? Icons.favorite_rounded
+                    : Icons.favorite_border_rounded,
+                size: 19,
+                color: isFavorite ? colors.secondary : colors.onSurfaceVariant,
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _RecipeImage extends StatelessWidget {
+  final String? imageUrl;
+
+  const _RecipeImage({required this.imageUrl});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    if (imageUrl != null && imageUrl!.trim().isNotEmpty) {
+      return Image.network(
+        imageUrl!,
+        width: double.infinity,
+        fit: BoxFit.cover,
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) {
+            return child;
+          }
+
+          return Container(
+            color: colors.surfaceContainerHighest,
+            alignment: Alignment.center,
+            child: const SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+          );
+        },
+        errorBuilder: (_, _, _) {
+          return _placeholder(colors);
+        },
+      );
+    }
+
+    return _placeholder(colors);
+  }
+
+  Widget _placeholder(ColorScheme colors) {
+    return Container(
+      width: double.infinity,
+      color: colors.surfaceContainerHighest,
+      alignment: Alignment.center,
+      child: Icon(
+        Icons.restaurant_outlined,
+        size: 36,
+        color: colors.primary.withValues(alpha: 0.72),
+      ),
+    );
   }
 }
 
@@ -425,8 +783,7 @@ void _showFavoriteLimitDialog(BuildContext context) {
       final colors = Theme.of(dialogContext).colorScheme;
 
       return AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
-        icon: Icon(Icons.favorite_rounded, size: 42, color: colors.primary),
+        icon: Icon(Icons.favorite_rounded, size: 40, color: colors.primary),
         title: const Text('Batas Resep Tersimpan', textAlign: TextAlign.center),
         content: Text(
           'Akun Free dapat menyimpan maksimal '
@@ -456,240 +813,6 @@ void _showFavoriteLimitDialog(BuildContext context) {
   );
 }
 
-class _SearchField extends StatelessWidget {
-  final TextEditingController controller;
-  final String query;
-  final ValueChanged<String> onChanged;
-  final VoidCallback onClear;
-
-  const _SearchField({
-    required this.controller,
-    required this.query,
-    required this.onChanged,
-    required this.onClear,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-
-    return Container(
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: colors.outlineVariant),
-      ),
-      child: TextField(
-        controller: controller,
-        textInputAction: TextInputAction.search,
-        onChanged: onChanged,
-        decoration: InputDecoration(
-          hintText: 'Cari resep atau bahan...',
-          hintStyle: TextStyle(color: colors.onSurfaceVariant),
-          prefixIcon: Icon(
-            Icons.search_rounded,
-            color: colors.onSurfaceVariant,
-          ),
-          suffixIcon: query.isEmpty
-              ? null
-              : IconButton(
-                  tooltip: 'Hapus pencarian',
-                  onPressed: onClear,
-                  icon: Icon(
-                    Icons.close_rounded,
-                    color: colors.onSurfaceVariant,
-                  ),
-                ),
-          border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(vertical: 18),
-        ),
-      ),
-    );
-  }
-}
-
-class _CatalogRecipeCard extends StatelessWidget {
-  final CatalogRecipe recipe;
-  final VoidCallback onTap;
-
-  const _CatalogRecipeCard({required this.recipe, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-
-    return Material(
-      color: colors.surface,
-      borderRadius: BorderRadius.circular(22),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(22),
-            border: Border.all(color: colors.outlineVariant),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    _RecipeImage(imageUrl: recipe.imageUrl),
-
-                    Positioned(
-                      top: 12,
-                      right: 12,
-                      child: BlocBuilder<FavoriteCubit, FavoriteState>(
-                        buildWhen: (previous, current) {
-                          return previous.favoriteIds != current.favoriteIds;
-                        },
-                        builder: (context, favoriteState) {
-                          final isFavorite = favoriteState.isFavorite(
-                            recipe.id,
-                          );
-
-                          return Material(
-                            color: colors.surface.withValues(alpha: 0.94),
-                            shape: const CircleBorder(),
-                            elevation: 2,
-                            clipBehavior: Clip.antiAlias,
-                            child: IconButton(
-                              tooltip: isFavorite
-                                  ? 'Hapus dari tersimpan'
-                                  : 'Simpan resep',
-                              onPressed: () {
-                                context
-                                    .read<FavoriteCubit>()
-                                    .toggleBackendFavorite(
-                                      SavedRecipe.fromCatalogRecipe(recipe),
-                                    );
-                              },
-                              icon: Icon(
-                                isFavorite
-                                    ? Icons.favorite_rounded
-                                    : Icons.favorite_border_rounded,
-                                color: isFavorite
-                                    ? colors.primary
-                                    : colors.onSurfaceVariant,
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              Padding(
-                padding: const EdgeInsets.all(14),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      recipe.title,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 15,
-                        height: 1.25,
-                        fontWeight: FontWeight.w800,
-                        color: colors.onSurface,
-                      ),
-                    ),
-
-                    const SizedBox(height: 12),
-
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.restaurant_menu_rounded,
-                          size: 16,
-                          color: colors.primary,
-                        ),
-
-                        const SizedBox(width: 6),
-
-                        Expanded(
-                          child: Text(
-                            '${recipe.ingredientCount} bahan',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                              color: colors.onSurfaceVariant,
-                            ),
-                          ),
-                        ),
-
-                        Icon(
-                          Icons.arrow_forward_ios_rounded,
-                          size: 13,
-                          color: colors.onSurfaceVariant,
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _RecipeImage extends StatelessWidget {
-  final String? imageUrl;
-
-  const _RecipeImage({required this.imageUrl});
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-
-    if (imageUrl != null && imageUrl!.trim().isNotEmpty) {
-      return Image.network(
-        imageUrl!,
-        width: double.infinity,
-        fit: BoxFit.cover,
-        errorBuilder: (_, _, _) {
-          return _placeholder(colors);
-        },
-      );
-    }
-
-    return _placeholder(colors);
-  }
-
-  Widget _placeholder(ColorScheme colors) {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [colors.primaryContainer, colors.secondaryContainer],
-        ),
-      ),
-      alignment: Alignment.center,
-      child: Container(
-        width: 68,
-        height: 68,
-        decoration: BoxDecoration(
-          color: colors.surface.withValues(alpha: 0.88),
-          shape: BoxShape.circle,
-        ),
-        child: Icon(Icons.restaurant_rounded, size: 34, color: colors.primary),
-      ),
-    );
-  }
-}
-
 class _LoadMoreArea extends StatelessWidget {
   final bool hasMore;
   final bool isLoading;
@@ -712,7 +835,8 @@ class _LoadMoreArea extends StatelessWidget {
     if (!hasMore) {
       return Center(
         child: Text(
-          'Menampilkan $loaded dari $total resep',
+          'Menampilkan $loaded dari '
+          '${_formatNumber(total)} resep',
           style: TextStyle(fontSize: 12, color: colors.onSurfaceVariant),
         ),
       );
@@ -732,6 +856,12 @@ class _LoadMoreArea extends StatelessWidget {
       ),
     );
   }
+
+  static String _formatNumber(int value) {
+    final source = value.toString();
+
+    return source.replaceAllMapped(RegExp(r'(?=(\d{3})+(?!\d))'), (_) => '.');
+  }
 }
 
 class _EmptySearchResult extends StatelessWidget {
@@ -749,22 +879,12 @@ class _EmptySearchResult extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              width: 84,
-              height: 84,
-              decoration: BoxDecoration(
-                color: colors.surfaceContainerHighest,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.search_off_rounded,
-                size: 38,
-                color: colors.onSurfaceVariant,
-              ),
+            Icon(
+              Icons.search_off_rounded,
+              size: 48,
+              color: colors.onSurfaceVariant,
             ),
-
-            const SizedBox(height: 20),
-
+            const SizedBox(height: 18),
             Text(
               'Tidak ada resep yang cocok',
               textAlign: TextAlign.center,
@@ -774,13 +894,12 @@ class _EmptySearchResult extends StatelessWidget {
                 color: colors.onSurface,
               ),
             ),
-
             const SizedBox(height: 8),
-
             Text(
               searchQuery.trim().isEmpty
                   ? 'Coba pilih kategori lainnya.'
-                  : 'Coba gunakan nama resep atau bahan yang berbeda.',
+                  : 'Coba gunakan nama resep atau '
+                        'bahan yang berbeda.',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,
@@ -811,10 +930,8 @@ class _SearchError extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.cloud_off_rounded, size: 56, color: colors.error),
-
+            Icon(Icons.cloud_off_outlined, size: 50, color: colors.error),
             const SizedBox(height: 16),
-
             Text(
               'Resep gagal dimuat',
               style: TextStyle(
@@ -823,17 +940,13 @@ class _SearchError extends StatelessWidget {
                 color: colors.onSurface,
               ),
             ),
-
             const SizedBox(height: 8),
-
             Text(
               message,
               textAlign: TextAlign.center,
               style: TextStyle(color: colors.onSurfaceVariant),
             ),
-
             const SizedBox(height: 20),
-
             FilledButton.icon(
               onPressed: onRetry,
               icon: const Icon(Icons.refresh_rounded),

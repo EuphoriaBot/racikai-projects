@@ -78,18 +78,20 @@ class AppTheme {
         backgroundColor: AppColors.surface,
         elevation: 0,
         indicatorColor: AppColors.primarySoft,
-        height: 72,
+        height: 110,
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
             return const TextStyle(
-              fontSize: 12,
+              fontSize: 11.5,
+              height: 1.0,
               fontWeight: FontWeight.w700,
               color: AppColors.primaryDark,
             );
           }
 
           return const TextStyle(
-            fontSize: 12,
+            fontSize: 11.5,
+            height: 1.0,
             fontWeight: FontWeight.w500,
             color: AppColors.textSecondary,
           );
