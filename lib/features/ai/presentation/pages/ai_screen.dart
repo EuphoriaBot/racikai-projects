@@ -178,74 +178,159 @@ class _AiContentState extends State<_AiContent> {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    final backgroundColor = Theme.of(context).scaffoldBackgroundColor;
 
-    return SafeArea(
-      child: Column(
-        children: [
-          _AiHeader(colors: colors),
+    return ColoredBox(
+      color: backgroundColor,
+      child: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final isWide = constraints.maxWidth >= 800;
 
-          Expanded(
-            child: ListView(
-              controller: scrollController,
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
+            return Column(
               children: [
-                ...messages.map((message) {
-                  return _ChatMessageBubble(message: message);
-                }),
+                _AiHeader(colors: colors, isWide: isWide),
 
-                if (messages.length == 1) ...[
-                  const SizedBox(height: 10),
+                Expanded(
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 880),
+                      child: ListView(
+                        controller: scrollController,
+                        padding: EdgeInsets.fromLTRB(
+                          isWide ? 24 : 16,
+                          22,
+                          isWide ? 24 : 16,
+                          24,
+                        ),
+                        children: [
+                          if (messages.length == 1)
+                            _AiWelcome(
+                              suggestions: suggestions,
+                              onSuggestionTap: (suggestion) {
+                                sendMessage(suggestion: suggestion);
+                              },
+                            )
+                          else
+                            ...messages.map((message) {
+                              return _ChatMessageBubble(message: message);
+                            }),
 
-                  Text(
-                    'Coba tanyakan',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: colors.onSurfaceVariant,
+                          if (isTyping) ...[
+                            const SizedBox(height: 4),
+                            const _TypingBubble(),
+                          ],
+                        ],
+                      ),
                     ),
                   ),
+                ),
 
-                  const SizedBox(height: 10),
-
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: suggestions.map((suggestion) {
-                      return ActionChip(
-                        avatar: Icon(
-                          Icons.auto_awesome,
-                          size: 16,
-                          color: colors.primary,
-                        ),
-                        label: Text(
-                          suggestion,
-                          style: TextStyle(color: colors.onSurface),
-                        ),
-                        backgroundColor: colors.surfaceContainerHighest,
-                        side: BorderSide(color: colors.outlineVariant),
-                        onPressed: () {
-                          sendMessage(suggestion: suggestion);
-                        },
-                      );
-                    }).toList(),
-                  ),
-                ],
-
-                if (isTyping) ...[
-                  const SizedBox(height: 4),
-                  const _TypingBubble(),
-                ],
+                _AiInputBar(
+                  controller: messageController,
+                  isTyping: isTyping,
+                  onChanged: () {
+                    setState(() {});
+                  },
+                  onSend: sendMessage,
+                ),
               ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _AiWelcome extends StatelessWidget {
+  final List<String> suggestions;
+  final ValueChanged<String> onSuggestionTap;
+
+  const _AiWelcome({required this.suggestions, required this.onSuggestionTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 28, bottom: 18),
+      child: Column(
+        children: [
+          Container(
+            width: 66,
+            height: 66,
+            decoration: BoxDecoration(
+              color: colors.primaryContainer,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.auto_awesome_rounded,
+              size: 30,
+              color: colors.primary,
             ),
           ),
 
-          _AiInputBar(
-            controller: messageController,
-            isTyping: isTyping,
-            onChanged: () {
-              setState(() {});
-            },
-            onSend: sendMessage,
+          const SizedBox(height: 20),
+
+          Text(
+            'Mau masak apa?',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 26,
+              height: 1.1,
+              fontWeight: FontWeight.w900,
+              letterSpacing: -0.5,
+              color: colors.onSurface,
+            ),
+          ),
+
+          const SizedBox(height: 10),
+
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 480),
+            child: Text(
+              'Ceritakan bahan yang tersedia atau '
+              'jenis makanan yang ingin kamu buat. '
+              'RacikAI akan membantu mencarikan resep yang relevan.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                height: 1.55,
+                color: colors.onSurfaceVariant,
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 30),
+
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              'Coba tanyakan',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: colors.onSurfaceVariant,
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 10),
+
+          Column(
+            children: [
+              for (final suggestion in suggestions) ...[
+                _SuggestionTile(
+                  text: suggestion,
+                  onTap: () {
+                    onSuggestionTap(suggestion);
+                  },
+                ),
+
+                if (suggestion != suggestions.last) const SizedBox(height: 9),
+              ],
+            ],
           ),
         ],
       ),
@@ -253,78 +338,179 @@ class _AiContentState extends State<_AiContent> {
   }
 }
 
+class _SuggestionTile extends StatelessWidget {
+  final String text;
+  final VoidCallback onTap;
+
+  const _SuggestionTile({required this.text, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return Material(
+      color: colors.surface,
+      borderRadius: BorderRadius.circular(16),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          child: Row(
+            children: [
+              Icon(Icons.auto_awesome_rounded, size: 17, color: colors.primary),
+
+              const SizedBox(width: 11),
+
+              Expanded(
+                child: Text(
+                  text,
+                  style: TextStyle(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w600,
+                    color: colors.onSurface,
+                  ),
+                ),
+              ),
+
+              Icon(
+                Icons.arrow_forward_rounded,
+                size: 18,
+                color: colors.onSurfaceVariant,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _AiHeader extends StatelessWidget {
   final ColorScheme colors;
+  final bool isWide;
 
-  const _AiHeader({required this.colors});
+  const _AiHeader({required this.colors, required this.isWide});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+      padding: EdgeInsets.fromLTRB(isWide ? 24 : 16, 15, isWide ? 24 : 16, 15),
       decoration: BoxDecoration(
         color: Theme.of(context).scaffoldBackgroundColor,
         border: Border(bottom: BorderSide(color: colors.outlineVariant)),
       ),
-      child: Row(
-        children: [
-          Container(
-            width: 46,
-            height: 46,
-            decoration: BoxDecoration(
-              color: colors.primaryContainer,
-              borderRadius: BorderRadius.circular(15),
-            ),
-            child: Icon(Icons.auto_awesome, color: colors.primary),
-          ),
-
-          const SizedBox(width: 12),
-
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'RacikAI Assistant',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                    color: colors.onSurface,
-                  ),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 880),
+          child: Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: colors.primaryContainer,
+                  borderRadius: BorderRadius.circular(13),
                 ),
+                child: Icon(
+                  Icons.auto_awesome_rounded,
+                  size: 21,
+                  color: colors.primary,
+                ),
+              ),
 
-                const SizedBox(height: 2),
+              const SizedBox(width: 12),
 
-                AnimatedBuilder(
-                  animation: UsageController.instance,
-                  builder: (context, _) {
-                    final isPremium = SubscriptionController.instance.isPremium;
-
-                    if (isPremium) {
-                      return Text(
-                        'Premium • AI tanpa batas ✨',
-                        style: TextStyle(fontSize: 12, color: colors.primary),
-                      );
-                    }
-
-                    final usage = UsageController.instance.aiUsage;
-
-                    return Text(
-                      '$usage / '
-                      '${UsageController.freeAiLimit} '
-                      'pertanyaan hari ini',
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'RacikAI Assistant',
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 17,
+                        fontWeight: FontWeight.w800,
+                        color: colors.onSurface,
+                      ),
+                    ),
+
+                    const SizedBox(height: 2),
+
+                    Text(
+                      'Tanya bahan, resep, atau ide masakan',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 11.5,
                         color: colors.onSurfaceVariant,
                       ),
-                    );
-                  },
+                    ),
+                  ],
                 ),
-              ],
+              ),
+
+              const SizedBox(width: 10),
+
+              _AiUsageBadge(colors: colors),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AiUsageBadge extends StatelessWidget {
+  final ColorScheme colors;
+
+  const _AiUsageBadge({required this.colors});
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: Listenable.merge([
+        UsageController.instance,
+        SubscriptionController.instance,
+      ]),
+      builder: (context, _) {
+        final isPremium = SubscriptionController.instance.isPremium;
+
+        if (isPremium) {
+          return Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+            decoration: BoxDecoration(
+              color: colors.secondaryContainer,
+              borderRadius: BorderRadius.circular(100),
+            ),
+            child: Text(
+              'Premium',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: colors.onSecondaryContainer,
+              ),
+            ),
+          );
+        }
+
+        final usage = UsageController.instance.aiUsage;
+
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+          decoration: BoxDecoration(
+            color: colors.surface,
+            borderRadius: BorderRadius.circular(100),
+          ),
+          child: Text(
+            '$usage/${UsageController.freeAiLimit}',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: colors.onSurfaceVariant,
             ),
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
@@ -349,73 +535,85 @@ class _AiInputBar extends StatelessWidget {
     final canSend = controller.text.trim().isNotEmpty && !isTyping;
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 10, 16, 14),
       decoration: BoxDecoration(
         color: Theme.of(context).scaffoldBackgroundColor,
         border: Border(top: BorderSide(color: colors.outlineVariant)),
       ),
       child: SafeArea(
         top: false,
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Expanded(
-              child: TextField(
-                controller: controller,
-                minLines: 1,
-                maxLines: 4,
-                textInputAction: TextInputAction.newline,
-                onChanged: (_) {
-                  onChanged();
-                },
-                decoration: InputDecoration(
-                  hintText: 'Tanya RacikAI...',
-                  filled: true,
-                  fillColor: colors.surfaceContainerHighest,
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 14,
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(20),
-                    borderSide: BorderSide.none,
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(20),
-                    borderSide: BorderSide(color: colors.outlineVariant),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(20),
-                    borderSide: BorderSide(color: colors.primary),
-                  ),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 880),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 11, 16, 12),
+              child: Container(
+                padding: const EdgeInsets.fromLTRB(4, 3, 4, 3),
+                decoration: BoxDecoration(
+                  color: colors.surface,
+                  borderRadius: BorderRadius.circular(22),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: controller,
+                        minLines: 1,
+                        maxLines: 4,
+                        textInputAction: TextInputAction.newline,
+                        onChanged: (_) {
+                          onChanged();
+                        },
+                        decoration: InputDecoration(
+                          hintText: 'Tanyakan sesuatu...',
+                          hintStyle: TextStyle(color: colors.onSurfaceVariant),
+                          filled: false,
+                          border: InputBorder.none,
+                          enabledBorder: InputBorder.none,
+                          focusedBorder: InputBorder.none,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 13,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(width: 4),
+
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 2),
+                      child: Material(
+                        color: canSend
+                            ? colors.primary
+                            : colors.surfaceContainerHighest,
+                        shape: const CircleBorder(),
+                        clipBehavior: Clip.antiAlias,
+                        child: InkWell(
+                          onTap: canSend
+                              ? () {
+                                  onSend();
+                                }
+                              : null,
+                          child: SizedBox(
+                            width: 43,
+                            height: 43,
+                            child: Icon(
+                              Icons.arrow_upward_rounded,
+                              size: 20,
+                              color: canSend
+                                  ? colors.onPrimary
+                                  : colors.onSurfaceVariant,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
-
-            const SizedBox(width: 10),
-
-            Container(
-              width: 50,
-              height: 50,
-              decoration: BoxDecoration(
-                color: canSend
-                    ? colors.primary
-                    : colors.surfaceContainerHighest,
-                shape: BoxShape.circle,
-              ),
-              child: IconButton(
-                onPressed: canSend
-                    ? () {
-                        onSend();
-                      }
-                    : null,
-                icon: Icon(
-                  Icons.arrow_upward_rounded,
-                  color: canSend ? colors.onPrimary : colors.onSurfaceVariant,
-                ),
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -430,84 +628,104 @@ class _ChatMessageBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isUser = message.role == ChatRole.user;
+
     final colors = Theme.of(context).colorScheme;
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 18),
+      padding: const EdgeInsets.only(bottom: 22),
       child: Column(
         crossAxisAlignment: isUser
             ? CrossAxisAlignment.end
             : CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: isUser
-                ? MainAxisAlignment.end
-                : MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (!isUser) ...[
+          if (isUser)
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 560),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 15,
+                  vertical: 12,
+                ),
+                decoration: BoxDecoration(
+                  color: colors.primary,
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(18),
+                    topRight: Radius.circular(18),
+                    bottomLeft: Radius.circular(18),
+                    bottomRight: Radius.circular(5),
+                  ),
+                ),
+                child: Text(
+                  message.text,
+                  style: TextStyle(
+                    fontSize: 14,
+                    height: 1.5,
+                    color: colors.onPrimary,
+                  ),
+                ),
+              ),
+            )
+          else
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
                 Container(
-                  width: 32,
-                  height: 32,
+                  width: 31,
+                  height: 31,
                   decoration: BoxDecoration(
                     color: colors.primaryContainer,
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
-                    Icons.auto_awesome,
-                    size: 17,
+                    Icons.auto_awesome_rounded,
+                    size: 16,
                     color: colors.primary,
                   ),
                 ),
 
-                const SizedBox(width: 8),
-              ],
+                const SizedBox(width: 10),
 
-              Flexible(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 760),
-                  child: Container(
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: isUser
-                          ? colors.primary
-                          : colors.surfaceContainerHighest,
-                      borderRadius: BorderRadius.only(
-                        topLeft: const Radius.circular(18),
-                        topRight: const Radius.circular(18),
-                        bottomLeft: Radius.circular(isUser ? 18 : 4),
-                        bottomRight: Radius.circular(isUser ? 4 : 18),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'RacikAI',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: colors.onSurfaceVariant,
+                        ),
                       ),
-                      border: isUser
-                          ? null
-                          : Border.all(color: colors.outlineVariant),
-                    ),
-                    child: Text(
-                      isUser ? message.text : _cleanAiText(message.text),
-                      style: TextStyle(
-                        fontSize: 14,
-                        height: 1.6,
-                        color: isUser ? colors.onPrimary : colors.onSurface,
+
+                      const SizedBox(height: 6),
+
+                      Text(
+                        _cleanAiText(message.text),
+                        style: TextStyle(
+                          fontSize: 14,
+                          height: 1.65,
+                          color: colors.onSurface,
+                        ),
                       ),
-                    ),
+                    ],
                   ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            ),
 
           if (message.recipes.isNotEmpty) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: 14),
 
             Padding(
-              padding: const EdgeInsets.only(left: 40),
+              padding: const EdgeInsets.only(left: 41),
               child: _AiRecipeSources(recipes: message.recipes),
             ),
           ] else if (message.sourceRecipeIds.isNotEmpty) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: 14),
 
             Padding(
-              padding: const EdgeInsets.only(left: 40),
+              padding: const EdgeInsets.only(left: 41),
               child: _RecipeSources(recipeIds: message.sourceRecipeIds),
             ),
           ],
@@ -533,46 +751,23 @@ class _AiRecipeSources extends StatelessWidget {
         children: [
           Row(
             children: [
-              Container(
-                width: 28,
-                height: 28,
-                decoration: BoxDecoration(
-                  color: colors.primaryContainer,
-                  borderRadius: BorderRadius.circular(9),
-                ),
-                child: Icon(
-                  Icons.auto_awesome_rounded,
-                  size: 15,
-                  color: colors.primary,
+              Text(
+                'Rekomendasi resep',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w800,
+                  color: colors.onSurface,
                 ),
               ),
 
               const SizedBox(width: 8),
 
               Text(
-                'Rekomendasi resep',
+                '${recipes.length}',
                 style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: colors.onSurface,
-                ),
-              ),
-
-              const SizedBox(width: 7),
-
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: colors.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(100),
-                ),
-                child: Text(
-                  '${recipes.length}',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: colors.onSurfaceVariant,
-                  ),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: colors.onSurfaceVariant,
                 ),
               ),
             ],
@@ -940,47 +1135,38 @@ class _TypingBubble extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
 
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Container(
-          width: 32,
-          height: 32,
+          width: 31,
+          height: 31,
           decoration: BoxDecoration(
             color: colors.primaryContainer,
             shape: BoxShape.circle,
           ),
-          child: Icon(Icons.auto_awesome, size: 17, color: colors.primary),
+          child: Icon(
+            Icons.auto_awesome_rounded,
+            size: 16,
+            color: colors.primary,
+          ),
         ),
 
-        const SizedBox(width: 8),
+        const SizedBox(width: 10),
 
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 13),
-          decoration: BoxDecoration(
-            color: colors.surfaceContainerHighest,
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: colors.outlineVariant),
+        SizedBox(
+          width: 16,
+          height: 16,
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            color: colors.primary,
           ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SizedBox(
-                width: 14,
-                height: 14,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: colors.primary,
-                ),
-              ),
+        ),
 
-              const SizedBox(width: 9),
+        const SizedBox(width: 9),
 
-              Text(
-                'RacikAI sedang meracik...',
-                style: TextStyle(fontSize: 12, color: colors.onSurfaceVariant),
-              ),
-            ],
-          ),
+        Text(
+          'RacikAI sedang meracik...',
+          style: TextStyle(fontSize: 12.5, color: colors.onSurfaceVariant),
         ),
       ],
     );
