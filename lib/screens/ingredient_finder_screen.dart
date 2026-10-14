@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import 'package:go_router/go_router.dart';
 
 class IngredientFinderScreen extends StatefulWidget {
@@ -62,6 +61,22 @@ class _IngredientFinderScreenState extends State<IngredientFinderScreen> {
     });
   }
 
+  void clearSearch() {
+    searchController.clear();
+
+    setState(() {
+      searchQuery = '';
+    });
+  }
+
+  void openResults() {
+    if (selectedIngredients.isEmpty) {
+      return;
+    }
+
+    context.push('/ingredients/results', extra: selectedIngredients.toList());
+  }
+
   @override
   void dispose() {
     searchController.dispose();
@@ -70,279 +85,457 @@ class _IngredientFinderScreenState extends State<IngredientFinderScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-
     final backgroundColor = Theme.of(context).scaffoldBackgroundColor;
 
     return Scaffold(
       backgroundColor: backgroundColor,
-
       appBar: AppBar(
-        backgroundColor: backgroundColor,
-        foregroundColor: colors.onSurface,
-        elevation: 0,
-        surfaceTintColor: Colors.transparent,
-        title: Text(
-          'Bahan Saya',
+        title: const Text(
+          'Dari bahan',
+          style: TextStyle(fontWeight: FontWeight.w800),
+        ),
+      ),
+      body: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final isWide = constraints.maxWidth >= 780;
+
+            return SingleChildScrollView(
+              padding: EdgeInsets.fromLTRB(
+                isWide ? 24 : 16,
+                14,
+                isWide ? 24 : 16,
+                40,
+              ),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 1080),
+                  child: isWide
+                      ? _DesktopLayout(
+                          searchController: searchController,
+                          searchQuery: searchQuery,
+                          selectedIngredients: selectedIngredients,
+                          filteredIngredients: filteredIngredients,
+                          onSearchChanged: (value) {
+                            setState(() {
+                              searchQuery = value;
+                            });
+                          },
+                          onClearSearch: clearSearch,
+                          onToggleIngredient: toggleIngredient,
+                          onClearSelected: () {
+                            setState(() {
+                              selectedIngredients.clear();
+                            });
+                          },
+                          onSearchRecipes: openResults,
+                        )
+                      : _MobileLayout(
+                          searchController: searchController,
+                          searchQuery: searchQuery,
+                          selectedIngredients: selectedIngredients,
+                          filteredIngredients: filteredIngredients,
+                          onSearchChanged: (value) {
+                            setState(() {
+                              searchQuery = value;
+                            });
+                          },
+                          onClearSearch: clearSearch,
+                          onToggleIngredient: toggleIngredient,
+                          onClearSelected: () {
+                            setState(() {
+                              selectedIngredients.clear();
+                            });
+                          },
+                          onSearchRecipes: openResults,
+                        ),
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _MobileLayout extends StatelessWidget {
+  final TextEditingController searchController;
+  final String searchQuery;
+  final Set<String> selectedIngredients;
+  final List<String> filteredIngredients;
+  final ValueChanged<String> onSearchChanged;
+  final VoidCallback onClearSearch;
+  final ValueChanged<String> onToggleIngredient;
+  final VoidCallback onClearSelected;
+  final VoidCallback onSearchRecipes;
+
+  const _MobileLayout({
+    required this.searchController,
+    required this.searchQuery,
+    required this.selectedIngredients,
+    required this.filteredIngredients,
+    required this.onSearchChanged,
+    required this.onClearSearch,
+    required this.onToggleIngredient,
+    required this.onClearSelected,
+    required this.onSearchRecipes,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const _Intro(),
+
+        const SizedBox(height: 22),
+
+        _IngredientSearchField(
+          controller: searchController,
+          query: searchQuery,
+          onChanged: onSearchChanged,
+          onClear: onClearSearch,
+        ),
+
+        if (selectedIngredients.isNotEmpty) ...[
+          const SizedBox(height: 26),
+
+          _SelectedIngredients(
+            selectedIngredients: selectedIngredients,
+            onToggle: onToggleIngredient,
+            onClear: onClearSelected,
+          ),
+        ],
+
+        const SizedBox(height: 28),
+
+        _IngredientChoices(
+          ingredients: filteredIngredients,
+          selectedIngredients: selectedIngredients,
+          onToggle: onToggleIngredient,
+        ),
+
+        const SizedBox(height: 30),
+
+        _SearchRecipeButton(
+          count: selectedIngredients.length,
+          onPressed: onSearchRecipes,
+        ),
+      ],
+    );
+  }
+}
+
+class _DesktopLayout extends StatelessWidget {
+  final TextEditingController searchController;
+  final String searchQuery;
+  final Set<String> selectedIngredients;
+  final List<String> filteredIngredients;
+  final ValueChanged<String> onSearchChanged;
+  final VoidCallback onClearSearch;
+  final ValueChanged<String> onToggleIngredient;
+  final VoidCallback onClearSelected;
+  final VoidCallback onSearchRecipes;
+
+  const _DesktopLayout({
+    required this.searchController,
+    required this.searchQuery,
+    required this.selectedIngredients,
+    required this.filteredIngredients,
+    required this.onSearchChanged,
+    required this.onClearSearch,
+    required this.onToggleIngredient,
+    required this.onClearSelected,
+    required this.onSearchRecipes,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          flex: 4,
+          child: Container(
+            padding: const EdgeInsets.all(22),
+            decoration: BoxDecoration(
+              color: colors.surface,
+              borderRadius: BorderRadius.circular(24),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const _Intro(),
+
+                const SizedBox(height: 22),
+
+                _IngredientSearchField(
+                  controller: searchController,
+                  query: searchQuery,
+                  onChanged: onSearchChanged,
+                  onClear: onClearSearch,
+                ),
+
+                if (selectedIngredients.isNotEmpty) ...[
+                  const SizedBox(height: 24),
+
+                  _SelectedIngredients(
+                    selectedIngredients: selectedIngredients,
+                    onToggle: onToggleIngredient,
+                    onClear: onClearSelected,
+                  ),
+                ],
+
+                const SizedBox(height: 26),
+
+                _SearchRecipeButton(
+                  count: selectedIngredients.length,
+                  onPressed: onSearchRecipes,
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        const SizedBox(width: 22),
+
+        Expanded(
+          flex: 6,
+          child: Container(
+            padding: const EdgeInsets.all(22),
+            decoration: BoxDecoration(
+              color: colors.surface,
+              borderRadius: BorderRadius.circular(24),
+            ),
+            child: _IngredientChoices(
+              ingredients: filteredIngredients,
+              selectedIngredients: selectedIngredients,
+              onToggle: onToggleIngredient,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _Intro extends StatelessWidget {
+  const _Intro();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Apa yang ada di dapurmu?',
           style: TextStyle(
-            fontWeight: FontWeight.w700,
+            fontSize: 27,
+            height: 1.1,
+            fontWeight: FontWeight.w900,
+            letterSpacing: -0.5,
             color: colors.onSurface,
           ),
         ),
-      ),
 
-      body: SafeArea(
-        child: Column(
+        const SizedBox(height: 8),
+
+        Text(
+          'Pilih bahan yang tersedia. '
+          'RacikAI akan membantu mencarikan '
+          'resep yang paling cocok.',
+          style: TextStyle(
+            fontSize: 14,
+            height: 1.5,
+            color: colors.onSurfaceVariant,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _IngredientSearchField extends StatelessWidget {
+  final TextEditingController controller;
+  final String query;
+  final ValueChanged<String> onChanged;
+  final VoidCallback onClear;
+
+  const _IngredientSearchField({
+    required this.controller,
+    required this.query,
+    required this.onChanged,
+    required this.onClear,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      controller: controller,
+      onChanged: onChanged,
+      decoration: InputDecoration(
+        hintText: 'Cari bahan...',
+        prefixIcon: const Icon(Icons.search_rounded),
+        suffixIcon: query.isNotEmpty
+            ? IconButton(
+                onPressed: onClear,
+                icon: const Icon(Icons.close_rounded),
+              )
+            : null,
+      ),
+    );
+  }
+}
+
+class _SelectedIngredients extends StatelessWidget {
+  final Set<String> selectedIngredients;
+  final ValueChanged<String> onToggle;
+  final VoidCallback onClear;
+
+  const _SelectedIngredients({
+    required this.selectedIngredients,
+    required this.onToggle,
+    required this.onClear,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
           children: [
             Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Apa yang ada di dapurmu?',
-                      style: TextStyle(
-                        fontSize: 26,
-                        fontWeight: FontWeight.w800,
-                        color: colors.onSurface,
-                      ),
-                    ),
-
-                    const SizedBox(height: 8),
-
-                    Text(
-                      'Pilih bahan yang kamu punya. '
-                      'RacikAI akan mencari resep '
-                      'yang paling cocok.',
-                      style: TextStyle(
-                        fontSize: 14,
-                        height: 1.5,
-                        color: colors.onSurfaceVariant,
-                      ),
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    TextField(
-                      controller: searchController,
-                      onChanged: (value) {
-                        setState(() {
-                          searchQuery = value;
-                        });
-                      },
-                      decoration: InputDecoration(
-                        hintText: 'Cari bahan...',
-
-                        prefixIcon: Icon(
-                          Icons.search,
-                          color: colors.onSurfaceVariant,
-                        ),
-
-                        suffixIcon: searchQuery.isNotEmpty
-                            ? IconButton(
-                                onPressed: () {
-                                  searchController.clear();
-
-                                  setState(() {
-                                    searchQuery = '';
-                                  });
-                                },
-                                icon: Icon(
-                                  Icons.close,
-                                  color: colors.onSurfaceVariant,
-                                ),
-                              )
-                            : null,
-
-                        filled: true,
-                        fillColor: colors.surface,
-
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          borderSide: BorderSide.none,
-                        ),
-
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          borderSide: BorderSide(color: colors.outlineVariant),
-                        ),
-
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          borderSide: BorderSide(
-                            color: colors.primary,
-                            width: 1.5,
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    if (selectedIngredients.isNotEmpty) ...[
-                      const SizedBox(height: 28),
-
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Bahan dipilih',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w700,
-                              color: colors.onSurface,
-                            ),
-                          ),
-
-                          TextButton(
-                            onPressed: () {
-                              setState(() {
-                                selectedIngredients.clear();
-                              });
-                            },
-                            child: const Text('Hapus Semua'),
-                          ),
-                        ],
-                      ),
-
-                      const SizedBox(height: 10),
-
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: selectedIngredients.map((ingredient) {
-                          return InputChip(
-                            label: Text(ingredient),
-                            selected: true,
-                            onDeleted: () {
-                              toggleIngredient(ingredient);
-                            },
-                            deleteIcon: Icon(
-                              Icons.close,
-                              size: 17,
-                              color: colors.onPrimaryContainer,
-                            ),
-                            selectedColor: colors.primaryContainer,
-                            side: BorderSide.none,
-                            labelStyle: TextStyle(
-                              color: colors.onPrimaryContainer,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                    ],
-
-                    const SizedBox(height: 30),
-
-                    Text(
-                      'Pilih bahan',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w800,
-                        color: colors.onSurface,
-                      ),
-                    ),
-
-                    const SizedBox(height: 14),
-
-                    if (filteredIngredients.isEmpty)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 40),
-                        child: Center(
-                          child: Text(
-                            'Bahan tidak ditemukan.',
-                            style: TextStyle(color: colors.onSurfaceVariant),
-                          ),
-                        ),
-                      )
-                    else
-                      Wrap(
-                        spacing: 9,
-                        runSpacing: 10,
-                        children: filteredIngredients.map((ingredient) {
-                          final isSelected = selectedIngredients.contains(
-                            ingredient,
-                          );
-
-                          return FilterChip(
-                            label: Text(ingredient),
-
-                            selected: isSelected,
-
-                            onSelected: (_) {
-                              toggleIngredient(ingredient);
-                            },
-
-                            showCheckmark: true,
-
-                            selectedColor: colors.primary,
-
-                            backgroundColor: colors.surface,
-
-                            checkmarkColor: colors.onPrimary,
-
-                            side: BorderSide(
-                              color: isSelected
-                                  ? colors.primary
-                                  : colors.outlineVariant,
-                            ),
-
-                            labelStyle: TextStyle(
-                              color: isSelected
-                                  ? colors.onPrimary
-                                  : colors.onSurface,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                  ],
+              child: Text(
+                'Bahan dipilih',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                  color: colors.onSurface,
                 ),
               ),
             ),
 
-            Container(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
-              decoration: BoxDecoration(
-                color: backgroundColor,
-                border: Border(top: BorderSide(color: colors.outlineVariant)),
-              ),
-              child: FilledButton(
-                onPressed: selectedIngredients.isEmpty
-                    ? null
-                    : () {
-                        context.push(
-                          '/ingredients/results',
-                          extra: selectedIngredients.toList(),
-                        );
-                      },
-                style: FilledButton.styleFrom(
-                  backgroundColor: colors.primary,
-
-                  foregroundColor: colors.onPrimary,
-
-                  disabledBackgroundColor: colors.surfaceContainerHighest,
-
-                  disabledForegroundColor: colors.onSurfaceVariant,
-
-                  minimumSize: const Size(double.infinity, 56),
-
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                ),
-                child: Text(
-                  selectedIngredients.isEmpty
-                      ? 'Pilih bahan terlebih dahulu'
-                      : 'Cari Resep (${selectedIngredients.length} bahan)',
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ),
+            TextButton(onPressed: onClear, child: const Text('Hapus semua')),
           ],
+        ),
+
+        const SizedBox(height: 8),
+
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: selectedIngredients.map((ingredient) {
+            return InputChip(
+              label: Text(ingredient),
+              onDeleted: () {
+                onToggle(ingredient);
+              },
+              deleteIcon: const Icon(Icons.close_rounded, size: 16),
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+}
+
+class _IngredientChoices extends StatelessWidget {
+  final List<String> ingredients;
+  final Set<String> selectedIngredients;
+  final ValueChanged<String> onToggle;
+
+  const _IngredientChoices({
+    required this.ingredients,
+    required this.selectedIngredients,
+    required this.onToggle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Pilih bahan',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w800,
+            color: colors.onSurface,
+          ),
+        ),
+
+        const SizedBox(height: 6),
+
+        Text(
+          'Ketuk bahan untuk menambahkan '
+          'atau menghapusnya dari pilihan.',
+          style: TextStyle(fontSize: 12.5, color: colors.onSurfaceVariant),
+        ),
+
+        const SizedBox(height: 16),
+
+        if (ingredients.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 34),
+            child: Center(
+              child: Text(
+                'Bahan tidak ditemukan.',
+                style: TextStyle(color: colors.onSurfaceVariant),
+              ),
+            ),
+          )
+        else
+          Wrap(
+            spacing: 9,
+            runSpacing: 10,
+            children: ingredients.map((ingredient) {
+              final isSelected = selectedIngredients.contains(ingredient);
+
+              return FilterChip(
+                label: Text(ingredient),
+                selected: isSelected,
+                onSelected: (_) {
+                  onToggle(ingredient);
+                },
+                showCheckmark: true,
+              );
+            }).toList(),
+          ),
+      ],
+    );
+  }
+}
+
+class _SearchRecipeButton extends StatelessWidget {
+  final int count;
+  final VoidCallback onPressed;
+
+  const _SearchRecipeButton({required this.count, required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      child: FilledButton.icon(
+        onPressed: count == 0 ? null : onPressed,
+        icon: const Icon(Icons.search_rounded),
+        label: Text(
+          count == 0
+              ? 'Pilih bahan terlebih dahulu'
+              : 'Cari resep dari $count bahan',
+        ),
+        style: FilledButton.styleFrom(
+          minimumSize: const Size(double.infinity, 52),
         ),
       ),
     );
