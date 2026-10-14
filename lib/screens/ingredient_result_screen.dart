@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../core/router/recipe_detail_route_args.dart';
+import '../features/favorite/data/models/saved_recipe.dart';
 import '../features/favorite/presentation/cubit/favorite_cubit.dart';
 import '../features/favorite/presentation/cubit/favorite_state.dart';
 import '../features/recipe/data/models/catalog_recipe.dart';
-import '../features/favorite/data/models/saved_recipe.dart';
 import '../services/recipe_catalog_service.dart';
-import '../core/router/recipe_detail_route_args.dart';
 
 class IngredientResultScreen extends StatefulWidget {
   final List<String> selectedIngredients;
@@ -63,14 +63,12 @@ class _IngredientResultScreenState extends State<IngredientResultScreen> {
   @override
   void initState() {
     super.initState();
-
     _loadRecipes(reset: true);
   }
 
   @override
   void dispose() {
     _catalogService.dispose();
-
     super.dispose();
   }
 
@@ -106,7 +104,6 @@ class _IngredientResultScreenState extends State<IngredientResultScreen> {
     }
 
     final version = _requestVersion;
-
     final requestedPage = reset ? 1 : _page + 1;
 
     try {
@@ -131,7 +128,6 @@ class _IngredientResultScreenState extends State<IngredientResultScreen> {
         _page = result.page;
         _total = result.total;
         _hasMore = result.hasMore;
-
         _errorMessage = null;
       });
     } on RecipeCatalogException catch (error) {
@@ -162,10 +158,17 @@ class _IngredientResultScreenState extends State<IngredientResultScreen> {
     );
   }
 
+  void _changeIngredients() {
+    if (context.canPop()) {
+      context.pop();
+      return;
+    }
+
+    context.go('/ingredients');
+  }
+
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-
     final backgroundColor = Theme.of(context).scaffoldBackgroundColor;
 
     return BlocListener<FavoriteCubit, FavoriteState>(
@@ -175,7 +178,6 @@ class _IngredientResultScreenState extends State<IngredientResultScreen> {
       listener: (context, state) {
         if (state.action == FavoriteAction.limitReached) {
           _showFavoriteLimitDialog(context);
-
           return;
         }
 
@@ -202,16 +204,9 @@ class _IngredientResultScreenState extends State<IngredientResultScreen> {
       child: Scaffold(
         backgroundColor: backgroundColor,
         appBar: AppBar(
-          backgroundColor: backgroundColor,
-          foregroundColor: colors.onSurface,
-          surfaceTintColor: Colors.transparent,
-          elevation: 0,
-          title: Text(
-            'Resep yang Cocok',
-            style: TextStyle(
-              fontWeight: FontWeight.w700,
-              color: colors.onSurface,
-            ),
+          title: const Text(
+            'Resep dari bahan',
+            style: TextStyle(fontWeight: FontWeight.w800),
           ),
         ),
         body: SafeArea(
@@ -254,65 +249,102 @@ class _IngredientResultScreenState extends State<IngredientResultScreen> {
       );
     }
 
-    if (_recipes.isEmpty) {
-      return CustomScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        slivers: [
-          SliverToBoxAdapter(
-            child: _IngredientHeader(
-              selectedIngredients: widget.selectedIngredients,
-              total: 0,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+
+        final crossAxisCount = width >= 1050
+            ? 4
+            : width >= 700
+            ? 3
+            : 2;
+
+        final horizontalPadding = width > 1148
+            ? (width - 1100) / 2
+            : width >= 700
+            ? 24.0
+            : 16.0;
+
+        final cardHeight = crossAxisCount == 2 ? 270.0 : 300.0;
+
+        if (_recipes.isEmpty) {
+          return CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
+              SliverToBoxAdapter(
+                child: _IngredientHeader(
+                  selectedIngredients: widget.selectedIngredients,
+                  total: 0,
+                  onChangeIngredients: _changeIngredients,
+                ),
+              ),
+              const SliverFillRemaining(
+                hasScrollBody: false,
+                child: _NoResult(),
+              ),
+            ],
+          );
+        }
+
+        return CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
+            SliverToBoxAdapter(
+              child: _IngredientHeader(
+                selectedIngredients: widget.selectedIngredients,
+                total: _total,
+                onChangeIngredients: _changeIngredients,
+              ),
             ),
-          ),
-          const SliverFillRemaining(hasScrollBody: false, child: _NoResult()),
-        ],
-      );
-    }
+            SliverPadding(
+              padding: EdgeInsets.fromLTRB(
+                horizontalPadding,
+                0,
+                horizontalPadding,
+                22,
+              ),
+              sliver: SliverGrid(
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: crossAxisCount,
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 14,
+                  mainAxisExtent: cardHeight,
+                ),
+                delegate: SliverChildBuilderDelegate((context, index) {
+                  final recipe = _recipes[index];
 
-    return CustomScrollView(
-      physics: const AlwaysScrollableScrollPhysics(),
-      slivers: [
-        SliverToBoxAdapter(
-          child: _IngredientHeader(
-            selectedIngredients: widget.selectedIngredients,
-            total: _total,
-          ),
-        ),
-
-        SliverPadding(
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 18),
-          sliver: SliverList.separated(
-            itemCount: _recipes.length,
-            separatorBuilder: (_, _) => const SizedBox(height: 14),
-            itemBuilder: (context, index) {
-              final recipe = _recipes[index];
-
-              return _IngredientRecipeCard(
-                recipe: recipe,
-                selectedIngredientCount: widget.selectedIngredients.length,
-                onTap: () {
-                  _openRecipe(recipe);
-                },
-              );
-            },
-          ),
-        ),
-
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 36),
-            child: _LoadMoreArea(
-              hasMore: _hasMore,
-              isLoading: _isLoadingMore,
-              loaded: _recipes.length,
-              total: _total,
-              onPressed: () {
-                _loadRecipes(reset: false);
-              },
+                  return _IngredientRecipeCard(
+                    recipe: recipe,
+                    selectedIngredientCount: widget.selectedIngredients.length,
+                    onTap: () {
+                      _openRecipe(recipe);
+                    },
+                  );
+                }, childCount: _recipes.length),
+              ),
             ),
-          ),
-        ),
-      ],
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(
+                  horizontalPadding,
+                  0,
+                  horizontalPadding,
+                  40,
+                ),
+                child: _LoadMoreArea(
+                  hasMore: _hasMore,
+                  isLoading: _isLoadingMore,
+                  loaded: _recipes.length,
+                  total: _total,
+                  onPressed: () {
+                    _loadRecipes(reset: false);
+                  },
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
@@ -320,10 +352,12 @@ class _IngredientResultScreenState extends State<IngredientResultScreen> {
 class _IngredientHeader extends StatelessWidget {
   final List<String> selectedIngredients;
   final int total;
+  final VoidCallback onChangeIngredients;
 
   const _IngredientHeader({
     required this.selectedIngredients,
     required this.total,
+    required this.onChangeIngredients,
   });
 
   @override
@@ -332,45 +366,53 @@ class _IngredientHeader extends StatelessWidget {
 
     return Center(
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 850),
+        constraints: const BoxConstraints(maxWidth: 1100),
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 26),
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 26),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Berdasarkan bahanmu',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w800,
-                  color: colors.onSurface,
-                ),
+              Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  Text(
+                    'Berdasarkan bahanmu',
+                    style: TextStyle(
+                      fontSize: 25,
+                      height: 1.15,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: -0.4,
+                      color: colors.onSurface,
+                    ),
+                  ),
+                  OutlinedButton.icon(
+                    onPressed: onChangeIngredients,
+                    icon: const Icon(Icons.tune_rounded, size: 17),
+                    label: const Text('Ubah bahan'),
+                  ),
+                ],
               ),
-
               const SizedBox(height: 8),
-
               Text(
                 total > 0
                     ? '${selectedIngredients.length} bahan dipilih • '
                           '$total resep ditemukan'
                     : '${selectedIngredients.length} bahan dipilih',
-                style: TextStyle(color: colors.onSurfaceVariant, fontSize: 14),
+                style: TextStyle(fontSize: 14, color: colors.onSurfaceVariant),
               ),
-
-              const SizedBox(height: 8),
-
+              const SizedBox(height: 6),
               Text(
-                'Hasil diambil dari dataset resep RacikAI '
-                'berdasarkan kombinasi bahan yang kamu pilih.',
+                'Hasil dari dataset RacikAI berdasarkan '
+                'kombinasi bahan yang kamu pilih.',
                 style: TextStyle(
-                  color: colors.onSurfaceVariant,
                   fontSize: 13,
                   height: 1.45,
+                  color: colors.onSurfaceVariant,
                 ),
               ),
-
               const SizedBox(height: 16),
-
               Wrap(
                 spacing: 7,
                 runSpacing: 7,
@@ -378,17 +420,10 @@ class _IngredientHeader extends StatelessWidget {
                   return Chip(
                     avatar: Icon(
                       Icons.check_rounded,
-                      size: 16,
+                      size: 15,
                       color: colors.primary,
                     ),
                     label: Text(ingredient),
-                    backgroundColor: colors.primaryContainer,
-                    side: BorderSide.none,
-                    labelStyle: TextStyle(
-                      color: colors.onPrimaryContainer,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 12,
-                    ),
                   );
                 }).toList(),
               ),
@@ -415,147 +450,139 @@ class _IngredientRecipeCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
 
-    return Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 850),
-        child: Material(
-          color: colors.surface,
-          borderRadius: BorderRadius.circular(22),
-          clipBehavior: Clip.antiAlias,
-          child: InkWell(
-            onTap: onTap,
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(22),
-                border: Border.all(color: colors.outlineVariant),
+    return Material(
+      color: colors.surface,
+      borderRadius: BorderRadius.circular(20),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: colors.outlineVariant),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    _RecipeImage(imageUrl: recipe.imageUrl),
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: BlocBuilder<FavoriteCubit, FavoriteState>(
+                        buildWhen: (previous, current) {
+                          return previous.favoriteIds != current.favoriteIds;
+                        },
+                        builder: (context, favoriteState) {
+                          final isFavorite = favoriteState.isFavorite(
+                            recipe.id,
+                          );
+
+                          return Material(
+                            color: colors.surface,
+                            shape: const CircleBorder(),
+                            child: IconButton(
+                              tooltip: isFavorite
+                                  ? 'Hapus dari tersimpan'
+                                  : 'Simpan resep',
+                              onPressed: () {
+                                context
+                                    .read<FavoriteCubit>()
+                                    .toggleBackendFavorite(
+                                      SavedRecipe.fromCatalogRecipe(recipe),
+                                    );
+                              },
+                              iconSize: 20,
+                              visualDensity: VisualDensity.compact,
+                              icon: Icon(
+                                isFavorite
+                                    ? Icons.favorite_rounded
+                                    : Icons.favorite_border_rounded,
+                                color: isFavorite
+                                    ? colors.secondary
+                                    : colors.onSurfaceVariant,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  _RecipeImage(imageUrl: recipe.imageUrl),
-
-                  const SizedBox(width: 14),
-
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 11, 12, 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      recipe.title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 14.5,
+                        height: 1.25,
+                        fontWeight: FontWeight.w800,
+                        color: colors.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: 9),
+                    Row(
                       children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 9,
-                            vertical: 5,
-                          ),
-                          decoration: BoxDecoration(
-                            color: colors.primaryContainer,
-                            borderRadius: BorderRadius.circular(100),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.check_circle_rounded,
-                                size: 14,
-                                color: colors.primary,
-                              ),
-                              const SizedBox(width: 5),
-                              Flexible(
-                                child: Text(
-                                  '$selectedIngredientCount bahan pilihan cocok',
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w700,
-                                    color: colors.primary,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
+                        Icon(
+                          Icons.check_circle_rounded,
+                          size: 15,
+                          color: colors.primary,
                         ),
-
-                        const SizedBox(height: 9),
-
-                        Text(
-                          recipe.title,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 16,
-                            height: 1.25,
-                            fontWeight: FontWeight.w800,
-                            color: colors.onSurface,
-                          ),
-                        ),
-
-                        const SizedBox(height: 9),
-
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.restaurant_menu_rounded,
-                              size: 16,
+                        const SizedBox(width: 5),
+                        Expanded(
+                          child: Text(
+                            '$selectedIngredientCount bahan pilihan cocok',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w600,
                               color: colors.primary,
                             ),
-
-                            const SizedBox(width: 6),
-
-                            Expanded(
-                              child: Text(
-                                '${recipe.ingredientCount} bahan total',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: colors.onSurfaceVariant,
-                                ),
-                              ),
-                            ),
-
-                            Icon(
-                              Icons.arrow_forward_ios_rounded,
-                              size: 13,
-                              color: colors.onSurfaceVariant,
-                            ),
-                          ],
+                          ),
                         ),
                       ],
                     ),
-                  ),
-
-                  const SizedBox(width: 4),
-
-                  BlocBuilder<FavoriteCubit, FavoriteState>(
-                    buildWhen: (previous, current) {
-                      return previous.favoriteIds != current.favoriteIds;
-                    },
-                    builder: (context, favoriteState) {
-                      final isFavorite = favoriteState.isFavorite(recipe.id);
-
-                      return IconButton(
-                        tooltip: isFavorite
-                            ? 'Hapus dari tersimpan'
-                            : 'Simpan resep',
-                        onPressed: () {
-                          context.read<FavoriteCubit>().toggleBackendFavorite(
-                            SavedRecipe.fromCatalogRecipe(recipe),
-                          );
-                        },
-                        icon: Icon(
-                          isFavorite
-                              ? Icons.favorite_rounded
-                              : Icons.favorite_border_rounded,
-                          color: isFavorite
-                              ? colors.primary
-                              : colors.onSurfaceVariant,
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.restaurant_menu_rounded,
+                          size: 15,
+                          color: colors.onSurfaceVariant,
                         ),
-                      );
-                    },
-                  ),
-                ],
+                        const SizedBox(width: 5),
+                        Expanded(
+                          child: Text(
+                            '${recipe.ingredientCount} bahan total',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 11.5,
+                              color: colors.onSurfaceVariant,
+                            ),
+                          ),
+                        ),
+                        Icon(
+                          Icons.arrow_forward_rounded,
+                          size: 16,
+                          color: colors.onSurfaceVariant,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
+            ],
           ),
         ),
       ),
@@ -572,36 +599,31 @@ class _RecipeImage extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
 
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(17),
-      child: SizedBox(
-        width: 104,
-        height: 116,
-        child: imageUrl != null && imageUrl!.trim().isNotEmpty
-            ? Image.network(
-                imageUrl!,
-                fit: BoxFit.cover,
-                loadingBuilder: (context, child, loadingProgress) {
-                  if (loadingProgress == null) {
-                    return child;
-                  }
+    if (imageUrl == null || imageUrl!.trim().isEmpty) {
+      return _placeholder(colors);
+    }
 
-                  return Container(
-                    color: colors.surfaceContainerHighest,
-                    alignment: Alignment.center,
-                    child: const SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                  );
-                },
-                errorBuilder: (_, _, _) {
-                  return _placeholder(colors);
-                },
-              )
-            : _placeholder(colors),
-      ),
+    return Image.network(
+      imageUrl!,
+      fit: BoxFit.cover,
+      loadingBuilder: (context, child, loadingProgress) {
+        if (loadingProgress == null) {
+          return child;
+        }
+
+        return Container(
+          color: colors.surfaceContainerHighest,
+          alignment: Alignment.center,
+          child: const SizedBox(
+            width: 22,
+            height: 22,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+        );
+      },
+      errorBuilder: (_, _, _) {
+        return _placeholder(colors);
+      },
     );
   }
 
@@ -673,28 +695,26 @@ class _NoResult extends StatelessWidget {
 
     return Center(
       child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(32, 30, 32, 100),
+        padding: const EdgeInsets.fromLTRB(32, 24, 32, 80),
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 420),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
-                width: 104,
-                height: 104,
+                width: 92,
+                height: 92,
                 decoration: BoxDecoration(
-                  color: colors.surfaceContainerHighest,
+                  color: colors.primaryContainer,
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
                   Icons.restaurant_menu_rounded,
-                  size: 48,
-                  color: colors.onSurfaceVariant,
+                  size: 42,
+                  color: colors.primary,
                 ),
               ),
-
-              const SizedBox(height: 24),
-
+              const SizedBox(height: 22),
               Text(
                 'Belum ada kombinasi yang cocok',
                 textAlign: TextAlign.center,
@@ -704,30 +724,30 @@ class _NoResult extends StatelessWidget {
                   color: colors.onSurface,
                 ),
               ),
-
-              const SizedBox(height: 10),
-
+              const SizedBox(height: 9),
               Text(
                 'Belum ada resep di dataset yang menggunakan '
                 'seluruh kombinasi bahan tersebut. '
-                'Coba kembali dan kurangi salah satu bahan '
-                'atau pilih kombinasi lain.',
+                'Coba kurangi salah satu bahan atau pilih '
+                'kombinasi lain.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 14,
-                  height: 1.55,
+                  height: 1.5,
                   color: colors.onSurfaceVariant,
                 ),
               ),
-
               const SizedBox(height: 22),
-
               FilledButton.icon(
                 onPressed: () {
-                  Navigator.of(context).maybePop();
+                  if (context.canPop()) {
+                    context.pop();
+                  } else {
+                    context.go('/ingredients');
+                  }
                 },
                 icon: const Icon(Icons.arrow_back_rounded),
-                label: const Text('Ubah Bahan'),
+                label: const Text('Ubah bahan'),
               ),
             ],
           ),
@@ -750,39 +770,36 @@ class _RecipeError extends StatelessWidget {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.cloud_off_rounded, size: 60, color: colors.error),
-
-            const SizedBox(height: 16),
-
-            Text(
-              'Resep gagal dimuat',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 19,
-                fontWeight: FontWeight.w700,
-                color: colors.onSurface,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 420),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.cloud_off_rounded, size: 58, color: colors.error),
+              const SizedBox(height: 18),
+              Text(
+                'Resep gagal dimuat',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 19,
+                  fontWeight: FontWeight.w800,
+                  color: colors.onSurface,
+                ),
               ),
-            ),
-
-            const SizedBox(height: 8),
-
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: TextStyle(color: colors.onSurfaceVariant),
-            ),
-
-            const SizedBox(height: 20),
-
-            FilledButton.icon(
-              onPressed: onRetry,
-              icon: const Icon(Icons.refresh_rounded),
-              label: const Text('Coba Lagi'),
-            ),
-          ],
+              const SizedBox(height: 8),
+              Text(
+                message,
+                textAlign: TextAlign.center,
+                style: TextStyle(height: 1.45, color: colors.onSurfaceVariant),
+              ),
+              const SizedBox(height: 20),
+              FilledButton.icon(
+                onPressed: onRetry,
+                icon: const Icon(Icons.refresh_rounded),
+                label: const Text('Coba lagi'),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -796,13 +813,13 @@ void _showFavoriteLimitDialog(BuildContext context) {
       final colors = Theme.of(dialogContext).colorScheme;
 
       return AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
-        icon: Icon(Icons.favorite_rounded, size: 42, color: colors.primary),
+        icon: Icon(Icons.favorite_rounded, size: 40, color: colors.secondary),
         title: const Text('Batas Resep Tersimpan', textAlign: TextAlign.center),
         content: Text(
           'Akun Free dapat menyimpan maksimal '
           '${FavoriteCubit.freeFavoriteLimit} resep. '
-          'Upgrade ke Premium untuk menyimpan resep tanpa batas.',
+          'Upgrade ke Premium untuk menyimpan '
+          'resep tanpa batas.',
           textAlign: TextAlign.center,
         ),
         actionsAlignment: MainAxisAlignment.center,
@@ -816,7 +833,6 @@ void _showFavoriteLimitDialog(BuildContext context) {
           FilledButton(
             onPressed: () {
               Navigator.pop(dialogContext);
-
               context.push('/premium');
             },
             child: const Text('Upgrade Premium'),
