@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../controllers/subscription_controller.dart';
-
-import 'package:go_router/go_router.dart';
 
 class PremiumScreen extends StatefulWidget {
   const PremiumScreen({super.key});
@@ -14,6 +13,24 @@ class PremiumScreen extends StatefulWidget {
 class _PremiumScreenState extends State<PremiumScreen> {
   bool isYearlySelected = true;
 
+  void _activatePremium() {
+    final plan = isYearlySelected
+        ? SubscriptionPlan.yearly
+        : SubscriptionPlan.monthly;
+
+    SubscriptionController.instance.activatePremium(plan);
+
+    final planName = isYearlySelected ? 'Premium Tahunan' : 'Premium Bulanan';
+
+    final messenger = ScaffoldMessenger.of(context);
+
+    context.pop();
+
+    messenger.showSnackBar(
+      SnackBar(content: Text('$planName berhasil diaktifkan (mode demo).')),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
@@ -21,238 +38,318 @@ class _PremiumScreenState extends State<PremiumScreen> {
 
     return Scaffold(
       backgroundColor: backgroundColor,
-
       appBar: AppBar(
-        backgroundColor: backgroundColor,
-        foregroundColor: colors.onSurface,
-        surfaceTintColor: Colors.transparent,
-        elevation: 0,
-        title: Text(
+        title: const Text(
           'RacikAI Premium',
-          style: TextStyle(
-            fontWeight: FontWeight.w700,
-            color: colors.onSurface,
-          ),
+          style: TextStyle(fontWeight: FontWeight.w800),
         ),
       ),
-
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(20, 10, 20, 120),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Column(
-                  children: [
-                    Container(
-                      width: 82,
-                      height: 82,
-                      decoration: BoxDecoration(
-                        color: colors.primaryContainer,
-                        shape: BoxShape.circle,
+        bottom: false,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final isWide = constraints.maxWidth >= 850;
+
+            return SingleChildScrollView(
+              padding: EdgeInsets.fromLTRB(
+                isWide ? 24 : 16,
+                10,
+                isWide ? 24 : 16,
+                32,
+              ),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 1100),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (isWide)
+                        _DesktopPremiumTop(
+                          isYearlySelected: isYearlySelected,
+                          onMonthlySelected: () {
+                            setState(() {
+                              isYearlySelected = false;
+                            });
+                          },
+                          onYearlySelected: () {
+                            setState(() {
+                              isYearlySelected = true;
+                            });
+                          },
+                          onUpgrade: _activatePremium,
+                        )
+                      else ...[
+                        const _PremiumHero(),
+                        const SizedBox(height: 30),
+                        const _BenefitsSection(),
+                        const SizedBox(height: 32),
+                        _PlanSection(
+                          isYearlySelected: isYearlySelected,
+                          onMonthlySelected: () {
+                            setState(() {
+                              isYearlySelected = false;
+                            });
+                          },
+                          onYearlySelected: () {
+                            setState(() {
+                              isYearlySelected = true;
+                            });
+                          },
+                        ),
+                      ],
+
+                      const SizedBox(height: 38),
+
+                      Text(
+                        'Free vs Premium',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.2,
+                          color: colors.onSurface,
+                        ),
                       ),
-                      child: Icon(
-                        Icons.workspace_premium_rounded,
-                        size: 42,
-                        color: colors.primary,
+
+                      const SizedBox(height: 14),
+
+                      const _ComparisonCard(),
+
+                      const SizedBox(height: 26),
+
+                      if (!isWide) ...[
+                        SizedBox(
+                          width: double.infinity,
+                          child: FilledButton(
+                            onPressed: _activatePremium,
+                            style: FilledButton.styleFrom(
+                              minimumSize: const Size(double.infinity, 52),
+                            ),
+                            child: Text(
+                              isYearlySelected
+                                  ? 'Pilih Premium Tahunan'
+                                  : 'Pilih Premium Bulanan',
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 14),
+                      ],
+
+                      Center(
+                        child: Text(
+                          'Mode demo • Tidak ada pembayaran nyata.',
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            color: colors.onSurfaceVariant,
+                          ),
+                        ),
                       ),
-                    ),
 
-                    const SizedBox(height: 20),
-
-                    Text(
-                      'Masak lebih pintar\ntanpa batas',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 28,
-                        height: 1.2,
-                        fontWeight: FontWeight.w800,
-                        color: colors.onSurface,
-                      ),
-                    ),
-
-                    const SizedBox(height: 10),
-
-                    Text(
-                      'Dapatkan pengalaman RacikAI lengkap dengan fitur Premium.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 14,
-                        height: 1.5,
-                        color: colors.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 32),
-
-              Text(
-                'Yang kamu dapatkan',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w800,
-                  color: colors.onSurface,
-                ),
-              ),
-
-              const SizedBox(height: 14),
-
-              const _PremiumFeature(
-                icon: Icons.auto_awesome,
-                title: 'AI tanpa batas',
-                description:
-                    'Tanya RacikAI kapan saja tanpa batas pertanyaan harian.',
-              ),
-
-              const _PremiumFeature(
-                icon: Icons.favorite_rounded,
-                title: 'Simpan resep tanpa batas',
-                description:
-                    'Simpan semua resep favoritmu tanpa batas maksimal.',
-              ),
-
-              const _PremiumFeature(
-                icon: Icons.tune_rounded,
-                title: 'Pencarian bahan lanjutan',
-                description: 'Dapatkan rekomendasi resep yang lebih fleksibel dari bahanmu.',
-              ),
-
-              const _PremiumFeature(
-                icon: Icons.calendar_month_rounded,
-                title: 'Meal Planner',
-                description:
-                    'Rencanakan menu makanan untuk beberapa hari ke depan.',
-              ),
-
-              const _PremiumFeature(
-                icon: Icons.block_rounded,
-                title: 'Tanpa iklan',
-                description:
-                    'Nikmati RacikAI dengan pengalaman yang lebih bersih.',
-              ),
-
-              const SizedBox(height: 32),
-
-              Text(
-                'Pilih paket',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w800,
-                  color: colors.onSurface,
-                ),
-              ),
-
-              const SizedBox(height: 14),
-
-              _PlanCard(
-                title: 'Bulanan',
-                price: 'Rp15.000',
-                period: '/ bulan',
-                description: 'Fleksibel, berhenti kapan saja',
-                isSelected: !isYearlySelected,
-                onTap: () {
-                  setState(() {
-                    isYearlySelected = false;
-                  });
-                },
-              ),
-
-              const SizedBox(height: 12),
-
-              _PlanCard(
-                title: 'Tahunan',
-                price: 'Rp120.000',
-                period: '/ tahun',
-                description: 'Hemat Rp60.000 per tahun',
-                badge: 'PALING HEMAT',
-                isSelected: isYearlySelected,
-                onTap: () {
-                  setState(() {
-                    isYearlySelected = true;
-                  });
-                },
-              ),
-
-              const SizedBox(height: 34),
-
-              Text(
-                'Free vs Premium',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w800,
-                  color: colors.onSurface,
-                ),
-              ),
-
-              const SizedBox(height: 14),
-
-              const _ComparisonCard(),
-
-              const SizedBox(height: 24),
-
-              Center(
-                child: Text(
-                  'Batalkan kapan saja.',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: colors.onSurfaceVariant,
+                      const SizedBox(height: 16),
+                    ],
                   ),
                 ),
               ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _DesktopPremiumTop extends StatelessWidget {
+  final bool isYearlySelected;
+  final VoidCallback onMonthlySelected;
+  final VoidCallback onYearlySelected;
+  final VoidCallback onUpgrade;
+
+  const _DesktopPremiumTop({
+    required this.isYearlySelected,
+    required this.onMonthlySelected,
+    required this.onYearlySelected,
+    required this.onUpgrade,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Expanded(
+          flex: 6,
+          child: Column(
+            children: [
+              _PremiumHero(alignLeft: true),
+              SizedBox(height: 28),
+              _BenefitsSection(compact: true),
             ],
           ),
         ),
-      ),
 
-      bottomNavigationBar: SafeArea(
-        child: Container(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
-          decoration: BoxDecoration(
-            color: backgroundColor,
-            border: Border(top: BorderSide(color: colors.outlineVariant)),
-          ),
-          child: FilledButton(
-            onPressed: () {
-              final plan = isYearlySelected
-                  ? SubscriptionPlan.yearly
-                  : SubscriptionPlan.monthly;
+        const SizedBox(width: 32),
 
-              SubscriptionController.instance.activatePremium(plan);
-
-              final planName = isYearlySelected
-                  ? 'Premium Tahunan'
-                  : 'Premium Bulanan';
-
-              final messenger = ScaffoldMessenger.of(context);
-
-              context.pop();
-
-              messenger.showSnackBar(
-                SnackBar(
-                  content: Text('$planName berhasil diaktifkan (mode demo).'),
-                ),
-              );
-            },
-            style: FilledButton.styleFrom(
-              backgroundColor: colors.primary,
-              foregroundColor: colors.onPrimary,
-              minimumSize: const Size(double.infinity, 56),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-            ),
-            child: Text(
-              isYearlySelected
-                  ? 'Pilih Premium Tahunan'
-                  : 'Pilih Premium Bulanan',
-              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
-            ),
+        Expanded(
+          flex: 5,
+          child: _DesktopPurchaseCard(
+            isYearlySelected: isYearlySelected,
+            onMonthlySelected: onMonthlySelected,
+            onYearlySelected: onYearlySelected,
+            onUpgrade: onUpgrade,
           ),
         ),
+      ],
+    );
+  }
+}
+
+class _PremiumHero extends StatelessWidget {
+  final bool alignLeft;
+
+  const _PremiumHero({this.alignLeft = false});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(alignLeft ? 30 : 24),
+      decoration: BoxDecoration(
+        color: colors.secondaryContainer,
+        borderRadius: BorderRadius.circular(28),
       ),
+      child: Column(
+        crossAxisAlignment: alignLeft
+            ? CrossAxisAlignment.start
+            : CrossAxisAlignment.center,
+        children: [
+          Container(
+            width: 62,
+            height: 62,
+            decoration: BoxDecoration(
+              color: colors.surface.withValues(alpha: 0.72),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.workspace_premium_rounded,
+              size: 30,
+              color: colors.secondary,
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
+          Text(
+            'Masak lebih bebas\ndengan RacikAI',
+            textAlign: alignLeft ? TextAlign.left : TextAlign.center,
+            style: TextStyle(
+              fontSize: alignLeft ? 36 : 29,
+              height: 1.12,
+              fontWeight: FontWeight.w900,
+              letterSpacing: -0.7,
+              color: colors.onSecondaryContainer,
+            ),
+          ),
+
+          const SizedBox(height: 12),
+
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 520),
+            child: Text(
+              'Nikmati AI tanpa batas, simpan lebih banyak resep, '
+              'dan susun rencana makan mingguan.',
+              textAlign: alignLeft ? TextAlign.left : TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                height: 1.55,
+                color: colors.onSecondaryContainer.withValues(alpha: 0.75),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _BenefitsSection extends StatelessWidget {
+  final bool compact;
+
+  const _BenefitsSection({this.compact = false});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    const benefits = [
+      (
+        Icons.auto_awesome_rounded,
+        'AI tanpa batas',
+        'Tanya RacikAI kapan saja tanpa batas pertanyaan harian.',
+      ),
+      (
+        Icons.favorite_border_rounded,
+        'Simpan resep tanpa batas',
+        'Bangun koleksi resep favorit sebanyak yang kamu inginkan.',
+      ),
+      (
+        Icons.calendar_month_outlined,
+        'Meal Planner',
+        'Susun menu Senin sampai Minggu dengan lebih teratur.',
+      ),
+      (
+        Icons.tune_rounded,
+        'Pencarian bahan lanjutan',
+        'Cari ide resep dengan pilihan bahan yang lebih fleksibel.',
+      ),
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Yang kamu dapatkan',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w800,
+            color: colors.onSurface,
+          ),
+        ),
+
+        const SizedBox(height: 14),
+
+        if (compact)
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: benefits.map((benefit) {
+              return SizedBox(
+                width: 260,
+                child: _PremiumFeature(
+                  icon: benefit.$1,
+                  title: benefit.$2,
+                  description: benefit.$3,
+                ),
+              );
+            }).toList(),
+          )
+        else
+          ...benefits.map(
+            (benefit) => Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: _PremiumFeature(
+                icon: benefit.$1,
+                title: benefit.$2,
+                description: benefit.$3,
+              ),
+            ),
+          ),
+      ],
     );
   }
 }
@@ -273,27 +370,25 @@ class _PremiumFeature extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
         color: colors.surface,
-        borderRadius: BorderRadius.circular(17),
-        border: Border.all(color: colors.outlineVariant),
+        borderRadius: BorderRadius.circular(18),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 42,
-            height: 42,
+            width: 40,
+            height: 40,
             decoration: BoxDecoration(
               color: colors.primaryContainer,
-              borderRadius: BorderRadius.circular(13),
+              borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(icon, size: 21, color: colors.primary),
+            child: Icon(icon, size: 19, color: colors.primary),
           ),
 
-          const SizedBox(width: 13),
+          const SizedBox(width: 12),
 
           Expanded(
             child: Column(
@@ -302,7 +397,7 @@ class _PremiumFeature extends StatelessWidget {
                 Text(
                   title,
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: 13.5,
                     fontWeight: FontWeight.w700,
                     color: colors.onSurface,
                   ),
@@ -313,12 +408,167 @@ class _PremiumFeature extends StatelessWidget {
                 Text(
                   description,
                   style: TextStyle(
-                    fontSize: 12,
-                    height: 1.4,
+                    fontSize: 11.5,
+                    height: 1.45,
                     color: colors.onSurfaceVariant,
                   ),
                 ),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PlanSection extends StatelessWidget {
+  final bool isYearlySelected;
+  final VoidCallback onMonthlySelected;
+  final VoidCallback onYearlySelected;
+
+  const _PlanSection({
+    required this.isYearlySelected,
+    required this.onMonthlySelected,
+    required this.onYearlySelected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Pilih paket',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w800,
+            color: colors.onSurface,
+          ),
+        ),
+
+        const SizedBox(height: 6),
+
+        Text(
+          'Kamu dapat mengganti pilihan sebelum mengaktifkan Premium.',
+          style: TextStyle(fontSize: 12.5, color: colors.onSurfaceVariant),
+        ),
+
+        const SizedBox(height: 14),
+
+        _PlanCard(
+          title: 'Bulanan',
+          price: 'Rp15.000',
+          period: '/ bulan',
+          description: 'Fleksibel untuk mencoba Premium',
+          isSelected: !isYearlySelected,
+          onTap: onMonthlySelected,
+        ),
+
+        const SizedBox(height: 12),
+
+        _PlanCard(
+          title: 'Tahunan',
+          price: 'Rp120.000',
+          period: '/ tahun',
+          description: 'Setara Rp10.000 per bulan',
+          badge: 'HEMAT Rp60.000',
+          isSelected: isYearlySelected,
+          onTap: onYearlySelected,
+        ),
+      ],
+    );
+  }
+}
+
+class _DesktopPurchaseCard extends StatelessWidget {
+  final bool isYearlySelected;
+  final VoidCallback onMonthlySelected;
+  final VoidCallback onYearlySelected;
+  final VoidCallback onUpgrade;
+
+  const _DesktopPurchaseCard({
+    required this.isYearlySelected,
+    required this.onMonthlySelected,
+    required this.onYearlySelected,
+    required this.onUpgrade,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.all(22),
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Pilih paket',
+            style: TextStyle(
+              fontSize: 21,
+              fontWeight: FontWeight.w800,
+              color: colors.onSurface,
+            ),
+          ),
+
+          const SizedBox(height: 6),
+
+          Text(
+            'Pilih paket Premium yang paling sesuai.',
+            style: TextStyle(fontSize: 12.5, color: colors.onSurfaceVariant),
+          ),
+
+          const SizedBox(height: 18),
+
+          _PlanCard(
+            title: 'Bulanan',
+            price: 'Rp15.000',
+            period: '/ bulan',
+            description: 'Fleksibel untuk mencoba Premium',
+            isSelected: !isYearlySelected,
+            onTap: onMonthlySelected,
+          ),
+
+          const SizedBox(height: 12),
+
+          _PlanCard(
+            title: 'Tahunan',
+            price: 'Rp120.000',
+            period: '/ tahun',
+            description: 'Setara Rp10.000 per bulan',
+            badge: 'HEMAT Rp60.000',
+            isSelected: isYearlySelected,
+            onTap: onYearlySelected,
+          ),
+
+          const SizedBox(height: 20),
+
+          FilledButton(
+            onPressed: onUpgrade,
+            style: FilledButton.styleFrom(
+              minimumSize: const Size(double.infinity, 54),
+            ),
+            child: Text(
+              isYearlySelected
+                  ? 'Pilih Premium Tahunan'
+                  : 'Pilih Premium Bulanan',
+              style: const TextStyle(fontWeight: FontWeight.w700),
+            ),
+          ),
+
+          const SizedBox(height: 11),
+
+          Center(
+            child: Text(
+              'Aktivasi menggunakan mode demo.',
+              style: TextStyle(fontSize: 11, color: colors.onSurfaceVariant),
             ),
           ),
         ],
@@ -350,38 +600,22 @@ class _PlanCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
 
-    final cardBackground = isSelected
-        ? colors.primaryContainer
-        : colors.surface;
-
-    final mainTextColor = isSelected
-        ? colors.onPrimaryContainer
-        : colors.onSurface;
-
-    final secondaryTextColor = isSelected
-        ? colors.onPrimaryContainer.withValues(alpha: 0.75)
-        : colors.onSurfaceVariant;
-
     return Material(
-      color: Colors.transparent,
+      color: isSelected
+          ? colors.primaryContainer
+          : colors.surfaceContainerHighest,
+      borderRadius: BorderRadius.circular(18),
+      clipBehavior: Clip.antiAlias,
       child: InkWell(
-        borderRadius: BorderRadius.circular(20),
         onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.all(18),
-          decoration: BoxDecoration(
-            color: cardBackground,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: isSelected ? colors.primary : colors.outlineVariant,
-              width: isSelected ? 2 : 1,
-            ),
-          ),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Container(
-                width: 24,
-                height: 24,
+                width: 23,
+                height: 23,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
@@ -392,8 +626,8 @@ class _PlanCard extends StatelessWidget {
                 child: isSelected
                     ? Center(
                         child: Container(
-                          width: 12,
-                          height: 12,
+                          width: 11,
+                          height: 11,
                           decoration: BoxDecoration(
                             color: colors.primary,
                             shape: BoxShape.circle,
@@ -403,47 +637,45 @@ class _PlanCard extends StatelessWidget {
                     : null,
               ),
 
-              const SizedBox(width: 14),
+              const SizedBox(width: 12),
 
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
+                    Wrap(
+                      spacing: 7,
+                      runSpacing: 5,
+                      crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
-                        Flexible(
-                          child: Text(
-                            title,
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w800,
-                              color: mainTextColor,
-                            ),
+                        Text(
+                          title,
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w800,
+                            color: colors.onSurface,
                           ),
                         ),
 
-                        if (badge != null) ...[
-                          const SizedBox(width: 8),
-
+                        if (badge != null)
                           Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
+                              horizontal: 7,
+                              vertical: 3,
                             ),
                             decoration: BoxDecoration(
-                              color: colors.primary,
-                              borderRadius: BorderRadius.circular(20),
+                              color: colors.secondaryContainer,
+                              borderRadius: BorderRadius.circular(100),
                             ),
                             child: Text(
                               badge!,
                               style: TextStyle(
-                                color: colors.onPrimary,
                                 fontSize: 9,
                                 fontWeight: FontWeight.w800,
+                                color: colors.onSecondaryContainer,
                               ),
                             ),
                           ),
-                        ],
                       ],
                     ),
 
@@ -451,7 +683,10 @@ class _PlanCard extends StatelessWidget {
 
                     Text(
                       description,
-                      style: TextStyle(fontSize: 12, color: secondaryTextColor),
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        color: colors.onSurfaceVariant,
+                      ),
                     ),
                   ],
                 ),
@@ -465,15 +700,17 @@ class _PlanCard extends StatelessWidget {
                   Text(
                     price,
                     style: TextStyle(
-                      fontSize: 17,
+                      fontSize: 16,
                       fontWeight: FontWeight.w800,
-                      color: mainTextColor,
+                      color: colors.onSurface,
                     ),
                   ),
-
                   Text(
                     period,
-                    style: TextStyle(fontSize: 11, color: secondaryTextColor),
+                    style: TextStyle(
+                      fontSize: 10.5,
+                      color: colors.onSurfaceVariant,
+                    ),
                   ),
                 ],
               ),
@@ -493,11 +730,11 @@ class _ComparisonCard extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
 
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: colors.surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: colors.outlineVariant),
       ),
       child: Column(
         children: [
@@ -510,13 +747,13 @@ class _ComparisonCard extends StatelessWidget {
           const _ComparisonRow(
             feature: 'Pertanyaan AI',
             free: '5 / hari',
-            premium: 'Unlimited',
+            premium: 'Tanpa batas',
           ),
 
           const _ComparisonRow(
-            feature: 'Resep favorit',
+            feature: 'Resep tersimpan',
             free: '10',
-            premium: 'Unlimited',
+            premium: 'Tanpa batas',
           ),
 
           const _ComparisonRow(
@@ -526,7 +763,7 @@ class _ComparisonCard extends StatelessWidget {
           ),
 
           const _ComparisonRow(
-            feature: 'Tanpa iklan',
+            feature: 'Pencarian bahan lanjutan',
             free: '—',
             premium: '✓',
             isLast: true,
@@ -551,28 +788,29 @@ class _ComparisonHeader extends StatelessWidget {
           child: Text(
             'Fitur',
             style: TextStyle(
+              fontSize: 12,
               fontWeight: FontWeight.w700,
               color: colors.onSurface,
             ),
           ),
         ),
-
         Expanded(
           child: Text(
             'Free',
             textAlign: TextAlign.center,
             style: TextStyle(
+              fontSize: 12,
               fontWeight: FontWeight.w700,
-              color: colors.onSurface,
+              color: colors.onSurfaceVariant,
             ),
           ),
         ),
-
         Expanded(
           child: Text(
             'Premium',
             textAlign: TextAlign.center,
             style: TextStyle(
+              fontSize: 12,
               fontWeight: FontWeight.w700,
               color: colors.primary,
             ),
@@ -614,7 +852,7 @@ class _ComparisonRow extends StatelessWidget {
             flex: 2,
             child: Text(
               feature,
-              style: TextStyle(fontSize: 12, color: colors.onSurfaceVariant),
+              style: TextStyle(fontSize: 11.5, color: colors.onSurfaceVariant),
             ),
           ),
 
@@ -622,7 +860,7 @@ class _ComparisonRow extends StatelessWidget {
             child: Text(
               free,
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 12, color: colors.onSurfaceVariant),
+              style: TextStyle(fontSize: 11.5, color: colors.onSurfaceVariant),
             ),
           ),
 
@@ -631,7 +869,7 @@ class _ComparisonRow extends StatelessWidget {
               premium,
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 12,
+                fontSize: 11.5,
                 fontWeight: FontWeight.w700,
                 color: colors.primary,
               ),
