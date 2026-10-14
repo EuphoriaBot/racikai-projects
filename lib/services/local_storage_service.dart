@@ -19,13 +19,9 @@ class LocalStorageService {
 
   static const String _lastUsageDateKey = 'last_usage_date';
 
-  // Meal Planner lama memakai ID dummy berbentuk int.
   static const String _legacyMealPlanKey = 'meal_plan';
 
-  // Meal Planner baru menyimpan snapshot CatalogRecipe backend.
   static const String _mealPlanKey = 'meal_plan_backend_v1';
-
-  static const String _themeModeKey = 'theme_mode';
 
   static Future<void> init() async {
     _preferences = await SharedPreferences.getInstance();
@@ -194,13 +190,5 @@ class LocalStorageService {
     await _preferences.remove(_mealPlanKey);
 
     await _preferences.remove(_legacyMealPlanKey);
-  }
-
-  static String? get themeMode {
-    return _preferences.getString(_themeModeKey);
-  }
-
-  static Future<void> saveThemeMode(String mode) async {
-    await _preferences.setString(_themeModeKey, mode);
   }
 }
