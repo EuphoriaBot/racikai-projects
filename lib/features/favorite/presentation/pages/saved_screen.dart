@@ -70,7 +70,7 @@ class _SavedContent extends StatelessWidget {
               child: Padding(
                 padding: EdgeInsets.fromLTRB(
                   horizontalPadding,
-                  24,
+                  18,
                   horizontalPadding,
                   0,
                 ),
@@ -78,7 +78,7 @@ class _SavedContent extends StatelessWidget {
               ),
             ),
 
-            const SliverToBoxAdapter(child: SizedBox(height: 24)),
+            const SliverToBoxAdapter(child: SizedBox(height: 16)),
 
             if (!isGrid)
               SliverPadding(
@@ -86,11 +86,11 @@ class _SavedContent extends StatelessWidget {
                   horizontalPadding,
                   0,
                   horizontalPadding,
-                  40,
+                  24,
                 ),
                 sliver: SliverList.separated(
                   itemCount: recipes.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: 12),
+                  separatorBuilder: (_, _) => const SizedBox(height: 10),
                   itemBuilder: (context, index) {
                     return _SavedRecipeListCard(recipe: recipes[index]);
                   },
@@ -102,7 +102,7 @@ class _SavedContent extends StatelessWidget {
                   horizontalPadding,
                   0,
                   horizontalPadding,
-                  40,
+                  24,
                 ),
                 sliver: SliverGrid(
                   delegate: SliverChildBuilderDelegate((context, index) {
@@ -110,9 +110,9 @@ class _SavedContent extends StatelessWidget {
                   }, childCount: recipes.length),
                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: columns,
-                    crossAxisSpacing: 16,
-                    mainAxisSpacing: 20,
-                    mainAxisExtent: 285,
+                    crossAxisSpacing: 14,
+                    mainAxisSpacing: 14,
+                    mainAxisExtent: 260,
                   ),
                 ),
               ),
@@ -162,7 +162,7 @@ class _SavedHeader extends StatelessWidget {
                 ),
               ),
 
-              const SizedBox(height: 8),
+              const SizedBox(height: 6),
 
               Text(
                 'Koleksi resep favorit yang ingin '
@@ -296,7 +296,7 @@ class _SavedRecipeGridCard extends StatelessWidget {
             ClipRRect(
               borderRadius: BorderRadius.circular(20),
               child: SizedBox(
-                height: 190,
+                height: 180,
                 width: double.infinity,
                 child: Stack(
                   fit: StackFit.expand,
@@ -304,7 +304,7 @@ class _SavedRecipeGridCard extends StatelessWidget {
                     _SavedRecipeImage(
                       imageUrl: recipe.imageUrl,
                       width: double.infinity,
-                      height: 190,
+                      height: 180,
                       borderRadius: 0,
                     ),
 
@@ -321,7 +321,7 @@ class _SavedRecipeGridCard extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
 
             Text(
               recipe.title,
@@ -335,7 +335,7 @@ class _SavedRecipeGridCard extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
 
             Row(
               children: [

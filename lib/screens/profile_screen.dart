@@ -83,9 +83,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 return SingleChildScrollView(
                   padding: EdgeInsets.fromLTRB(
                     isWide ? 24 : 16,
-                    22,
+                    16,
                     isWide ? 24 : 16,
-                    40,
+                    24,
                   ),
                   child: Center(
                     child: ConstrainedBox(
@@ -95,7 +95,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         children: [
                           const _ProfilePageHeader(),
 
-                          const SizedBox(height: 24),
+                          const SizedBox(height: 18),
 
                           if (isWide)
                             Row(
@@ -129,12 +129,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               onEdit: _openEditProfile,
                             ),
 
-                            const SizedBox(height: 16),
+                            const SizedBox(height: 12),
 
                             _PlanOverviewCard(subscription: subscription),
                           ],
 
-                          const SizedBox(height: 32),
+                          const SizedBox(height: 24),
 
                           if (isWide)
                             Row(
@@ -221,7 +221,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               ),
                             ),
 
-                            const SizedBox(height: 26),
+                            const SizedBox(height: 20),
 
                             _ProfileSection(
                               title: 'Informasi',
@@ -247,7 +247,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ),
                           ],
 
-                          const SizedBox(height: 30),
+                          const SizedBox(height: 20),
 
                           Center(
                             child: Text(
@@ -326,7 +326,7 @@ class _AccountCard extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: colors.surface,
         borderRadius: BorderRadius.circular(22),
@@ -386,7 +386,7 @@ class _AccountCard extends StatelessWidget {
             ],
           ),
 
-          const SizedBox(height: 18),
+          const SizedBox(height: 14),
 
           Row(
             children: [
@@ -458,7 +458,7 @@ class _PlanOverviewCard extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: colors.surface,
         borderRadius: BorderRadius.circular(22),
@@ -537,7 +537,7 @@ class _PlanOverviewCard extends StatelessWidget {
           ),
 
           if (!isPremium) ...[
-            const SizedBox(height: 18),
+            const SizedBox(height: 14),
 
             AnimatedBuilder(
               animation: UsageController.instance,
@@ -591,7 +591,7 @@ class _PlanOverviewCard extends StatelessWidget {
             ),
           ],
 
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
 
           _PlanFeatureRow(
             icon: Icons.auto_awesome_rounded,
@@ -601,7 +601,7 @@ class _PlanOverviewCard extends StatelessWidget {
                       'pertanyaan AI per hari',
           ),
 
-          const SizedBox(height: 11),
+          const SizedBox(height: 8),
 
           _PlanFeatureRow(
             icon: Icons.favorite_border_rounded,
@@ -610,7 +610,7 @@ class _PlanOverviewCard extends StatelessWidget {
                 : 'Maksimal 10 resep tersimpan',
           ),
 
-          const SizedBox(height: 11),
+          const SizedBox(height: 8),
 
           _PlanFeatureRow(
             icon: Icons.calendar_month_outlined,
@@ -620,7 +620,7 @@ class _PlanOverviewCard extends StatelessWidget {
           ),
 
           if (!isPremium) ...[
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
 
             SizedBox(
               width: double.infinity,
@@ -758,7 +758,7 @@ class _SettingsItem extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
           child: Row(
             children: [
               SizedBox(
