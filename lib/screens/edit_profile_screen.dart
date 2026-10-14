@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import 'package:go_router/go_router.dart';
 
 class EditProfileScreen extends StatefulWidget {
@@ -22,6 +21,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
 
   late final TextEditingController nameController;
+
   late final TextEditingController emailController;
 
   String? selectedPreference;
@@ -49,6 +49,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   void dispose() {
     nameController.dispose();
     emailController.dispose();
+
     super.dispose();
   }
 
@@ -96,102 +97,180 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
 
+    final backgroundColor = Theme.of(context).scaffoldBackgroundColor;
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Edit Profil')),
-      body: SafeArea(
-        child: Form(
-          key: formKey,
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
-            children: [
-              Text(
-                'Informasi Profil',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w800,
-                  color: colors.onSurface,
-                ),
-              ),
-
-              const SizedBox(height: 6),
-
-              Text(
-                'Perbarui informasi dasar dan preferensi makananmu.',
-                style: TextStyle(
-                  fontSize: 14,
-                  height: 1.5,
-                  color: colors.onSurfaceVariant,
-                ),
-              ),
-
-              const SizedBox(height: 28),
-
-              TextFormField(
-                controller: nameController,
-                textInputAction: TextInputAction.next,
-                validator: validateName,
-                decoration: const InputDecoration(
-                  labelText: 'Nama',
-                  hintText: 'Masukkan nama kamu',
-                  prefixIcon: Icon(Icons.person_outline),
-                ),
-              ),
-
-              const SizedBox(height: 18),
-
-              TextFormField(
-                controller: emailController,
-                keyboardType: TextInputType.emailAddress,
-                textInputAction: TextInputAction.next,
-                validator: validateEmail,
-                decoration: const InputDecoration(
-                  labelText: 'Email',
-                  hintText: 'contoh@email.com',
-                  prefixIcon: Icon(Icons.email_outlined),
-                ),
-              ),
-
-              const SizedBox(height: 18),
-
-              DropdownButtonFormField<String>(
-                initialValue: selectedPreference,
-                decoration: const InputDecoration(
-                  labelText: 'Preferensi makanan',
-                  prefixIcon: Icon(Icons.restaurant_outlined),
-                ),
-                items: preferences.map((preference) {
-                  return DropdownMenuItem(
-                    value: preference,
-                    child: Text(preference),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    selectedPreference = value;
-                  });
-                },
-                validator: (value) {
-                  if (value == null) {
-                    return 'Pilih preferensi makanan';
-                  }
-
-                  return null;
-                },
-              ),
-
-              const SizedBox(height: 32),
-
-              FilledButton.icon(
-                onPressed: saveProfile,
-                icon: const Icon(Icons.save_outlined),
-                label: const Text('Simpan Perubahan'),
-                style: FilledButton.styleFrom(
-                  minimumSize: const Size(double.infinity, 56),
-                ),
-              ),
-            ],
-          ),
+      backgroundColor: backgroundColor,
+      appBar: AppBar(
+        title: const Text(
+          'Edit profil',
+          style: TextStyle(fontWeight: FontWeight.w800),
         ),
+      ),
+      body: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final isWide = constraints.maxWidth >= 700;
+
+            return SingleChildScrollView(
+              padding: EdgeInsets.fromLTRB(
+                isWide ? 24 : 16,
+                14,
+                isWide ? 24 : 16,
+                40,
+              ),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 680),
+                  child: Form(
+                    key: formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Informasi profil',
+                          style: TextStyle(
+                            fontSize: isWide ? 30 : 26,
+                            height: 1.1,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: -0.5,
+                            color: colors.onSurface,
+                          ),
+                        ),
+
+                        const SizedBox(height: 8),
+
+                        Text(
+                          'Perbarui informasi dasar '
+                          'dan preferensi makananmu.',
+                          style: TextStyle(
+                            fontSize: 14,
+                            height: 1.5,
+                            color: colors.onSurfaceVariant,
+                          ),
+                        ),
+
+                        const SizedBox(height: 26),
+
+                        Container(
+                          width: double.infinity,
+                          padding: EdgeInsets.all(isWide ? 24 : 18),
+                          decoration: BoxDecoration(
+                            color: colors.surface,
+                            borderRadius: BorderRadius.circular(22),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const _FormLabel(text: 'Informasi akun'),
+
+                              const SizedBox(height: 14),
+
+                              TextFormField(
+                                controller: nameController,
+                                textInputAction: TextInputAction.next,
+                                validator: validateName,
+                                decoration: const InputDecoration(
+                                  labelText: 'Nama',
+                                  hintText: 'Masukkan nama kamu',
+                                  prefixIcon: Icon(
+                                    Icons.person_outline_rounded,
+                                  ),
+                                ),
+                              ),
+
+                              const SizedBox(height: 18),
+
+                              TextFormField(
+                                controller: emailController,
+                                keyboardType: TextInputType.emailAddress,
+                                textInputAction: TextInputAction.next,
+                                validator: validateEmail,
+                                decoration: const InputDecoration(
+                                  labelText: 'Email',
+                                  hintText: 'contoh@email.com',
+                                  prefixIcon: Icon(Icons.email_outlined),
+                                ),
+                              ),
+
+                              const SizedBox(height: 28),
+
+                              const _FormLabel(text: 'Preferensi makanan'),
+
+                              const SizedBox(height: 14),
+
+                              DropdownButtonFormField<String>(
+                                initialValue: selectedPreference,
+                                decoration: const InputDecoration(
+                                  labelText: 'Pilih preferensi',
+                                  prefixIcon: Icon(
+                                    Icons.restaurant_menu_outlined,
+                                  ),
+                                ),
+                                items: preferences.map((preference) {
+                                  return DropdownMenuItem(
+                                    value: preference,
+                                    child: Text(preference),
+                                  );
+                                }).toList(),
+                                onChanged: (value) {
+                                  setState(() {
+                                    selectedPreference = value;
+                                  });
+                                },
+                                validator: (value) {
+                                  if (value == null) {
+                                    return 'Pilih preferensi makanan';
+                                  }
+
+                                  return null;
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(height: 22),
+
+                        SizedBox(
+                          width: double.infinity,
+                          child: FilledButton.icon(
+                            onPressed: saveProfile,
+                            icon: const Icon(Icons.check_rounded),
+                            label: const Text('Simpan perubahan'),
+                            style: FilledButton.styleFrom(
+                              minimumSize: const Size(double.infinity, 54),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _FormLabel extends StatelessWidget {
+  final String text;
+
+  const _FormLabel({required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return Text(
+      text,
+      style: TextStyle(
+        fontSize: 13,
+        fontWeight: FontWeight.w700,
+        color: colors.onSurfaceVariant,
       ),
     );
   }
