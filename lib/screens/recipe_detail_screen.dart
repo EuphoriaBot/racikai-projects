@@ -146,8 +146,6 @@ class _MobileDetail extends StatelessWidget {
         _InstructionsSection(recipe: recipe),
 
         const SizedBox(height: 34),
-
-        _CookingButton(recipe: recipe),
       ],
     );
   }
@@ -174,8 +172,6 @@ class _DesktopDetail extends StatelessWidget {
               _RecipeStats(recipe: recipe),
 
               const SizedBox(height: 20),
-
-              _CookingButton(recipe: recipe),
             ],
           ),
         ),
@@ -573,29 +569,6 @@ class _InstructionItem extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _CookingButton extends StatelessWidget {
-  final RecipeEntity recipe;
-
-  const _CookingButton({required this.recipe});
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      child: FilledButton.icon(
-        onPressed: () {
-          context.push('/recipe/${recipe.id}/cook');
-        },
-        icon: const Icon(Icons.play_arrow_rounded),
-        label: const Text('Mulai memasak'),
-        style: FilledButton.styleFrom(
-          minimumSize: const Size(double.infinity, 54),
-        ),
       ),
     );
   }

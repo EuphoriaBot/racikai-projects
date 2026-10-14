@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import '../di/service_locator.dart';
 import '../../features/recipe/domain/entities/recipe_entity.dart';
 import '../../features/recipe/domain/usecases/get_recipe_by_id.dart';
-import '../../screens/cooking_mode_screen.dart';
 import '../../screens/edit_profile_screen.dart';
 import '../../screens/ingredient_finder_screen.dart';
 import '../../screens/ingredient_result_screen.dart';
@@ -31,15 +30,6 @@ final GoRouter appRouter = GoRouter(
         final id = int.tryParse(state.pathParameters['id'] ?? '');
 
         return _RecipeRouteLoader(recipeId: id);
-      },
-    ),
-
-    GoRoute(
-      path: '/recipe/:id/cook',
-      builder: (context, state) {
-        final id = int.tryParse(state.pathParameters['id'] ?? '');
-
-        return _RecipeRouteLoader(recipeId: id, cookingMode: true);
       },
     ),
 
@@ -117,9 +107,8 @@ final GoRouter appRouter = GoRouter(
 
 class _RecipeRouteLoader extends StatefulWidget {
   final int? recipeId;
-  final bool cookingMode;
 
-  const _RecipeRouteLoader({required this.recipeId, this.cookingMode = false});
+  const _RecipeRouteLoader({required this.recipeId});
 
   @override
   State<_RecipeRouteLoader> createState() => _RecipeRouteLoaderState();
@@ -160,10 +149,6 @@ class _RecipeRouteLoaderState extends State<_RecipeRouteLoader> {
 
         if (recipe == null) {
           return const _RouteErrorScreen(message: 'Resep tidak ditemukan.');
-        }
-
-        if (widget.cookingMode) {
-          return CookingModeScreen(recipe: recipe);
         }
 
         return RecipeDetailScreen(recipe: recipe);
