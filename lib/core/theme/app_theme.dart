@@ -78,7 +78,7 @@ class AppTheme {
         backgroundColor: AppColors.surface,
         elevation: 0,
         indicatorColor: AppColors.primarySoft,
-        height: 130,
+        height: 72,
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
             return const TextStyle(
