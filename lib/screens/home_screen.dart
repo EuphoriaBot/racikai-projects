@@ -123,8 +123,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-
     return SafeArea(
       child: RefreshIndicator(
         onRefresh: _loadFeaturedRecipes,
@@ -137,32 +135,9 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'RacikAI',
-                    style: TextStyle(
-                      fontSize: 29,
-                      height: 1,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: -0.8,
-                      color: colors.onSurface,
-                    ),
-                  ),
+                  _HomeHeroHeader(onSearchTap: widget.onSearchTap),
 
-                  const SizedBox(height: 8),
-
-                  Text(
-                    'Mau masak apa hari ini?',
-                    style: TextStyle(
-                      fontSize: 15,
-                      color: colors.onSurfaceVariant,
-                    ),
-                  ),
-
-                  const SizedBox(height: 22),
-
-                  _HomeSearchBar(onTap: widget.onSearchTap),
-
-                  const SizedBox(height: 30),
+                  const SizedBox(height: 28),
 
                   const _SectionTitle(title: 'Masak lebih mudah'),
 
@@ -290,62 +265,122 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-class _HomeSearchBar extends StatelessWidget {
-  final VoidCallback onTap;
+class _HomeHeroHeader extends StatelessWidget {
+  final VoidCallback onSearchTap;
 
-  const _HomeSearchBar({required this.onTap});
+  const _HomeHeroHeader({required this.onSearchTap});
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
 
     return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(17),
-        boxShadow: [
-          BoxShadow(
-            color: colors.shadow.withValues(alpha: 0.045),
-            blurRadius: 20,
-            offset: const Offset(0, 7),
-          ),
-        ],
+        color: colors.primary,
+        borderRadius: BorderRadius.circular(26),
       ),
-      child: Material(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(17),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(17),
-          child: SizedBox(
-            height: 58,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 17),
-              child: Row(
-                children: [
-                  Icon(Icons.search_rounded, color: colors.onSurfaceVariant),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                'RacikAI',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: colors.onPrimary,
+                ),
+              ),
 
-                  const SizedBox(width: 12),
+              const Spacer(),
 
-                  Expanded(
-                    child: Text(
-                      'Cari resep atau bahan...',
-                      style: TextStyle(
-                        fontSize: 15,
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: colors.onPrimary.withValues(alpha: 0.14),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.soup_kitchen_rounded,
+                  size: 22,
+                  color: colors.onPrimary,
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 24),
+
+          Text(
+            'Mau masak apa hari ini?',
+            style: TextStyle(
+              fontSize: 27,
+              height: 1.1,
+              fontWeight: FontWeight.w900,
+              letterSpacing: -0.7,
+              color: colors.onPrimary,
+            ),
+          ),
+
+          const SizedBox(height: 7),
+
+          Text(
+            'Temukan inspirasi dari bahan yang ada di dapurmu.',
+            style: TextStyle(
+              fontSize: 13,
+              height: 1.4,
+              color: colors.onPrimary.withValues(alpha: 0.75),
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
+          Material(
+            color: colors.surface,
+            borderRadius: BorderRadius.circular(17),
+            child: InkWell(
+              onTap: onSearchTap,
+              borderRadius: BorderRadius.circular(17),
+              child: SizedBox(
+                height: 54,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.search_rounded,
+                        size: 21,
+                        color: colors.primary,
+                      ),
+
+                      const SizedBox(width: 11),
+
+                      Expanded(
+                        child: Text(
+                          'Cari resep atau bahan...',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: colors.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+
+                      Icon(
+                        Icons.arrow_forward_rounded,
+                        size: 18,
                         color: colors.onSurfaceVariant,
                       ),
-                    ),
+                    ],
                   ),
-
-                  Icon(
-                    Icons.arrow_forward_rounded,
-                    size: 19,
-                    color: colors.onSurfaceVariant,
-                  ),
-                ],
+                ),
               ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
