@@ -555,9 +555,7 @@ class _PlanOverviewCard extends StatelessWidget {
 
           _PlanFeatureRow(
             icon: Icons.calendar_month_outlined,
-            text: isPremium
-                ? 'Meal Planner aktif'
-                : 'Meal Planner tersedia di Premium',
+            text: 'Meal Planner tersedia',
           ),
 
           if (!isPremium) ...[
