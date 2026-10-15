@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../controllers/subscription_controller.dart';
-import '../controllers/usage_controller.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -536,69 +535,11 @@ class _PlanOverviewCard extends StatelessWidget {
             ],
           ),
 
-          if (!isPremium) ...[
-            const SizedBox(height: 14),
-
-            AnimatedBuilder(
-              animation: UsageController.instance,
-              builder: (context, _) {
-                final usage = UsageController.instance.aiUsage;
-
-                final progress = (usage / UsageController.freeAiLimit)
-                    .clamp(0.0, 1.0)
-                    .toDouble();
-
-                return Column(
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            'Pertanyaan AI hari ini',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: colors.onSurfaceVariant,
-                            ),
-                          ),
-                        ),
-
-                        Text(
-                          '$usage / '
-                          '${UsageController.freeAiLimit}',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: colors.primary,
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 9),
-
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(100),
-                      child: LinearProgressIndicator(
-                        value: progress,
-                        minHeight: 7,
-                        backgroundColor: colors.surfaceContainerHighest,
-                        color: colors.primary,
-                      ),
-                    ),
-                  ],
-                );
-              },
-            ),
-          ],
-
           const SizedBox(height: 16),
 
-          _PlanFeatureRow(
+          const _PlanFeatureRow(
             icon: Icons.auto_awesome_rounded,
-            text: isPremium
-                ? 'Pertanyaan AI tanpa batas'
-                : '${UsageController.freeAiLimit} '
-                      'pertanyaan AI per hari',
+            text: 'Pertanyaan AI tanpa batas',
           ),
 
           const SizedBox(height: 8),

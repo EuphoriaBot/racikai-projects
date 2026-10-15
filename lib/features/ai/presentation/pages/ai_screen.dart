@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../controllers/subscription_controller.dart';
-import '../../../../controllers/usage_controller.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../recipe/domain/entities/recipe_entity.dart';
 import '../../../recipe/presentation/cubit/recipe_cubit.dart';
@@ -68,13 +66,6 @@ class _AiContentState extends State<_AiContent> {
       return;
     }
 
-    final usage = UsageController.instance;
-
-    if (!usage.canAskAI) {
-      showAiLimitDialog();
-      return;
-    }
-
     setState(() {
       messages.add(ChatMessage(role: ChatRole.user, text: question));
 
@@ -90,8 +81,6 @@ class _AiContentState extends State<_AiContent> {
       if (!mounted) {
         return;
       }
-
-      usage.recordAiQuestion();
 
       setState(() {
         messages.add(response);
@@ -117,48 +106,6 @@ class _AiContentState extends State<_AiContent> {
         scrollToBottom();
       }
     }
-  }
-
-  void showAiLimitDialog() {
-    showDialog(
-      context: context,
-      builder: (dialogContext) {
-        final colors = Theme.of(dialogContext).colorScheme;
-
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(22),
-          ),
-          icon: Icon(Icons.auto_awesome, size: 42, color: colors.primary),
-          title: const Text('Batas AI Tercapai', textAlign: TextAlign.center),
-          content: const Text(
-            'Kamu sudah menggunakan 5 pertanyaan AI gratis hari ini. '
-            'Upgrade ke Premium untuk menggunakan RacikAI tanpa batas.',
-            textAlign: TextAlign.center,
-          ),
-          actionsAlignment: MainAxisAlignment.center,
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(dialogContext);
-              },
-              child: const Text('Nanti'),
-            ),
-            FilledButton(
-              onPressed: () {
-                Navigator.pop(dialogContext);
-                context.push('/premium');
-              },
-              style: FilledButton.styleFrom(
-                backgroundColor: colors.primary,
-                foregroundColor: colors.onPrimary,
-              ),
-              child: const Text('Upgrade Premium'),
-            ),
-          ],
-        );
-      },
-    );
   }
 
   void scrollToBottom() {
@@ -467,50 +414,27 @@ class _AiUsageBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: Listenable.merge([
-        UsageController.instance,
-        SubscriptionController.instance,
-      ]),
-      builder: (context, _) {
-        final isPremium = SubscriptionController.instance.isPremium;
-
-        if (isPremium) {
-          return Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-            decoration: BoxDecoration(
-              color: colors.secondaryContainer,
-              borderRadius: BorderRadius.circular(100),
-            ),
-            child: Text(
-              'Premium',
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                color: colors.onSecondaryContainer,
-              ),
-            ),
-          );
-        }
-
-        final usage = UsageController.instance.aiUsage;
-
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-          decoration: BoxDecoration(
-            color: colors.surface,
-            borderRadius: BorderRadius.circular(100),
-          ),
-          child: Text(
-            '$usage/${UsageController.freeAiLimit}',
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+      decoration: BoxDecoration(
+        color: colors.primaryContainer,
+        borderRadius: BorderRadius.circular(100),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.auto_awesome_rounded, size: 13, color: colors.primary),
+          const SizedBox(width: 5),
+          Text(
+            'AI aktif',
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w700,
-              color: colors.onSurfaceVariant,
+              color: colors.primary,
             ),
           ),
-        );
-      },
+        ],
+      ),
     );
   }
 }
