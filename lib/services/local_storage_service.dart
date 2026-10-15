@@ -8,9 +8,6 @@ import '../features/recipe/data/models/catalog_recipe.dart';
 class LocalStorageService {
   static late SharedPreferences _preferences;
 
-  static const String _premiumKey = 'is_premium';
-  static const String _subscriptionPlanKey = 'subscription_plan';
-
   static const String _favoriteIdsKey = 'favorite_ids';
 
   static const String _savedBackendRecipesKey = 'saved_backend_recipes_v1';
@@ -28,27 +25,6 @@ class LocalStorageService {
 
     if (_preferences.containsKey(_legacyMealPlanKey)) {
       await _preferences.remove(_legacyMealPlanKey);
-    }
-  }
-
-  static bool get isPremium {
-    return _preferences.getBool(_premiumKey) ?? false;
-  }
-
-  static String? get subscriptionPlan {
-    return _preferences.getString(_subscriptionPlanKey);
-  }
-
-  static Future<void> saveSubscription({
-    required bool isPremium,
-    String? plan,
-  }) async {
-    await _preferences.setBool(_premiumKey, isPremium);
-
-    if (plan == null) {
-      await _preferences.remove(_subscriptionPlanKey);
-    } else {
-      await _preferences.setString(_subscriptionPlanKey, plan);
     }
   }
 
