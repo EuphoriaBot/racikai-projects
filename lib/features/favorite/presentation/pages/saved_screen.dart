@@ -541,8 +541,7 @@ class _EmptySavedState extends StatelessWidget {
                     const SizedBox(width: 7),
 
                     Text(
-                      'Free: maksimal '
-                      '${FavoriteCubit.freeFavoriteLimit} resep',
+                      'Simpan resep favorit tanpa batas',
                       style: TextStyle(
                         fontSize: 11.5,
                         fontWeight: FontWeight.w600,

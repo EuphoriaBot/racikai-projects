@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 
-enum FavoriteAction { idle, added, removed, limitReached }
+enum FavoriteAction { idle, added, removed }
 
 String favoriteKeyFor(Object recipeId) {
   if (recipeId is int) {

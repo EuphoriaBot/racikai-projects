@@ -1,14 +1,11 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../../controllers/subscription_controller.dart';
 import '../../data/models/saved_recipe.dart';
 import '../../../../services/local_storage_service.dart';
 import 'favorite_state.dart';
 
 class FavoriteCubit extends Cubit<FavoriteState> {
   FavoriteCubit() : super(const FavoriteState());
-
-  static const int freeFavoriteLimit = 10;
 
   void loadFromStorage() {
     final savedFavorites = LocalStorageService.favoriteIds;
@@ -30,19 +27,6 @@ class FavoriteCubit extends Cubit<FavoriteState> {
         FavoriteState(
           favoriteIds: Set<String>.unmodifiable(updatedIds),
           action: FavoriteAction.removed,
-          actionId: state.actionId + 1,
-        ),
-      );
-
-      return;
-    }
-
-    final isPremium = SubscriptionController.instance.isPremium;
-
-    if (!isPremium && updatedIds.length >= freeFavoriteLimit) {
-      emit(
-        state.copyWith(
-          action: FavoriteAction.limitReached,
           actionId: state.actionId + 1,
         ),
       );
@@ -78,26 +62,12 @@ class FavoriteCubit extends Cubit<FavoriteState> {
       savedRecipes.removeWhere((savedRecipe) => savedRecipe.id == recipe.id);
 
       LocalStorageService.saveFavoriteIds(updatedIds);
-
       LocalStorageService.saveBackendRecipes(savedRecipes);
 
       emit(
         FavoriteState(
           favoriteIds: Set<String>.unmodifiable(updatedIds),
           action: FavoriteAction.removed,
-          actionId: state.actionId + 1,
-        ),
-      );
-
-      return;
-    }
-
-    final isPremium = SubscriptionController.instance.isPremium;
-
-    if (!isPremium && updatedIds.length >= freeFavoriteLimit) {
-      emit(
-        state.copyWith(
-          action: FavoriteAction.limitReached,
           actionId: state.actionId + 1,
         ),
       );
@@ -112,7 +82,6 @@ class FavoriteCubit extends Cubit<FavoriteState> {
     savedRecipes.insert(0, recipe);
 
     LocalStorageService.saveFavoriteIds(updatedIds);
-
     LocalStorageService.saveBackendRecipes(savedRecipes);
 
     emit(

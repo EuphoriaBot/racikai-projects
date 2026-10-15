@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 
 import '../features/ai/data/models/chat_message.dart';
 import '../features/favorite/data/models/saved_recipe.dart';
@@ -34,11 +33,6 @@ class AiRecipeDetailScreen extends StatelessWidget {
         return previous.actionId != current.actionId;
       },
       listener: (context, state) {
-        if (state.action == FavoriteAction.limitReached) {
-          _showFavoriteLimitDialog(context);
-          return;
-        }
-
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
         if (state.action == FavoriteAction.added) {
@@ -923,41 +917,4 @@ class _DatasetNote extends StatelessWidget {
       ],
     );
   }
-}
-
-void _showFavoriteLimitDialog(BuildContext context) {
-  showDialog(
-    context: context,
-    builder: (dialogContext) {
-      final colors = Theme.of(dialogContext).colorScheme;
-
-      return AlertDialog(
-        icon: Icon(Icons.favorite_rounded, size: 40, color: colors.primary),
-        title: const Text('Batas Resep Tersimpan', textAlign: TextAlign.center),
-        content: Text(
-          'Akun Free dapat menyimpan maksimal '
-          '${FavoriteCubit.freeFavoriteLimit} resep. '
-          'Upgrade ke Premium untuk menyimpan resep tanpa batas.',
-          textAlign: TextAlign.center,
-        ),
-        actionsAlignment: MainAxisAlignment.center,
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(dialogContext);
-            },
-            child: const Text('Nanti'),
-          ),
-          FilledButton(
-            onPressed: () {
-              Navigator.pop(dialogContext);
-
-              context.push('/premium');
-            },
-            child: const Text('Upgrade Premium'),
-          ),
-        ],
-      );
-    },
-  );
 }
