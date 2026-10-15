@@ -176,11 +176,6 @@ class _IngredientResultScreenState extends State<IngredientResultScreen> {
         return previous.actionId != current.actionId;
       },
       listener: (context, state) {
-        if (state.action == FavoriteAction.limitReached) {
-          _showFavoriteLimitDialog(context);
-          return;
-        }
-
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
         if (state.action == FavoriteAction.added) {
@@ -804,41 +799,4 @@ class _RecipeError extends StatelessWidget {
       ),
     );
   }
-}
-
-void _showFavoriteLimitDialog(BuildContext context) {
-  showDialog(
-    context: context,
-    builder: (dialogContext) {
-      final colors = Theme.of(dialogContext).colorScheme;
-
-      return AlertDialog(
-        icon: Icon(Icons.favorite_rounded, size: 40, color: colors.secondary),
-        title: const Text('Batas Resep Tersimpan', textAlign: TextAlign.center),
-        content: Text(
-          'Akun Free dapat menyimpan maksimal '
-          '${FavoriteCubit.freeFavoriteLimit} resep. '
-          'Upgrade ke Premium untuk menyimpan '
-          'resep tanpa batas.',
-          textAlign: TextAlign.center,
-        ),
-        actionsAlignment: MainAxisAlignment.center,
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(dialogContext);
-            },
-            child: const Text('Nanti'),
-          ),
-          FilledButton(
-            onPressed: () {
-              Navigator.pop(dialogContext);
-              context.push('/premium');
-            },
-            child: const Text('Upgrade Premium'),
-          ),
-        ],
-      );
-    },
-  );
 }

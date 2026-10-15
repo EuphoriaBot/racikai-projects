@@ -9,7 +9,6 @@ import '../../screens/ingredient_finder_screen.dart';
 import '../../screens/ingredient_result_screen.dart';
 import '../../screens/main_screen.dart';
 import '../../screens/meal_planner_screen.dart';
-import '../../screens/premium_screen.dart';
 import '../../screens/recipe_detail_screen.dart';
 import '../../screens/ai_recipe_detail_screen.dart';
 import 'recipe_detail_route_args.dart';
@@ -46,13 +45,6 @@ final GoRouter appRouter = GoRouter(
         final ingredients = state.extra as List<String>? ?? <String>[];
 
         return IngredientResultScreen(selectedIngredients: ingredients);
-      },
-    ),
-
-    GoRoute(
-      path: '/premium',
-      builder: (context, state) {
-        return const PremiumScreen();
       },
     ),
 

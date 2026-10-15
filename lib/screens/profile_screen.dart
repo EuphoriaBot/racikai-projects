@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../controllers/subscription_controller.dart';
-import '../controllers/usage_controller.dart';
-
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
@@ -66,211 +63,173 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final subscription = SubscriptionController.instance;
-
     final backgroundColor = Theme.of(context).scaffoldBackgroundColor;
 
-    return AnimatedBuilder(
-      animation: subscription,
-      builder: (context, _) {
-        return ColoredBox(
-          color: backgroundColor,
-          child: SafeArea(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final isWide = constraints.maxWidth >= 800;
+    return ColoredBox(
+      color: backgroundColor,
+      child: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final isWide = constraints.maxWidth >= 800;
 
-                return SingleChildScrollView(
-                  padding: EdgeInsets.fromLTRB(
-                    isWide ? 24 : 16,
-                    16,
-                    isWide ? 24 : 16,
-                    24,
-                  ),
-                  child: Center(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 1100),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const _ProfilePageHeader(),
+            return SingleChildScrollView(
+              padding: EdgeInsets.fromLTRB(
+                isWide ? 24 : 16,
+                16,
+                isWide ? 24 : 16,
+                24,
+              ),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 1100),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const _ProfilePageHeader(),
 
-                          const SizedBox(height: 18),
+                      const SizedBox(height: 18),
 
-                          if (isWide)
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Expanded(
-                                  flex: 5,
-                                  child: _AccountCard(
-                                    name: name,
-                                    email: email,
-                                    isPremium: subscription.isPremium,
-                                    onEdit: _openEditProfile,
-                                  ),
-                                ),
-
-                                const SizedBox(width: 18),
-
-                                Expanded(
-                                  flex: 6,
-                                  child: _PlanOverviewCard(
-                                    subscription: subscription,
-                                  ),
-                                ),
-                              ],
-                            )
-                          else ...[
-                            _AccountCard(
-                              name: name,
-                              email: email,
-                              isPremium: subscription.isPremium,
-                              onEdit: _openEditProfile,
-                            ),
-
-                            const SizedBox(height: 12),
-
-                            _PlanOverviewCard(subscription: subscription),
-                          ],
-
-                          const SizedBox(height: 24),
-
-                          if (isWide)
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Expanded(
-                                  child: _ProfileSection(
-                                    title: 'Personalisasi',
-                                    child: _SettingsGroup(
-                                      children: [
-                                        _SettingsItem(
-                                          icon: Icons.restaurant_menu_outlined,
-                                          title: 'Preferensi makanan',
-                                          trailingText: preference,
-                                          onTap: _openEditProfile,
-                                        ),
-                                        _SettingsItem(
-                                          icon: Icons.language_rounded,
-                                          title: 'Bahasa',
-                                          trailingText: 'Indonesia',
-                                          onTap: () {
-                                            _showInfoMessage(
-                                              'Saat ini RacikAI '
-                                              'menggunakan Bahasa Indonesia.',
-                                            );
-                                          },
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-
-                                const SizedBox(width: 20),
-
-                                Expanded(
-                                  child: _ProfileSection(
-                                    title: 'Informasi',
-                                    child: _SettingsGroup(
-                                      children: [
-                                        _SettingsItem(
-                                          icon: Icons.info_outline_rounded,
-                                          title: 'Tentang RacikAI',
-                                          onTap: _showAboutRacikAI,
-                                        ),
-                                        _SettingsItem(
-                                          icon: Icons.lock_outline_rounded,
-                                          title: 'Kebijakan Privasi',
-                                          onTap: () {
-                                            _showInfoMessage(
-                                              'Halaman kebijakan privasi '
-                                              'belum tersedia.',
-                                            );
-                                          },
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            )
-                          else ...[
-                            _ProfileSection(
-                              title: 'Personalisasi',
-                              child: _SettingsGroup(
-                                children: [
-                                  _SettingsItem(
-                                    icon: Icons.restaurant_menu_outlined,
-                                    title: 'Preferensi makanan',
-                                    trailingText: preference,
-                                    onTap: _openEditProfile,
-                                  ),
-                                  _SettingsItem(
-                                    icon: Icons.language_rounded,
-                                    title: 'Bahasa',
-                                    trailingText: 'Indonesia',
-                                    onTap: () {
-                                      _showInfoMessage(
-                                        'Saat ini RacikAI '
-                                        'menggunakan Bahasa Indonesia.',
-                                      );
-                                    },
-                                  ),
-                                ],
-                              ),
-                            ),
-
-                            const SizedBox(height: 20),
-
-                            _ProfileSection(
-                              title: 'Informasi',
-                              child: _SettingsGroup(
-                                children: [
-                                  _SettingsItem(
-                                    icon: Icons.info_outline_rounded,
-                                    title: 'Tentang RacikAI',
-                                    onTap: _showAboutRacikAI,
-                                  ),
-                                  _SettingsItem(
-                                    icon: Icons.lock_outline_rounded,
-                                    title: 'Kebijakan Privasi',
-                                    onTap: () {
-                                      _showInfoMessage(
-                                        'Halaman kebijakan privasi '
-                                        'belum tersedia.',
-                                      );
-                                    },
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-
-                          const SizedBox(height: 20),
-
-                          Center(
-                            child: Text(
-                              'RacikAI v1.0.0',
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onSurfaceVariant
-                                    .withValues(alpha: 0.65),
-                              ),
-                            ),
-                          ),
-                        ],
+                      _AccountCard(
+                        name: name,
+                        email: email,
+                        onEdit: _openEditProfile,
                       ),
-                    ),
+
+                      const SizedBox(height: 24),
+
+                      if (isWide)
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: _ProfileSection(
+                                title: 'Personalisasi',
+                                child: _SettingsGroup(
+                                  children: [
+                                    _SettingsItem(
+                                      icon: Icons.restaurant_menu_outlined,
+                                      title: 'Preferensi makanan',
+                                      trailingText: preference,
+                                      onTap: _openEditProfile,
+                                    ),
+                                    _SettingsItem(
+                                      icon: Icons.language_rounded,
+                                      title: 'Bahasa',
+                                      trailingText: 'Indonesia',
+                                      onTap: () {
+                                        _showInfoMessage(
+                                          'Saat ini RacikAI '
+                                          'menggunakan Bahasa Indonesia.',
+                                        );
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+
+                            const SizedBox(width: 20),
+
+                            Expanded(
+                              child: _ProfileSection(
+                                title: 'Informasi',
+                                child: _SettingsGroup(
+                                  children: [
+                                    _SettingsItem(
+                                      icon: Icons.info_outline_rounded,
+                                      title: 'Tentang RacikAI',
+                                      onTap: _showAboutRacikAI,
+                                    ),
+                                    _SettingsItem(
+                                      icon: Icons.lock_outline_rounded,
+                                      title: 'Kebijakan Privasi',
+                                      onTap: () {
+                                        _showInfoMessage(
+                                          'Halaman kebijakan privasi '
+                                          'belum tersedia.',
+                                        );
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        )
+                      else ...[
+                        _ProfileSection(
+                          title: 'Personalisasi',
+                          child: _SettingsGroup(
+                            children: [
+                              _SettingsItem(
+                                icon: Icons.restaurant_menu_outlined,
+                                title: 'Preferensi makanan',
+                                trailingText: preference,
+                                onTap: _openEditProfile,
+                              ),
+                              _SettingsItem(
+                                icon: Icons.language_rounded,
+                                title: 'Bahasa',
+                                trailingText: 'Indonesia',
+                                onTap: () {
+                                  _showInfoMessage(
+                                    'Saat ini RacikAI '
+                                    'menggunakan Bahasa Indonesia.',
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(height: 20),
+
+                        _ProfileSection(
+                          title: 'Informasi',
+                          child: _SettingsGroup(
+                            children: [
+                              _SettingsItem(
+                                icon: Icons.info_outline_rounded,
+                                title: 'Tentang RacikAI',
+                                onTap: _showAboutRacikAI,
+                              ),
+                              _SettingsItem(
+                                icon: Icons.lock_outline_rounded,
+                                title: 'Kebijakan Privasi',
+                                onTap: () {
+                                  _showInfoMessage(
+                                    'Halaman kebijakan privasi '
+                                    'belum tersedia.',
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+
+                      const SizedBox(height: 20),
+
+                      Center(
+                        child: Text(
+                          'RacikAI v1.0.0',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant
+                                .withValues(alpha: 0.65),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                );
-              },
-            ),
-          ),
-        );
-      },
+                ),
+              ),
+            );
+          },
+        ),
+      ),
     );
   }
 }
@@ -310,13 +269,11 @@ class _ProfilePageHeader extends StatelessWidget {
 class _AccountCard extends StatelessWidget {
   final String name;
   final String email;
-  final bool isPremium;
   final VoidCallback onEdit;
 
   const _AccountCard({
     required this.name,
     required this.email,
-    required this.isPremium,
     required this.onEdit,
   });
 
@@ -344,9 +301,7 @@ class _AccountCard extends StatelessWidget {
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
-                  isPremium
-                      ? Icons.workspace_premium_rounded
-                      : Icons.person_rounded,
+                  Icons.person_rounded,
                   size: 31,
                   color: colors.primary,
                 ),
@@ -388,287 +343,16 @@ class _AccountCard extends StatelessWidget {
 
           const SizedBox(height: 14),
 
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: isPremium
-                      ? colors.secondaryContainer
-                      : colors.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(100),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      isPremium
-                          ? Icons.workspace_premium_rounded
-                          : Icons.person_outline_rounded,
-                      size: 14,
-                      color: isPremium
-                          ? colors.secondary
-                          : colors.onSurfaceVariant,
-                    ),
-
-                    const SizedBox(width: 5),
-
-                    Text(
-                      isPremium ? 'Premium' : 'Free',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: isPremium
-                            ? colors.onSecondaryContainer
-                            : colors.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const Spacer(),
-
-              TextButton.icon(
-                onPressed: onEdit,
-                icon: const Icon(Icons.edit_outlined, size: 17),
-                label: const Text('Edit profil'),
-              ),
-            ],
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton.icon(
+              onPressed: onEdit,
+              icon: const Icon(Icons.edit_outlined, size: 17),
+              label: const Text('Edit profil'),
+            ),
           ),
         ],
       ),
-    );
-  }
-}
-
-class _PlanOverviewCard extends StatelessWidget {
-  final SubscriptionController subscription;
-
-  const _PlanOverviewCard({required this.subscription});
-
-  @override
-  Widget build(BuildContext context) {
-    final isPremium = subscription.isPremium;
-
-    final colors = Theme.of(context).colorScheme;
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(22),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 45,
-                height: 45,
-                decoration: BoxDecoration(
-                  color: colors.primaryContainer,
-                  borderRadius: BorderRadius.circular(13),
-                ),
-                child: Icon(
-                  isPremium
-                      ? Icons.workspace_premium_rounded
-                      : Icons.auto_awesome_rounded,
-                  size: 21,
-                  color: colors.primary,
-                ),
-              ),
-
-              const SizedBox(width: 12),
-
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      subscription.planName,
-                      style: TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w800,
-                        color: colors.onSurface,
-                      ),
-                    ),
-
-                    const SizedBox(height: 3),
-
-                    Text(
-                      isPremium
-                          ? 'Paket ${subscription.planPeriod}'
-                          : 'Paket yang sedang digunakan',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: colors.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              if (isPremium)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: colors.secondaryContainer,
-                    borderRadius: BorderRadius.circular(100),
-                  ),
-                  child: Text(
-                    'Aktif',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      color: colors.onSecondaryContainer,
-                    ),
-                  ),
-                ),
-            ],
-          ),
-
-          if (!isPremium) ...[
-            const SizedBox(height: 14),
-
-            AnimatedBuilder(
-              animation: UsageController.instance,
-              builder: (context, _) {
-                final usage = UsageController.instance.aiUsage;
-
-                final progress = (usage / UsageController.freeAiLimit)
-                    .clamp(0.0, 1.0)
-                    .toDouble();
-
-                return Column(
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            'Pertanyaan AI hari ini',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: colors.onSurfaceVariant,
-                            ),
-                          ),
-                        ),
-
-                        Text(
-                          '$usage / '
-                          '${UsageController.freeAiLimit}',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: colors.primary,
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 9),
-
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(100),
-                      child: LinearProgressIndicator(
-                        value: progress,
-                        minHeight: 7,
-                        backgroundColor: colors.surfaceContainerHighest,
-                        color: colors.primary,
-                      ),
-                    ),
-                  ],
-                );
-              },
-            ),
-          ],
-
-          const SizedBox(height: 16),
-
-          _PlanFeatureRow(
-            icon: Icons.auto_awesome_rounded,
-            text: isPremium
-                ? 'Pertanyaan AI tanpa batas'
-                : '${UsageController.freeAiLimit} '
-                      'pertanyaan AI per hari',
-          ),
-
-          const SizedBox(height: 8),
-
-          _PlanFeatureRow(
-            icon: Icons.favorite_border_rounded,
-            text: isPremium
-                ? 'Simpan resep tanpa batas'
-                : 'Maksimal 10 resep tersimpan',
-          ),
-
-          const SizedBox(height: 8),
-
-          _PlanFeatureRow(
-            icon: Icons.calendar_month_outlined,
-            text: isPremium
-                ? 'Meal Planner aktif'
-                : 'Meal Planner tersedia di Premium',
-          ),
-
-          if (!isPremium) ...[
-            const SizedBox(height: 16),
-
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton.icon(
-                onPressed: () {
-                  context.push('/premium');
-                },
-                icon: const Icon(Icons.workspace_premium_rounded),
-                label: const Text('Lihat Premium'),
-                style: FilledButton.styleFrom(
-                  minimumSize: const Size(double.infinity, 50),
-                ),
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-class _PlanFeatureRow extends StatelessWidget {
-  final IconData icon;
-  final String text;
-
-  const _PlanFeatureRow({required this.icon, required this.text});
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-
-    return Row(
-      children: [
-        Icon(icon, size: 17, color: colors.primary),
-
-        const SizedBox(width: 9),
-
-        Expanded(
-          child: Text(
-            text,
-            style: TextStyle(
-              fontSize: 12.5,
-              color: colors.onSurface,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

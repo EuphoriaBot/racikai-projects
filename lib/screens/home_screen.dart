@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../controllers/subscription_controller.dart';
 import '../core/router/recipe_detail_route_args.dart';
 import '../features/favorite/data/models/saved_recipe.dart';
 import '../features/favorite/presentation/cubit/favorite_cubit.dart';
@@ -119,50 +118,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _openMealPlanner() {
-    final isPremium = SubscriptionController.instance.isPremium;
-
-    if (isPremium) {
-      context.push('/meal-planner');
-      return;
-    }
-
-    showDialog(
-      context: context,
-      builder: (dialogContext) {
-        final colors = Theme.of(dialogContext).colorScheme;
-
-        return AlertDialog(
-          icon: Icon(
-            Icons.calendar_month_outlined,
-            size: 40,
-            color: colors.primary,
-          ),
-          title: const Text('Fitur Premium'),
-          content: const Text(
-            'Rencana makan mingguan tersedia '
-            'untuk pengguna RacikAI Premium.',
-            textAlign: TextAlign.center,
-          ),
-          actionsAlignment: MainAxisAlignment.center,
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(dialogContext);
-              },
-              child: const Text('Nanti'),
-            ),
-            FilledButton(
-              onPressed: () {
-                Navigator.pop(dialogContext);
-
-                context.push('/premium');
-              },
-              child: const Text('Lihat Premium'),
-            ),
-          ],
-        );
-      },
-    );
+    context.push('/meal-planner');
   }
 
   @override
