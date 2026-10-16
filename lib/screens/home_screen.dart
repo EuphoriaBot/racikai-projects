@@ -8,6 +8,7 @@ import '../features/favorite/presentation/cubit/favorite_cubit.dart';
 import '../features/favorite/presentation/cubit/favorite_state.dart';
 import '../features/recipe/data/models/catalog_recipe.dart';
 import '../services/recipe_catalog_service.dart';
+import '../widgets/recipe_search_bar.dart';
 
 class HomeScreen extends StatefulWidget {
   final VoidCallback onSearchTap;
@@ -242,7 +243,7 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: 16),
 
           SizedBox(
-            height: 187,
+            height: 210,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               itemCount: otherRecipes.length,
@@ -296,7 +297,7 @@ class _HomeHeroHeader extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Teman masak harianmu',
+                    'Aplikasi Resep Makanan',
                     style: TextStyle(
                       fontSize: 11.5,
                       color: colors.onSurfaceVariant,
@@ -368,44 +369,7 @@ class _HomeHeroHeader extends StatelessWidget {
 
               const SizedBox(height: 16),
 
-              Material(
-                color: colors.surface,
-                borderRadius: BorderRadius.circular(16),
-                child: InkWell(
-                  onTap: onSearchTap,
-                  borderRadius: BorderRadius.circular(16),
-                  child: SizedBox(
-                    height: 54,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.search_rounded,
-                            size: 21,
-                            color: colors.primary,
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              'Cari resep atau bahan...',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: colors.onSurfaceVariant,
-                              ),
-                            ),
-                          ),
-                          Icon(
-                            Icons.arrow_forward_rounded,
-                            size: 18,
-                            color: colors.onSurfaceVariant,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
+              RecipeSearchBar(readOnly: true, onTap: onSearchTap),
             ],
           ),
         ),

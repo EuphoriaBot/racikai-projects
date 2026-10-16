@@ -10,6 +10,7 @@ import '../features/favorite/presentation/cubit/favorite_cubit.dart';
 import '../features/favorite/presentation/cubit/favorite_state.dart';
 import '../features/recipe/data/models/catalog_recipe.dart';
 import '../services/recipe_catalog_service.dart';
+import '../widgets/recipe_search_bar.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -214,13 +215,13 @@ class _SearchScreenState extends State<SearchScreen> {
                     child: ConstrainedBox(
                       constraints: const BoxConstraints(maxWidth: 1100),
                       child: Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
+                        padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const _SearchHeader(),
 
-                            const SizedBox(height: 22),
+                            const SizedBox(height: 14),
 
                             _SearchField(
                               controller: _searchController,
@@ -395,24 +396,60 @@ class _SearchHeader extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Jelajahi resep',
-          style: TextStyle(
-            fontSize: 28,
-            height: 1.05,
-            fontWeight: FontWeight.w900,
-            letterSpacing: -0.7,
-            color: colors.onSurface,
-          ),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'RacikAI',
+                    style: TextStyle(
+                      fontSize: 20,
+                      height: 1,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: -0.5,
+                      color: colors.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Aplikasi Resep Makanan',
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      color: colors.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            Container(
+              width: 40,
+              height: 40,
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: colors.primary,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.asset(
+                  'assets/images/racikai_logo.png',
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 8),
-        Text(
-          'Temukan inspirasi dari koleksi resep RacikAI.',
-          style: TextStyle(
-            fontSize: 14,
-            height: 1.4,
-            color: colors.onSurfaceVariant,
-          ),
+
+        const SizedBox(height: 12),
+
+        Container(
+          width: double.infinity,
+          height: 1.5,
+          color: colors.outlineVariant,
         ),
       ],
     );
@@ -437,44 +474,46 @@ class _SearchField extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
 
     return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(18, 20, 18, 18),
       decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(17),
-        boxShadow: [
-          BoxShadow(
-            color: colors.shadow.withValues(alpha: 0.04),
-            blurRadius: 18,
-            offset: const Offset(0, 6),
+        color: colors.primary,
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Jelajahi resep',
+            style: TextStyle(
+              fontSize: 26,
+              height: 1.08,
+              fontWeight: FontWeight.w900,
+              letterSpacing: -0.6,
+              color: colors.onPrimary,
+            ),
+          ),
+
+          const SizedBox(height: 8),
+
+          Text(
+            'Temukan resep yang cocok untuk menu hari ini.',
+            style: TextStyle(
+              fontSize: 13,
+              height: 1.4,
+              color: colors.onPrimary.withValues(alpha: 0.78),
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          RecipeSearchBar(
+            controller: controller,
+            query: query,
+            onChanged: onChanged,
+            onClear: onClear,
           ),
         ],
-      ),
-      child: TextField(
-        controller: controller,
-        textInputAction: TextInputAction.search,
-        onChanged: onChanged,
-        decoration: InputDecoration(
-          hintText: 'Cari resep atau bahan...',
-          hintStyle: TextStyle(color: colors.onSurfaceVariant),
-          prefixIcon: Icon(
-            Icons.search_rounded,
-            color: colors.onSurfaceVariant,
-          ),
-          suffixIcon: query.isEmpty
-              ? null
-              : IconButton(
-                  tooltip: 'Hapus pencarian',
-                  onPressed: onClear,
-                  icon: Icon(
-                    Icons.close_rounded,
-                    color: colors.onSurfaceVariant,
-                  ),
-                ),
-          filled: false,
-          border: InputBorder.none,
-          enabledBorder: InputBorder.none,
-          focusedBorder: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(vertical: 18),
-        ),
       ),
     );
   }
