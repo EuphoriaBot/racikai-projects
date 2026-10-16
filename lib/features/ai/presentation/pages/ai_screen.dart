@@ -136,7 +136,7 @@ class _AiContentState extends State<_AiContent> {
 
             return Column(
               children: [
-                _AiHeader(colors: colors, isWide: isWide),
+                _AiHeader(colors: colors),
 
                 Expanded(
                   child: Center(
@@ -201,7 +201,7 @@ class _AiWelcome extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
 
     return Padding(
-      padding: const EdgeInsets.only(top: 28, bottom: 18),
+      padding: const EdgeInsets.only(top: 0, bottom: 18),
       child: Column(
         children: [
           Container(
@@ -335,58 +335,37 @@ class _SuggestionTile extends StatelessWidget {
 
 class _AiHeader extends StatelessWidget {
   final ColorScheme colors;
-  final bool isWide;
 
-  const _AiHeader({required this.colors, required this.isWide});
+  const _AiHeader({required this.colors});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.fromLTRB(isWide ? 24 : 16, 15, isWide ? 24 : 16, 15),
-      decoration: BoxDecoration(
-        color: Theme.of(context).scaffoldBackgroundColor,
-        border: Border(bottom: BorderSide(color: colors.outlineVariant)),
-      ),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 880),
-          child: Row(
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 14),
+      color: Theme.of(context).scaffoldBackgroundColor,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: colors.primaryContainer,
-                  borderRadius: BorderRadius.circular(13),
-                ),
-                child: Icon(
-                  Icons.auto_awesome_rounded,
-                  size: 21,
-                  color: colors.primary,
-                ),
-              ),
-
-              const SizedBox(width: 12),
-
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'RacikAI Assistant',
+                      'RacikAI',
                       style: TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w800,
+                        fontSize: 20,
+                        height: 1,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: -0.5,
                         color: colors.onSurface,
                       ),
                     ),
-
-                    const SizedBox(height: 2),
-
+                    const SizedBox(height: 4),
                     Text(
-                      'Tanya bahan, resep, atau ide masakan',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                      'Aplikasi Resep Makanan',
                       style: TextStyle(
                         fontSize: 11.5,
                         color: colors.onSurfaceVariant,
@@ -396,42 +375,31 @@ class _AiHeader extends StatelessWidget {
                 ),
               ),
 
-              const SizedBox(width: 10),
-
-              _AiUsageBadge(colors: colors),
+              Container(
+                width: 40,
+                height: 40,
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: colors.primary,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.asset(
+                    'assets/images/racikai_logo.png',
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
 
-class _AiUsageBadge extends StatelessWidget {
-  final ColorScheme colors;
+          const SizedBox(height: 12),
 
-  const _AiUsageBadge({required this.colors});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-      decoration: BoxDecoration(
-        color: colors.primaryContainer,
-        borderRadius: BorderRadius.circular(100),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.auto_awesome_rounded, size: 13, color: colors.primary),
-          const SizedBox(width: 5),
-          Text(
-            'AI aktif',
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              color: colors.primary,
-            ),
+          Container(
+            width: double.infinity,
+            height: 1.5,
+            color: colors.outlineVariant,
           ),
         ],
       ),
