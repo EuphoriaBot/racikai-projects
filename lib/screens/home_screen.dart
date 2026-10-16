@@ -128,7 +128,7 @@ class _HomeScreenState extends State<HomeScreen> {
         onRefresh: _loadFeaturedRecipes,
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(16, 18, 16, 36),
+          padding: const EdgeInsets.fromLTRB(16, 10, 16, 36),
           child: Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 900),
@@ -274,114 +274,142 @@ class _HomeHeroHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
-      decoration: BoxDecoration(
-        color: colors.primary,
-        borderRadius: BorderRadius.circular(26),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'RacikAI',
+                    style: TextStyle(
+                      fontSize: 20,
+                      height: 1,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: -0.5,
+                      color: colors.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Teman masak harianmu',
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      color: colors.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              width: 40,
+              height: 40,
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: colors.primary,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.asset(
+                  'assets/images/racikai_logo.png',
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+          ],
+        ),
+
+        const SizedBox(height: 12),
+
+        Container(
+          width: double.infinity,
+          height: 1.5,
+          color: colors.outlineVariant,
+        ),
+
+        const SizedBox(height: 14),
+
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.fromLTRB(18, 20, 18, 18),
+          decoration: BoxDecoration(
+            color: colors.primary,
+            borderRadius: BorderRadius.circular(24),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'RacikAI',
+                'Mau masak apa hari ini?',
                 style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w800,
+                  fontSize: 26,
+                  height: 1.08,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: -0.6,
                   color: colors.onPrimary,
                 ),
               ),
 
-              const Spacer(),
+              const SizedBox(height: 8),
 
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: colors.onPrimary.withValues(alpha: 0.14),
-                  shape: BoxShape.circle,
+              Text(
+                'Temukan inspirasi dari bahan yang ada di dapurmu.',
+                style: TextStyle(
+                  fontSize: 13,
+                  height: 1.4,
+                  color: colors.onPrimary.withValues(alpha: 0.78),
                 ),
-                child: Icon(
-                  Icons.soup_kitchen_rounded,
-                  size: 22,
-                  color: colors.onPrimary,
+              ),
+
+              const SizedBox(height: 16),
+
+              Material(
+                color: colors.surface,
+                borderRadius: BorderRadius.circular(16),
+                child: InkWell(
+                  onTap: onSearchTap,
+                  borderRadius: BorderRadius.circular(16),
+                  child: SizedBox(
+                    height: 54,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.search_rounded,
+                            size: 21,
+                            color: colors.primary,
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              'Cari resep atau bahan...',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: colors.onSurfaceVariant,
+                              ),
+                            ),
+                          ),
+                          Icon(
+                            Icons.arrow_forward_rounded,
+                            size: 18,
+                            color: colors.onSurfaceVariant,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ],
           ),
-
-          const SizedBox(height: 24),
-
-          Text(
-            'Mau masak apa hari ini?',
-            style: TextStyle(
-              fontSize: 27,
-              height: 1.1,
-              fontWeight: FontWeight.w900,
-              letterSpacing: -0.7,
-              color: colors.onPrimary,
-            ),
-          ),
-
-          const SizedBox(height: 7),
-
-          Text(
-            'Temukan inspirasi dari bahan yang ada di dapurmu.',
-            style: TextStyle(
-              fontSize: 13,
-              height: 1.4,
-              color: colors.onPrimary.withValues(alpha: 0.75),
-            ),
-          ),
-
-          const SizedBox(height: 20),
-
-          Material(
-            color: colors.surface,
-            borderRadius: BorderRadius.circular(17),
-            child: InkWell(
-              onTap: onSearchTap,
-              borderRadius: BorderRadius.circular(17),
-              child: SizedBox(
-                height: 54,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 15),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.search_rounded,
-                        size: 21,
-                        color: colors.primary,
-                      ),
-
-                      const SizedBox(width: 11),
-
-                      Expanded(
-                        child: Text(
-                          'Cari resep atau bahan...',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: colors.onSurfaceVariant,
-                          ),
-                        ),
-                      ),
-
-                      Icon(
-                        Icons.arrow_forward_rounded,
-                        size: 18,
-                        color: colors.onSurfaceVariant,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
