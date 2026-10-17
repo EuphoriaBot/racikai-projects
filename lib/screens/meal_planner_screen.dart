@@ -18,6 +18,7 @@ class MealPlannerScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: backgroundColor,
       appBar: AppBar(
+        titleSpacing: 0,
         title: const Text(
           'Rencana makan',
           style: TextStyle(fontWeight: FontWeight.w800),
@@ -72,7 +73,7 @@ class MealPlannerScreen extends StatelessWidget {
                           isWide: isWide,
                         ),
 
-                        const SizedBox(height: 28),
+                        const SizedBox(height: 20),
 
                         if (isWide)
                           _DesktopPlannerGrid(
@@ -149,113 +150,106 @@ class _PlannerOverview extends StatelessWidget {
 
     final progress = totalDays == 0 ? 0.0 : filledDays / totalDays;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Rencana Mingguan',
-          style: TextStyle(
-            fontSize: isWide ? 32 : 27,
-            height: 1.1,
-            fontWeight: FontWeight.w900,
-            letterSpacing: -0.6,
-            color: colors.onSurface,
-          ),
-        ),
-
-        const SizedBox(height: 8),
-
-        Text(
-          'Susun menu untuk seminggu agar pilihan makanan '
-          'lebih terencana.',
-          style: TextStyle(
-            fontSize: 14,
-            height: 1.45,
-            color: colors.onSurfaceVariant,
-          ),
-        ),
-
-        const SizedBox(height: 22),
-
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(18),
-          decoration: BoxDecoration(
-            color: colors.surface,
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Column(
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(isWide ? 22 : 18),
+      decoration: BoxDecoration(
+        color: colors.primary,
+        borderRadius: BorderRadius.circular(22),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  Container(
-                    width: 42,
-                    height: 42,
-                    decoration: BoxDecoration(
-                      color: colors.primaryContainer,
-                      borderRadius: BorderRadius.circular(13),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Menu minggu ini',
+                      style: TextStyle(
+                        fontSize: isWide ? 24 : 20,
+                        height: 1.2,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.4,
+                        color: colors.onPrimary,
+                      ),
                     ),
-                    child: Icon(
-                      Icons.calendar_today_outlined,
-                      size: 21,
-                      color: colors.primary,
-                    ),
-                  ),
 
-                  const SizedBox(width: 13),
+                    const SizedBox(height: 8),
 
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Minggu ini',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            color: colors.onSurface,
-                          ),
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          filledDays == 0
-                              ? 'Belum ada menu yang direncanakan'
-                              : '$filledDays dari $totalDays hari terisi',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: colors.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
+                    Text(
+                      'Susun menu untuk 7 hari agar '
+                      'lebih terencana.',
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        height: 1.45,
+                        color: colors.onPrimary.withValues(alpha: 0.85),
+                      ),
                     ),
-                  ),
-
-                  Text(
-                    '$filledDays/$totalDays',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w800,
-                      color: colors.primary,
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
 
-              const SizedBox(height: 15),
+              const SizedBox(width: 12),
 
-              ClipRRect(
-                borderRadius: BorderRadius.circular(100),
-                child: LinearProgressIndicator(
-                  value: progress,
-                  minHeight: 7,
-                  backgroundColor: colors.surfaceContainerHighest,
-                  color: colors.primary,
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: colors.onPrimary.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(13),
+                ),
+                child: Icon(
+                  Icons.calendar_today_outlined,
+                  size: 22,
+                  color: colors.onPrimary,
                 ),
               ),
             ],
           ),
-        ),
-      ],
+
+          const SizedBox(height: 22),
+
+          Row(
+            children: [
+              Text(
+                'Progres rencana',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: colors.onPrimary.withValues(alpha: 0.85),
+                ),
+              ),
+
+              const Spacer(),
+
+              Text(
+                '$filledDays dari $totalDays hari',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: colors.onPrimary,
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 10),
+
+          ClipRRect(
+            borderRadius: BorderRadius.circular(100),
+            child: LinearProgressIndicator(
+              value: progress,
+              minHeight: 8,
+              backgroundColor: colors.onPrimary.withValues(alpha: 0.25),
+              color: colors.onPrimary,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
