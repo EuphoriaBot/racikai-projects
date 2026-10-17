@@ -90,6 +90,7 @@ class _IngredientFinderScreenState extends State<IngredientFinderScreen> {
     return Scaffold(
       backgroundColor: backgroundColor,
       appBar: AppBar(
+        titleSpacing: 0,
         title: const Text(
           'Dari bahan',
           style: TextStyle(fontWeight: FontWeight.w800),
@@ -189,7 +190,7 @@ class _MobileLayout extends StatelessWidget {
       children: [
         const _Intro(),
 
-        const SizedBox(height: 22),
+        const SizedBox(height: 16),
 
         _IngredientSearchField(
           controller: searchController,
@@ -208,7 +209,7 @@ class _MobileLayout extends StatelessWidget {
           ),
         ],
 
-        const SizedBox(height: 28),
+        const SizedBox(height: 22),
 
         _IngredientChoices(
           ingredients: filteredIngredients,
@@ -329,33 +330,40 @@ class _Intro extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Apa yang ada di dapurmu?',
-          style: TextStyle(
-            fontSize: 27,
-            height: 1.1,
-            fontWeight: FontWeight.w900,
-            letterSpacing: -0.5,
-            color: colors.onSurface,
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: colors.primaryContainer.withValues(alpha: 0.75),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Apa yang ada di dapurmu?',
+            style: TextStyle(
+              fontSize: 23,
+              height: 1.15,
+              fontWeight: FontWeight.w900,
+              letterSpacing: -0.5,
+              color: colors.onPrimaryContainer,
+            ),
           ),
-        ),
 
-        const SizedBox(height: 8),
+          const SizedBox(height: 8),
 
-        Text(
-          'Pilih bahan yang tersedia. '
-          'RacikAI akan membantu mencarikan '
-          'resep yang paling cocok.',
-          style: TextStyle(
-            fontSize: 14,
-            height: 1.5,
-            color: colors.onSurfaceVariant,
+          Text(
+            'Pilih bahan yang tersedia, lalu temukan '
+            'resep yang paling cocok untukmu.',
+            style: TextStyle(
+              fontSize: 12.5,
+              height: 1.45,
+              color: colors.onPrimaryContainer.withValues(alpha: 0.85),
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -502,12 +510,39 @@ class _IngredientChoices extends StatelessWidget {
               final isSelected = selectedIngredients.contains(ingredient);
 
               return FilterChip(
-                label: Text(ingredient),
+                label: Text(
+                  ingredient,
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+                    color: isSelected
+                        ? colors.onPrimary
+                        : colors.onPrimaryContainer,
+                  ),
+                ),
+
                 selected: isSelected,
+
                 onSelected: (_) {
                   onToggle(ingredient);
                 },
+
                 showCheckmark: true,
+                checkmarkColor: colors.onPrimary,
+
+                backgroundColor: colors.primaryContainer.withValues(
+                  alpha: 0.55,
+                ),
+
+                selectedColor: colors.primary,
+
+                side: BorderSide(
+                  color: isSelected ? colors.primary : colors.outlineVariant,
+                ),
+
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               );
             }).toList(),
           ),
