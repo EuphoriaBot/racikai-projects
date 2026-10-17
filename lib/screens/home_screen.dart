@@ -399,7 +399,7 @@ class _QuickActions extends StatelessWidget {
           children: [
             Expanded(
               child: SizedBox(
-                height: isWide ? 112 : 146,
+                height: isWide ? 112 : 156,
                 child: _QuickActionCard(
                   icon: Icons.kitchen_outlined,
                   title: 'Dari bahan',
@@ -416,7 +416,7 @@ class _QuickActions extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: SizedBox(
-                height: isWide ? 112 : 146,
+                height: isWide ? 112 : 156,
                 child: _QuickActionCard(
                   icon: Icons.calendar_today_outlined,
                   title: 'Rencana makan',
@@ -475,7 +475,7 @@ class _QuickActionCard extends StatelessWidget {
 
   Widget _buildMobile() {
     return Padding(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -494,10 +494,10 @@ class _QuickActionCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 13),
+          const SizedBox(height: 10),
           Text(
             title,
-            maxLines: 1,
+            maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
               fontSize: 15,
@@ -541,7 +541,7 @@ class _QuickActionCard extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  maxLines: 1,
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontSize: 15,
@@ -623,7 +623,7 @@ class _CategoryList extends StatelessWidget {
           final category = categories[index];
 
           return Material(
-            color: colors.surface,
+            color: colors.primaryContainer.withValues(alpha: 0.65),
             borderRadius: BorderRadius.circular(14),
             child: InkWell(
               onTap: onCategoryTap,
