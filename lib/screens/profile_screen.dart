@@ -75,7 +75,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             return SingleChildScrollView(
               padding: EdgeInsets.fromLTRB(
                 isWide ? 24 : 16,
-                16,
+                10,
                 isWide ? 24 : 16,
                 24,
               ),
@@ -94,7 +94,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         email: email,
                         onEdit: _openEditProfile,
                       ),
-
                       const SizedBox(height: 24),
 
                       if (isWide)
@@ -244,22 +243,62 @@ class _ProfilePageHeader extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Profile',
-          style: TextStyle(
-            fontSize: 29,
-            height: 1.05,
-            fontWeight: FontWeight.w900,
-            letterSpacing: -0.7,
-            color: colors.onSurface,
-          ),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'RacikAI',
+                    style: TextStyle(
+                      fontSize: 20,
+                      height: 1,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: -0.5,
+                      color: colors.onSurface,
+                    ),
+                  ),
+
+                  const SizedBox(height: 4),
+
+                  Text(
+                    'Aplikasi Resep Makanan',
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      color: colors.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            Container(
+              width: 40,
+              height: 40,
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: colors.primary,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.asset(
+                  'assets/images/racikai_logo.png',
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+          ],
         ),
 
-        const SizedBox(height: 8),
+        const SizedBox(height: 12),
 
-        Text(
-          'Kelola akun dan preferensi RacikAI.',
-          style: TextStyle(fontSize: 14, color: colors.onSurfaceVariant),
+        Container(
+          width: double.infinity,
+          height: 1.5,
+          color: colors.outlineVariant,
         ),
       ],
     );
@@ -281,29 +320,27 @@ class _AccountCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(22),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+    return Material(
+      color: colors.primary,
+      borderRadius: BorderRadius.circular(20),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onEdit,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          child: Row(
             children: [
               Container(
-                width: 64,
-                height: 64,
+                width: 52,
+                height: 52,
                 decoration: BoxDecoration(
-                  color: colors.primaryContainer,
+                  color: Colors.white.withOpacity(0.18),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
                   Icons.person_rounded,
-                  size: 31,
-                  color: colors.primary,
+                  size: 28,
+                  color: colors.onPrimary,
                 ),
               ),
 
@@ -318,9 +355,10 @@ class _AccountCard extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        fontSize: 18,
+                        fontSize: 17,
                         fontWeight: FontWeight.w800,
-                        color: colors.onSurface,
+                        letterSpacing: -0.3,
+                        color: colors.onPrimary,
                       ),
                     ),
 
@@ -332,26 +370,23 @@ class _AccountCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         fontSize: 12.5,
-                        color: colors.onSurfaceVariant,
+                        color: colors.onPrimary.withOpacity(0.85),
                       ),
                     ),
                   ],
                 ),
               ),
+
+              const SizedBox(width: 8),
+
+              Icon(
+                Icons.chevron_right_rounded,
+                size: 24,
+                color: colors.onPrimary.withOpacity(0.9),
+              ),
             ],
           ),
-
-          const SizedBox(height: 14),
-
-          Align(
-            alignment: Alignment.centerRight,
-            child: TextButton.icon(
-              onPressed: onEdit,
-              icon: const Icon(Icons.edit_outlined, size: 17),
-              label: const Text('Edit profil'),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
