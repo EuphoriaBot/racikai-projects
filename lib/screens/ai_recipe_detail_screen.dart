@@ -218,7 +218,7 @@ class _MobileHero extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       width: double.infinity,
-      height: 305,
+      height: 265,
       child: _RecipeHero(recipe: recipe, borderRadius: 0, bottomRadius: 26),
     );
   }
@@ -311,9 +311,9 @@ class _RecipeSummary extends StatelessWidget {
         Text(
           recipe.title,
           style: TextStyle(
-            fontSize: large ? 37 : 28,
-            height: 1.12,
-            letterSpacing: large ? -0.9 : -0.55,
+            fontSize: large ? 37 : 23,
+            height: 1.18,
+            letterSpacing: large ? -0.9 : -0.45,
             fontWeight: FontWeight.w900,
             color: colors.onSurface,
           ),
@@ -335,8 +335,8 @@ class _RecipeSummary extends StatelessWidget {
         const SizedBox(height: 22),
 
         Wrap(
-          spacing: 18,
-          runSpacing: 10,
+          spacing: 8,
+          runSpacing: 8,
           children: [
             _RecipeMetadata(
               icon: Icons.restaurant_menu_outlined,
@@ -376,20 +376,29 @@ class _RecipeMetadata extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
 
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 17, color: colors.primary),
-        const SizedBox(width: 7),
-        Text(
-          text,
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: colors.onSurfaceVariant,
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+      decoration: BoxDecoration(
+        color: colors.primaryContainer.withValues(alpha: 0.65),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: colors.primary),
+
+          const SizedBox(width: 7),
+
+          Text(
+            text,
+            style: TextStyle(
+              fontSize: 12.5,
+              fontWeight: FontWeight.w700,
+              color: colors.onPrimaryContainer,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -540,15 +549,22 @@ class _HeroCircleButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
 
-    return Material(
-      color: colors.surface.withValues(alpha: 0.94),
-      shape: const CircleBorder(),
-      elevation: 1,
-      clipBehavior: Clip.antiAlias,
-      child: IconButton(
-        tooltip: tooltip,
-        onPressed: onPressed,
-        icon: Icon(icon, size: 21, color: iconColor ?? colors.onSurface),
+    return IconButton(
+      tooltip: tooltip,
+      onPressed: onPressed,
+      padding: EdgeInsets.zero,
+      constraints: const BoxConstraints.tightFor(width: 44, height: 44),
+      style: IconButton.styleFrom(
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      ),
+      icon: Container(
+        width: 36,
+        height: 36,
+        decoration: BoxDecoration(
+          color: colors.surface.withValues(alpha: 0.94),
+          shape: BoxShape.circle,
+        ),
+        child: Icon(icon, size: 19, color: iconColor ?? colors.onSurface),
       ),
     );
   }
