@@ -70,11 +70,20 @@ class _SavedContent extends StatelessWidget {
               child: Padding(
                 padding: EdgeInsets.fromLTRB(
                   horizontalPadding,
-                  18,
+                  10,
                   horizontalPadding,
                   0,
                 ),
-                child: _SavedHeader(count: recipes.length),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const _SavedBrandHeader(),
+
+                    const SizedBox(height: 12),
+
+                    _SavedHeader(count: recipes.length),
+                  ],
+                ),
               ),
             ),
 
@@ -135,6 +144,78 @@ class _SavedContent extends StatelessWidget {
   }
 }
 
+class _SavedBrandHeader extends StatelessWidget {
+  const _SavedBrandHeader();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'RacikAI',
+                    style: TextStyle(
+                      fontSize: 20,
+                      height: 1,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: -0.5,
+                      color: colors.onSurface,
+                    ),
+                  ),
+
+                  const SizedBox(height: 4),
+
+                  Text(
+                    'Aplikasi Resep Makanan',
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      color: colors.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            Container(
+              width: 40,
+              height: 40,
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: colors.primary,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.asset(
+                  'assets/images/racikai_logo.png',
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+          ],
+        ),
+
+        const SizedBox(height: 12),
+
+        Container(
+          width: double.infinity,
+          height: 1.5,
+          color: colors.outlineVariant,
+        ),
+      ],
+    );
+  }
+}
+
 class _SavedHeader extends StatelessWidget {
   final int count;
 
@@ -148,43 +229,24 @@ class _SavedHeader extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Resep Tersimpan',
-                style: TextStyle(
-                  fontSize: 28,
-                  height: 1.05,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: -0.6,
-                  color: colors.onSurface,
-                ),
-              ),
-
-              const SizedBox(height: 6),
-
-              Text(
-                'Koleksi resep favorit yang ingin '
-                'kamu masak lagi.',
-                style: TextStyle(
-                  fontSize: 14,
-                  height: 1.4,
-                  color: colors.onSurfaceVariant,
-                ),
-              ),
-            ],
+          child: Text(
+            'Favorit kamu',
+            style: TextStyle(
+              fontSize: 20,
+              height: 1.2,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.25,
+              color: colors.onSurface,
+            ),
           ),
         ),
 
-        const SizedBox(width: 14),
-
         Text(
-          '$count tersimpan',
+          '$count resep',
           style: TextStyle(
             fontSize: 12,
-            fontWeight: FontWeight.w700,
-            color: colors.primary,
+            fontWeight: FontWeight.w600,
+            color: colors.onSurfaceVariant,
           ),
         ),
       ],
