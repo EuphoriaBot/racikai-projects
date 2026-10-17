@@ -410,7 +410,7 @@ class _ProfileSection extends StatelessWidget {
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w700,
-            color: colors.onSurfaceVariant,
+            color: colors.primary,
           ),
         ),
 
@@ -445,7 +445,7 @@ class _SettingsGroup extends StatelessWidget {
 
             if (i != children.length - 1)
               Padding(
-                padding: const EdgeInsets.only(left: 52, right: 16),
+                padding: const EdgeInsets.only(left: 62, right: 16),
                 child: Divider(height: 1, color: colors.outlineVariant),
               ),
           ],
@@ -480,12 +480,17 @@ class _SettingsItem extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
           child: Row(
             children: [
-              SizedBox(
-                width: 22,
-                child: Icon(icon, size: 20, color: colors.primary),
+              Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: colors.primaryContainer.withValues(alpha: 0.65),
+                  borderRadius: BorderRadius.circular(11),
+                ),
+                child: Icon(icon, size: 18, color: colors.primary),
               ),
 
-              const SizedBox(width: 14),
+              const SizedBox(width: 12),
 
               Expanded(
                 child: Text(
