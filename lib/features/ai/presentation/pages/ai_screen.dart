@@ -258,7 +258,7 @@ class _AiWelcome extends StatelessWidget {
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w700,
-                color: colors.onSurfaceVariant,
+                color: colors.primary,
               ),
             ),
           ),
@@ -296,34 +296,49 @@ class _SuggestionTile extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
 
     return Material(
-      color: colors.surface,
+      color: colors.primaryContainer.withValues(alpha: 0.55),
       borderRadius: BorderRadius.circular(16),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 12),
           child: Row(
             children: [
-              Icon(Icons.auto_awesome_rounded, size: 17, color: colors.primary),
+              Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: colors.secondaryContainer,
+                  borderRadius: BorderRadius.circular(11),
+                ),
+                child: Icon(
+                  Icons.auto_awesome_rounded,
+                  size: 18,
+                  color: colors.secondary,
+                ),
+              ),
 
-              const SizedBox(width: 11),
+              const SizedBox(width: 12),
 
               Expanded(
                 child: Text(
                   text,
                   style: TextStyle(
                     fontSize: 13.5,
+                    height: 1.3,
                     fontWeight: FontWeight.w600,
-                    color: colors.onSurface,
+                    color: colors.onPrimaryContainer,
                   ),
                 ),
               ),
 
+              const SizedBox(width: 8),
+
               Icon(
                 Icons.arrow_forward_rounded,
                 size: 18,
-                color: colors.onSurfaceVariant,
+                color: colors.primary,
               ),
             ],
           ),
