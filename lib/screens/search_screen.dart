@@ -548,7 +548,9 @@ class _CategoryChips extends StatelessWidget {
           final selected = selectedCategory == category;
 
           return Material(
-            color: selected ? colors.primaryContainer : colors.surface,
+            color: selected
+                ? colors.primary
+                : colors.primaryContainer.withValues(alpha: 0.75),
             borderRadius: BorderRadius.circular(14),
             child: InkWell(
               onTap: () {
@@ -565,7 +567,9 @@ class _CategoryChips extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
-                    color: selected ? colors.primary : colors.onSurfaceVariant,
+                    color: selected
+                        ? colors.onPrimary
+                        : colors.onPrimaryContainer,
                   ),
                 ),
               ),
