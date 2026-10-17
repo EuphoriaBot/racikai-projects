@@ -905,9 +905,15 @@ class _RecipePickerSheetState extends State<_RecipePickerSheet> {
             ),
           ),
 
-          Padding(
-            padding: const EdgeInsets.fromLTRB(18, 18, 12, 14),
+          Container(
+            margin: const EdgeInsets.fromLTRB(18, 16, 18, 14),
+            padding: const EdgeInsets.fromLTRB(14, 14, 8, 14),
+            decoration: BoxDecoration(
+              color: colors.primaryContainer.withValues(alpha: 0.75),
+              borderRadius: BorderRadius.circular(18),
+            ),
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Expanded(
                   child: Column(
@@ -916,30 +922,42 @@ class _RecipePickerSheetState extends State<_RecipePickerSheet> {
                       Text(
                         'Pilih menu ${widget.day}',
                         style: TextStyle(
-                          fontSize: 21,
+                          fontSize: 18,
+                          height: 1.2,
                           fontWeight: FontWeight.w800,
-                          color: colors.onSurface,
+                          color: colors.onPrimaryContainer,
                         ),
                       ),
-                      const SizedBox(height: 4),
+
+                      const SizedBox(height: 6),
+
                       Text(
-                        'Cari resep yang ingin dimasukkan '
-                        'ke rencana makan.',
+                        'Cari resep untuk dimasukkan '
+                        'ke rencana makanmu.',
                         style: TextStyle(
-                          fontSize: 12.5,
-                          color: colors.onSurfaceVariant,
+                          fontSize: 12,
+                          height: 1.4,
+                          color: colors.onPrimaryContainer.withValues(
+                            alpha: 0.8,
+                          ),
                         ),
                       ),
                     ],
                   ),
                 ),
 
+                const SizedBox(width: 8),
+
                 IconButton(
                   tooltip: 'Tutup',
                   onPressed: () {
                     Navigator.of(context).pop();
                   },
-                  icon: const Icon(Icons.close_rounded),
+                  style: IconButton.styleFrom(
+                    backgroundColor: colors.surface,
+                    foregroundColor: colors.primary,
+                  ),
+                  icon: const Icon(Icons.close_rounded, size: 19),
                 ),
               ],
             ),
@@ -951,16 +969,30 @@ class _RecipePickerSheetState extends State<_RecipePickerSheet> {
               controller: _searchController,
               textInputAction: TextInputAction.search,
               onChanged: _onSearchChanged,
+
               decoration: InputDecoration(
                 hintText: 'Cari resep atau bahan...',
-                prefixIcon: const Icon(Icons.search_rounded),
+                prefixIcon: Icon(Icons.search_rounded, color: colors.primary),
+                filled: true,
+                fillColor: colors.surface,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 14,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: BorderSide(color: colors.outlineVariant),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: BorderSide(color: colors.primary, width: 1.5),
+                ),
                 suffixIcon: _query.isEmpty
                     ? null
                     : IconButton(
                         tooltip: 'Hapus pencarian',
                         onPressed: () {
                           _searchController.clear();
-
                           _onSearchChanged('');
                         },
                         icon: const Icon(Icons.close_rounded),
