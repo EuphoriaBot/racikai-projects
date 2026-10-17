@@ -603,6 +603,9 @@ class _IngredientsSection extends StatelessWidget {
             decoration: BoxDecoration(
               color: colors.surface,
               borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: colors.outlineVariant.withValues(alpha: 0.65),
+              ),
             ),
             child: Column(
               children: [
@@ -637,7 +640,7 @@ class _StepsSection extends StatelessWidget {
           trailing: steps.isEmpty ? null : '${steps.length} langkah',
         ),
 
-        const SizedBox(height: 18),
+        const SizedBox(height: 14),
 
         if (steps.isEmpty)
           const _EmptyContent(
@@ -695,7 +698,7 @@ class _ContentSectionHeader extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 11.5,
                   fontWeight: FontWeight.w600,
-                  color: colors.onSurfaceVariant,
+                  color: colors.primary,
                 ),
               ),
           ],
@@ -740,11 +743,15 @@ class _IngredientTileState extends State<_IngredientTile> {
     return Column(
       children: [
         Material(
-          color: Colors.transparent,
+          color: _isPrepared
+              ? colors.primaryContainer.withValues(alpha: 0.45)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+          clipBehavior: Clip.antiAlias,
           child: InkWell(
             onTap: _togglePrepared,
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 14),
+              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -817,55 +824,70 @@ class _CookingStep extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
 
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Column(
+    return Padding(
+      padding: EdgeInsets.only(bottom: isLast ? 0 : 10),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: colors.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: colors.outlineVariant.withValues(alpha: 0.7),
+          ),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
               width: 34,
               height: 34,
+              alignment: Alignment.center,
               decoration: BoxDecoration(
                 color: colors.primaryContainer,
-                shape: BoxShape.circle,
+                borderRadius: BorderRadius.circular(11),
               ),
-              alignment: Alignment.center,
               child: Text(
                 '$number',
                 style: TextStyle(
-                  fontSize: 13,
+                  fontSize: 14,
                   fontWeight: FontWeight.w800,
                   color: colors.primary,
                 ),
               ),
             ),
 
-            if (!isLast)
-              Container(
-                width: 1,
-                height: 34,
-                margin: const EdgeInsets.symmetric(vertical: 6),
-                color: colors.outlineVariant,
-              ),
-          ],
-        ),
+            const SizedBox(width: 12),
 
-        const SizedBox(width: 13),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Langkah $number',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: colors.primary,
+                    ),
+                  ),
 
-        Expanded(
-          child: Padding(
-            padding: EdgeInsets.only(top: 6, bottom: isLast ? 0 : 18),
-            child: Text(
-              text,
-              style: TextStyle(
-                fontSize: 14,
-                height: 1.6,
-                color: colors.onSurface,
+                  const SizedBox(height: 6),
+
+                  Text(
+                    text,
+                    style: TextStyle(
+                      fontSize: 13.5,
+                      height: 1.5,
+                      color: colors.onSurface,
+                    ),
+                  ),
+                ],
               ),
             ),
-          ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }
