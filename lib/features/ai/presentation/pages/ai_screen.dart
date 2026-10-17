@@ -729,7 +729,7 @@ class _AiRecipeCard extends StatelessWidget {
               children: [
                 _RecipeThumbnail(imageUrl: recipe.imageUrl),
 
-                const SizedBox(width: 14),
+                const SizedBox(width: 10),
 
                 Expanded(
                   child: Column(
@@ -808,13 +808,18 @@ class _AiRecipeCard extends StatelessWidget {
                       const SizedBox(height: 10),
 
                       Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text(
-                            'Lihat resep',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                              color: colors.primary,
+                          Flexible(
+                            child: Text(
+                              'Lihat resep',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: colors.primary,
+                              ),
                             ),
                           ),
 
@@ -829,13 +834,6 @@ class _AiRecipeCard extends StatelessWidget {
                       ),
                     ],
                   ),
-                ),
-
-                const SizedBox(width: 6),
-
-                Icon(
-                  Icons.chevron_right_rounded,
-                  color: colors.onSurfaceVariant,
                 ),
               ],
             ),
