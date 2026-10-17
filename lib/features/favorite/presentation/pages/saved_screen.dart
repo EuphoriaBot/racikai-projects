@@ -446,7 +446,7 @@ class _RemoveFavoriteButton extends StatelessWidget {
     return Material(
       color: overlay
           ? colors.surface.withValues(alpha: 0.94)
-          : Colors.transparent,
+          : colors.secondaryContainer.withValues(alpha: 0.75),
       shape: const CircleBorder(),
       elevation: overlay ? 1 : 0,
       clipBehavior: Clip.antiAlias,
