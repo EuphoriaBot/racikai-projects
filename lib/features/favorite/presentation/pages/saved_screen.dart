@@ -444,18 +444,36 @@ class _RemoveFavoriteButton extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
 
     return Material(
-      color: overlay
-          ? colors.surface.withValues(alpha: 0.94)
-          : colors.secondaryContainer.withValues(alpha: 0.75),
-      shape: const CircleBorder(),
-      elevation: overlay ? 1 : 0,
-      clipBehavior: Clip.antiAlias,
+      color: Colors.transparent,
       child: IconButton(
         tooltip: 'Hapus dari tersimpan',
         onPressed: () {
           context.read<FavoriteCubit>().toggleBackendFavorite(recipe);
         },
-        icon: Icon(Icons.favorite_rounded, size: 20, color: colors.secondary),
+
+        // Area sentuh tetap nyaman
+        constraints: const BoxConstraints.tightFor(width: 44, height: 44),
+        padding: EdgeInsets.zero,
+        style: IconButton.styleFrom(
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        ),
+
+        // Lingkaran visual lebih kecil
+        icon: Container(
+          width: 34,
+          height: 34,
+          decoration: BoxDecoration(
+            color: overlay
+                ? colors.surface.withValues(alpha: 0.94)
+                : colors.secondaryContainer.withValues(alpha: 0.75),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            Icons.favorite_rounded,
+            size: 18,
+            color: colors.secondary,
+          ),
+        ),
       ),
     );
   }
