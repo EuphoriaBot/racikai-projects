@@ -1,11 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/di/service_locator.dart';
-import '../../../recipe/domain/entities/recipe_entity.dart';
-import '../../../recipe/presentation/cubit/recipe_cubit.dart';
-import '../../../recipe/presentation/cubit/recipe_state.dart';
 import '../../data/models/chat_message.dart';
 import '../../data/datasources/ai_service.dart';
 import '../../../../core/router/recipe_detail_route_args.dart';
@@ -15,10 +10,7 @@ class AiScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => sl<RecipeCubit>()..loadRecipes(),
-      child: const _AiContent(),
-    );
+    return const _AiContent();
   }
 }
 
@@ -628,13 +620,6 @@ class _ChatMessageBubble extends StatelessWidget {
               padding: const EdgeInsets.only(left: 41),
               child: _AiRecipeSources(recipes: message.recipes),
             ),
-          ] else if (message.sourceRecipeIds.isNotEmpty) ...[
-            const SizedBox(height: 14),
-
-            Padding(
-              padding: const EdgeInsets.only(left: 41),
-              child: _RecipeSources(recipeIds: message.sourceRecipeIds),
-            ),
           ],
         ],
       ),
@@ -898,136 +883,6 @@ class _RecipeThumbnailPlaceholder extends StatelessWidget {
         ),
         child: Icon(Icons.restaurant_rounded, color: colors.primary, size: 24),
       ),
-    );
-  }
-}
-
-class _RecipeSources extends StatelessWidget {
-  final List<int> recipeIds;
-
-  const _RecipeSources({required this.recipeIds});
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-
-    return BlocBuilder<RecipeCubit, RecipeState>(
-      builder: (context, state) {
-        if (state is RecipeInitial ||
-            state is RecipeLoading ||
-            state is RecipeError ||
-            state is! RecipeLoaded) {
-          return const SizedBox.shrink();
-        }
-
-        final List<RecipeEntity> recipes = state.recipes.where((recipe) {
-          return recipeIds.contains(recipe.id);
-        }).toList();
-
-        if (recipes.isEmpty) {
-          return const SizedBox.shrink();
-        }
-
-        return ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 760),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(
-                    Icons.menu_book_outlined,
-                    size: 15,
-                    color: colors.onSurfaceVariant,
-                  ),
-
-                  const SizedBox(width: 5),
-
-                  Text(
-                    'Sumber resep',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: colors.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 8),
-
-              ...recipes.map((recipe) {
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(14),
-                      onTap: () {
-                        context.push('/recipe/${recipe.id}');
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: colors.primaryContainer,
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        child: Row(
-                          children: [
-                            Text(
-                              recipe.emoji,
-                              style: const TextStyle(fontSize: 28),
-                            ),
-
-                            const SizedBox(width: 10),
-
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    recipe.title,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w700,
-                                      color: colors.onPrimaryContainer,
-                                    ),
-                                  ),
-
-                                  const SizedBox(height: 3),
-
-                                  Text(
-                                    recipe.duration,
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      color: colors.onPrimaryContainer
-                                          .withValues(alpha: 0.75),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-
-                            Icon(
-                              Icons.arrow_forward_ios,
-                              size: 13,
-                              color: colors.onPrimaryContainer.withValues(
-                                alpha: 0.65,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              }),
-            ],
-          ),
-        );
-      },
     );
   }
 }

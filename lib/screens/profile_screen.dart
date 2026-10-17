@@ -334,7 +334,7 @@ class _AccountCard extends StatelessWidget {
                 width: 52,
                 height: 52,
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.18),
+                  color: Colors.white.withValues(alpha: 0.18),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -370,7 +370,7 @@ class _AccountCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         fontSize: 12.5,
-                        color: colors.onPrimary.withOpacity(0.85),
+                        color: colors.onPrimary.withValues(alpha: 0.85),
                       ),
                     ),
                   ],
@@ -382,7 +382,7 @@ class _AccountCard extends StatelessWidget {
               Icon(
                 Icons.chevron_right_rounded,
                 size: 24,
-                color: colors.onPrimary.withOpacity(0.9),
+                color: colors.onPrimary.withValues(alpha: 0.9),
               ),
             ],
           ),
