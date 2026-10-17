@@ -96,12 +96,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-
     final backgroundColor = Theme.of(context).scaffoldBackgroundColor;
 
     return Scaffold(
       backgroundColor: backgroundColor,
       appBar: AppBar(
+        titleSpacing: 0,
         title: const Text(
           'Edit profil',
           style: TextStyle(fontWeight: FontWeight.w800),
@@ -115,57 +115,43 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             return SingleChildScrollView(
               padding: EdgeInsets.fromLTRB(
                 isWide ? 24 : 16,
-                14,
+                12,
                 isWide ? 24 : 16,
                 40,
               ),
               child: Center(
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 680),
+                  constraints: const BoxConstraints(maxWidth: 560),
                   child: Form(
                     key: formKey,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Informasi profil',
+                          'Perbarui informasi akun dan '
+                          'preferensi makanan sesuai kebutuhanmu.',
                           style: TextStyle(
-                            fontSize: isWide ? 30 : 26,
-                            height: 1.1,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: -0.5,
-                            color: colors.onSurface,
-                          ),
-                        ),
-
-                        const SizedBox(height: 8),
-
-                        Text(
-                          'Perbarui informasi dasar '
-                          'dan preferensi makananmu.',
-                          style: TextStyle(
-                            fontSize: 14,
+                            fontSize: 13.5,
                             height: 1.5,
                             color: colors.onSurfaceVariant,
                           ),
                         ),
 
-                        const SizedBox(height: 26),
+                        const SizedBox(height: 24),
+
+                        const _FormLabel(text: 'Informasi akun'),
+
+                        const SizedBox(height: 10),
 
                         Container(
                           width: double.infinity,
-                          padding: EdgeInsets.all(isWide ? 24 : 18),
+                          padding: EdgeInsets.all(isWide ? 20 : 14),
                           decoration: BoxDecoration(
                             color: colors.surface,
-                            borderRadius: BorderRadius.circular(22),
+                            borderRadius: BorderRadius.circular(20),
                           ),
                           child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const _FormLabel(text: 'Informasi akun'),
-
-                              const SizedBox(height: 14),
-
                               TextFormField(
                                 controller: nameController,
                                 textInputAction: TextInputAction.next,
@@ -179,7 +165,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                 ),
                               ),
 
-                              const SizedBox(height: 18),
+                              const SizedBox(height: 16),
 
                               TextFormField(
                                 controller: emailController,
@@ -192,45 +178,50 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                   prefixIcon: Icon(Icons.email_outlined),
                                 ),
                               ),
-
-                              const SizedBox(height: 28),
-
-                              const _FormLabel(text: 'Preferensi makanan'),
-
-                              const SizedBox(height: 14),
-
-                              DropdownButtonFormField<String>(
-                                initialValue: selectedPreference,
-                                decoration: const InputDecoration(
-                                  labelText: 'Pilih preferensi',
-                                  prefixIcon: Icon(
-                                    Icons.restaurant_menu_outlined,
-                                  ),
-                                ),
-                                items: preferences.map((preference) {
-                                  return DropdownMenuItem(
-                                    value: preference,
-                                    child: Text(preference),
-                                  );
-                                }).toList(),
-                                onChanged: (value) {
-                                  setState(() {
-                                    selectedPreference = value;
-                                  });
-                                },
-                                validator: (value) {
-                                  if (value == null) {
-                                    return 'Pilih preferensi makanan';
-                                  }
-
-                                  return null;
-                                },
-                              ),
                             ],
                           ),
                         ),
 
-                        const SizedBox(height: 22),
+                        const SizedBox(height: 24),
+
+                        const _FormLabel(text: 'Preferensi makanan'),
+
+                        const SizedBox(height: 10),
+
+                        Container(
+                          width: double.infinity,
+                          padding: EdgeInsets.all(isWide ? 20 : 14),
+                          decoration: BoxDecoration(
+                            color: colors.surface,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: DropdownButtonFormField<String>(
+                            initialValue: selectedPreference,
+                            decoration: const InputDecoration(
+                              labelText: 'Pilih preferensi',
+                              prefixIcon: Icon(Icons.restaurant_menu_outlined),
+                            ),
+                            items: preferences.map((preference) {
+                              return DropdownMenuItem(
+                                value: preference,
+                                child: Text(preference),
+                              );
+                            }).toList(),
+                            onChanged: (value) {
+                              setState(() {
+                                selectedPreference = value;
+                              });
+                            },
+                            validator: (value) {
+                              if (value == null) {
+                                return 'Pilih preferensi makanan';
+                              }
+                              return null;
+                            },
+                          ),
+                        ),
+
+                        const SizedBox(height: 24),
 
                         SizedBox(
                           width: double.infinity,
@@ -239,7 +230,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                             icon: const Icon(Icons.check_rounded),
                             label: const Text('Simpan perubahan'),
                             style: FilledButton.styleFrom(
-                              minimumSize: const Size(double.infinity, 54),
+                              minimumSize: const Size(double.infinity, 52),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
                             ),
                           ),
                         ),
@@ -270,7 +264,7 @@ class _FormLabel extends StatelessWidget {
       style: TextStyle(
         fontSize: 13,
         fontWeight: FontWeight.w700,
-        color: colors.onSurfaceVariant,
+        color: colors.primary,
       ),
     );
   }
