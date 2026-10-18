@@ -1362,21 +1362,47 @@ class _PickerError extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
 
     return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.cloud_off_outlined, size: 46, color: colors.error),
+            Container(
+              width: 70,
+              height: 70,
+              decoration: BoxDecoration(
+                color: colors.secondaryContainer,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.cloud_off_outlined,
+                size: 32,
+                color: colors.secondary,
+              ),
+            ),
 
-            const SizedBox(height: 14),
+            const SizedBox(height: 18),
 
             Text(
               'Gagal memuat resep',
+              textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 17,
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w800,
                 color: colors.onSurface,
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+            Text(
+              'Ups, resep belum berhasil dimuat. '
+              'Periksa koneksi internetmu, lalu coba lagi.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 13,
+                height: 1.5,
+                color: colors.onSurfaceVariant,
               ),
             ),
 
@@ -1385,15 +1411,30 @@ class _PickerError extends StatelessWidget {
             Text(
               message,
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 13, color: colors.onSurfaceVariant),
+              style: TextStyle(
+                fontSize: 11.5,
+                height: 1.4,
+                color: colors.onSurfaceVariant,
+              ),
             ),
 
-            const SizedBox(height: 18),
+            const SizedBox(height: 20),
 
             FilledButton.icon(
               onPressed: onRetry,
-              icon: const Icon(Icons.refresh_rounded),
+              icon: const Icon(Icons.refresh_rounded, size: 18),
               label: const Text('Coba lagi'),
+              style: FilledButton.styleFrom(
+                backgroundColor: colors.primary,
+                foregroundColor: colors.onPrimary,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
             ),
           ],
         ),
