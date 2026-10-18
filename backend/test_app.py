@@ -48,25 +48,144 @@ class ApiTests(unittest.TestCase):
                 validate_assets(root)
 
     def test_generation_uses_retrieved_sources(self):
+        
         class Generator:
+            def is_recipe_query(self, question):
+                return True
+
+            def rewrite_query(self, question):
+                return question
+
+            def filter_relevant_recipes(self, question, recipes):
+                return recipes
+
             def generate(self, question, recipes):
                 assert question == 'ayam'
                 assert recipes[0]['id'] == '0'
                 return 'Masak ayam. Sumber resep: Ayam'
+
         with TestClient(create_app(FakeEngine, Generator)) as client:
             response = client.post('/chat', json={'message': 'ayam'}).json()
             self.assertEqual(response['generation'], 'gemini')
             self.assertIn('Sumber resep: Ayam', response['text'])
 
-    def test_generation_failure_keeps_sources(self):
+    
+    def test_off_topic_query_returns_no_recipes(self):
         class Generator:
+            def is_recipe_query(self, question):
+                return False
+
+            def rewrite_query(self, question):
+                raise AssertionError(
+                    "Rewrite tidak boleh dijalankan."
+                )
+
+        with TestClient(create_app(FakeEngine, Generator)) as client:
+            response = client.post(
+                '/chat',
+                json={'message': 'Bagaimana memperbaiki motor?'}
+            )
+
+            self.assertEqual(response.status_code, 200)
+
+            data = response.json()
+
+            self.assertEqual(data['recipes'], [])
+            self.assertIn(
+                'RacikAI berfokus',
+                data['text']
+            )
+
+    def test_irrelevant_recipes_are_filtered(self):
+        class Generator:
+            def is_recipe_query(self, question):
+                return True
+
+            def rewrite_query(self, question):
+                return question
+
+            def filter_relevant_recipes(self, question, recipes):
+                return []
+
+            def generate(self, question, recipes):
+                raise AssertionError(
+                    "Generate tidak boleh dijalankan jika resep kosong."
+                )
+
+        with TestClient(create_app(FakeEngine, Generator)) as client:
+            response = client.post(
+                '/chat',
+                json={'message': 'ayam'}
+            )
+
+            self.assertEqual(response.status_code, 200)
+
+            data = response.json()
+
+            self.assertEqual(data['recipes'], [])
+            self.assertEqual(
+                data['generation'],
+                'retrieval_only'
+            )
+
+    def test_generation_failure_keeps_sources(self):
+        
+        class Generator:
+            def is_recipe_query(self, question):
+                return True
+
+            def rewrite_query(self, question):
+                return question
+
+            def filter_relevant_recipes(self, question, recipes):
+                return recipes
+
             def generate(self, question, recipes):
                 raise RuntimeError('private provider detail')
+
         with TestClient(create_app(FakeEngine, Generator)) as client:
             response = client.post('/chat', json={'message': 'ayam'}).json()
             self.assertEqual(response['generation'], 'unavailable')
             self.assertEqual(len(response['recipes']), 1)
             self.assertNotIn('private', response['text'])
+
+    
+    def test_recipe_filter_failure_returns_no_sources(self):
+        class Generator:
+            def is_recipe_query(self, question):
+                return True
+
+            def rewrite_query(self, question):
+                return question
+
+            def filter_relevant_recipes(self, question, recipes):
+                raise RuntimeError("private provider detail")
+
+            def generate(self, question, recipes):
+                raise AssertionError(
+                    "Generate tidak boleh dipanggil."
+                )
+
+        with TestClient(create_app(FakeEngine, Generator)) as client:
+            response = client.post(
+                "/chat",
+                json={"message": "ayam"},
+            )
+
+            self.assertEqual(response.status_code, 200)
+
+            data = response.json()
+
+            self.assertEqual(data["recipes"], [])
+            self.assertEqual(
+                data["generation"],
+                "unavailable",
+            )
+
+            self.assertNotIn(
+                "private provider detail",
+                data["text"],
+            )
 
 
 if __name__ == '__main__':

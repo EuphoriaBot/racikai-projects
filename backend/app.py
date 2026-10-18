@@ -601,7 +601,7 @@ class RecipeEngine:
                 )
             )
 
-            scores, ids = (
+            _, ids = (
                 self.index.search(
                     np.asarray(
                         vector,
@@ -682,6 +682,28 @@ class RecipeEngine:
                     "image_url": None,
                 }
             )
+
+        # DEBUG: evaluasi skor kemiripan FAISS
+        metric = (
+            "IP"
+            if self.index.metric_type == self.faiss.METRIC_INNER_PRODUCT
+            else "L2"
+            if self.index.metric_type == self.faiss.METRIC_L2
+            else str(self.index.metric_type)
+        )
+
+        log.warning(
+            "FAISS DEBUG | metric=%s | hasil=%s",
+            metric,
+            [
+                {
+                    "judul": self.rows[int(idx)]["Title"],
+                    "skor": round(float(score), 4),
+                }
+                for score, idx in zip(scores[0], ids[0])
+                if idx >= 0
+            ],
+        )
 
         return recipes
 
@@ -1394,6 +1416,35 @@ def create_app(
                     "Silakan coba lagi."
                 ),
             ) from None
+
+        if recipes and api.state.generator is not None:
+            try:
+                recipes = (
+                    api.state.generator.filter_relevant_recipes(
+                        request.message,
+                        recipes,
+                    )
+                )
+
+                log.info(
+                    "Resep relevan setelah filtering: %s",
+                    [recipe["title"] for recipe in recipes],
+                )
+
+            except Exception:
+                log.exception(
+                    "Pemeriksaan kecocokan resep gagal."
+                )
+
+                return {
+                    "text": (
+                        "Maaf, RacikAI belum bisa memeriksa "
+                        "kecocokan resep saat ini. "
+                        "Silakan coba lagi."
+                    ),
+                    "recipes": [],
+                    "generation": "unavailable",
+                }
 
         text = (
             (
