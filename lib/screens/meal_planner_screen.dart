@@ -1083,34 +1083,74 @@ class _RecipePickerSheetState extends State<_RecipePickerSheet> {
     if (_recipes.isEmpty) {
       return Center(
         child: Padding(
-          padding: const EdgeInsets.all(30),
+          padding: const EdgeInsets.all(24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                Icons.search_off_rounded,
-                size: 46,
-                color: colors.onSurfaceVariant,
+              Container(
+                width: 70,
+                height: 70,
+                decoration: BoxDecoration(
+                  color: colors.primaryContainer,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.search_off_rounded,
+                  size: 32,
+                  color: colors.primary,
+                ),
               ),
 
-              const SizedBox(height: 13),
+              const SizedBox(height: 18),
 
               Text(
                 'Resep tidak ditemukan',
+                textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 17,
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w800,
                   color: colors.onSurface,
                 ),
               ),
 
-              const SizedBox(height: 6),
+              const SizedBox(height: 8),
 
               Text(
-                'Coba gunakan kata kunci lain.',
+                _query.trim().isEmpty
+                    ? 'Belum ada resep yang tersedia saat ini.'
+                    : 'Coba gunakan nama resep atau bahan '
+                          'yang berbeda',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 13, color: colors.onSurfaceVariant),
+                style: TextStyle(
+                  fontSize: 13,
+                  height: 1.5,
+                  color: colors.onSurfaceVariant,
+                ),
               ),
+
+              if (_query.trim().isNotEmpty) ...[
+                const SizedBox(height: 20),
+
+                FilledButton.icon(
+                  onPressed: () {
+                    _searchController.clear();
+                    _onSearchChanged('');
+                  },
+                  icon: const Icon(Icons.refresh_rounded, size: 18),
+                  label: const Text('Hapus pencarian'),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: colors.primary,
+                    foregroundColor: colors.onPrimary,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 18,
+                      vertical: 12,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ],
             ],
           ),
         ),
