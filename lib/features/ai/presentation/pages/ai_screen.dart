@@ -617,7 +617,9 @@ class _ChatMessageBubble extends StatelessWidget {
             const SizedBox(height: 14),
 
             Padding(
-              padding: const EdgeInsets.only(left: 41),
+              padding: EdgeInsets.only(
+                left: MediaQuery.sizeOf(context).width < 360 ? 0 : 41,
+              ),
               child: _AiRecipeSources(recipes: message.recipes),
             ),
           ],
