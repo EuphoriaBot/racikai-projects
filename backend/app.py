@@ -9,7 +9,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from threading import Lock
 from urllib.parse import quote
-from PIL import Image
+from PIL import Image, ImageStat
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -227,9 +227,51 @@ def build_image_index(
         ):
             continue
 
+        
         try:
             with Image.open(image_path) as img:
                 img.load()
+
+                if img.width < 32 or img.height < 32:
+                    log.warning(
+                        "Gambar terlalu kecil, dilewati: %s",
+                        image_path.name,
+                    )
+                    continue
+
+                preview = img.convert("RGBA")
+                preview.thumbnail((96, 96))
+
+                background = Image.new(
+                    "RGBA",
+                    preview.size,
+                    (255, 255, 255, 255),
+                )
+
+                preview = Image.alpha_composite(
+                    background,
+                    preview,
+                ).convert("L")
+
+                stats = ImageStat.Stat(preview)
+
+                brightness = stats.mean[0]
+                variation = stats.stddev[0]
+
+                is_blank = (
+                    brightness >= 235
+                    and variation < 10
+                )
+
+                if is_blank:
+                    log.warning(
+                        "Gambar kosong, dilewati: %s "
+                        "| brightness=%.2f | variation=%.2f",
+                        image_path.name,
+                        brightness,
+                        variation,
+                    )
+                    continue
 
         except (OSError, ValueError) as error:
             log.warning(
