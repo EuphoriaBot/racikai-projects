@@ -81,6 +81,18 @@ class _SearchScreenState extends State<SearchScreen> {
     });
   }
 
+  void _resetSearchFilters() {
+    _debounce?.cancel();
+    _searchController.clear();
+
+    setState(() {
+      _searchQuery = '';
+      _selectedCategory = 'Semua';
+    });
+
+    _loadRecipes(reset: true);
+  }
+
   void _selectCategory(String category) {
     if (_selectedCategory == category) {
       return;
@@ -276,7 +288,13 @@ class _SearchScreenState extends State<SearchScreen> {
                 else if (_recipes.isEmpty)
                   SliverFillRemaining(
                     hasScrollBody: false,
-                    child: _EmptySearchResult(searchQuery: _searchQuery),
+                    child: _EmptySearchResult(
+                      searchQuery: _searchQuery,
+                      hasActiveFilters:
+                          _searchQuery.trim().isNotEmpty ||
+                          _selectedCategory != 'Semua',
+                      onReset: _resetSearchFilters,
+                    ),
                   )
                 else ...[
                   SliverLayoutBuilder(
@@ -867,8 +885,14 @@ class _LoadMoreArea extends StatelessWidget {
 
 class _EmptySearchResult extends StatelessWidget {
   final String searchQuery;
+  final bool hasActiveFilters;
+  final VoidCallback onReset;
 
-  const _EmptySearchResult({required this.searchQuery});
+  const _EmptySearchResult({
+    required this.searchQuery,
+    required this.hasActiveFilters,
+    required this.onReset,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -876,38 +900,77 @@ class _EmptySearchResult extends StatelessWidget {
 
     return Center(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(36, 20, 36, 100),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.search_off_rounded,
-              size: 48,
-              color: colors.onSurfaceVariant,
+            // Ikon pencarian kosong
+            Container(
+              width: 64,
+              height: 64,
+              decoration: BoxDecoration(
+                color: colors.primaryContainer,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.search_off_rounded,
+                size: 30,
+                color: colors.primary,
+              ),
             ),
-            const SizedBox(height: 18),
+
+            const SizedBox(height: 14),
+
+            // Judul
             Text(
               'Tidak ada resep yang cocok',
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
                 color: colors.onSurface,
               ),
             ),
+
             const SizedBox(height: 8),
+
+            // Deskripsi
             Text(
-              searchQuery.trim().isEmpty
+              searchQuery.trim().isNotEmpty
+                  ? 'Coba gunakan nama resep atau bahan '
+                        'yang berbeda.'
+                  : hasActiveFilters
                   ? 'Coba pilih kategori lainnya.'
-                  : 'Coba gunakan nama resep atau '
-                        'bahan yang berbeda.',
+                  : 'Belum ada resep yang tersedia saat ini.',
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 14,
+                fontSize: 12.5,
                 height: 1.5,
                 color: colors.onSurfaceVariant,
               ),
             ),
+
+            // Tombol reset pencarian dan filter
+            if (hasActiveFilters) ...[
+              const SizedBox(height: 18),
+
+              OutlinedButton.icon(
+                onPressed: onReset,
+                icon: const Icon(Icons.refresh_rounded, size: 18),
+                label: const Text('Reset pencarian'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: colors.primary,
+                  side: BorderSide(color: colors.outlineVariant),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 18,
+                    vertical: 11,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),
