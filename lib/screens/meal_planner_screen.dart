@@ -1011,7 +1011,64 @@ class _RecipePickerSheetState extends State<_RecipePickerSheet> {
 
   Widget _buildContent(ColorScheme colors) {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  color: colors.primaryContainer,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.restaurant_menu_rounded,
+                  color: colors.primary,
+                  size: 28,
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              SizedBox(
+                width: 28,
+                height: 28,
+                child: CircularProgressIndicator(
+                  strokeWidth: 3,
+                  color: colors.primary,
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              Text(
+                'Sedang menyiapkan resep...',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: colors.onSurface,
+                ),
+              ),
+
+              const SizedBox(height: 6),
+
+              Text(
+                'Sebentar, RacikAI sedang mencari menu untukmu.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 12.5,
+                  height: 1.5,
+                  color: colors.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
     }
 
     if (_errorMessage != null && _recipes.isEmpty) {
@@ -1167,18 +1224,9 @@ class _PickerRecipeTile extends StatelessWidget {
                 ),
               ),
 
-              const SizedBox(width: 8),
+              const SizedBox(width: 10),
 
-              Container(
-                width: 36,
-                height: 36,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: colors.primaryContainer,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(Icons.add_rounded, size: 20, color: colors.primary),
-              ),
+              Icon(Icons.add_circle_rounded, color: colors.primary),
             ],
           ),
         ),
