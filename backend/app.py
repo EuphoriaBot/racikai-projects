@@ -9,6 +9,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from threading import Lock
 from urllib.parse import quote
+from PIL import Image
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -224,6 +225,18 @@ def build_image_index(
             image_path.suffix.lower()
             not in IMAGE_EXTENSIONS
         ):
+            continue
+
+        try:
+            with Image.open(image_path) as img:
+                img.load()
+
+        except (OSError, ValueError) as error:
+            log.warning(
+                "Gambar rusak, dilewati: %s | %s",
+                image_path.name,
+                error,
+            )
             continue
 
         key = (
@@ -472,11 +485,19 @@ def parse_ingredient_list(
         if str(item).strip()
     ]
 
+
 class RecipeEngine:
     def __init__(
         self,
         directory: Path,
+        image_index: dict[str, str] | None = None,
     ):
+        self.valid_image_keys = (
+            set(image_index)
+            if image_index is not None
+            else None
+        )
+
         model_directory = (
             validate_assets(
                 directory
@@ -554,6 +575,23 @@ class RecipeEngine:
                 "dengan jumlah vektor index."
             )
 
+        self.invalid_image_count = (
+            sum(
+                1
+                for row in self.rows
+                if _image_lookup_key(
+                    row.get("Image_Name")
+                ) not in self.valid_image_keys
+            )
+            if self.valid_image_keys is not None
+            else 0
+        )
+
+        log.info(
+            "Resep tanpa gambar valid: %s",
+            self.invalid_image_count,
+        )
+
         self.model = (
             SentenceTransformer(
                 str(
@@ -608,10 +646,8 @@ class RecipeEngine:
                         dtype="float32",
                     ),
                     min(
-                        top_k,
-                        len(
-                            self.rows
-                        ),
+                        top_k + self.invalid_image_count,
+                        len(self.rows),
                     ),
                 )
             )
@@ -627,7 +663,7 @@ class RecipeEngine:
         log.warning(
             "DEBUG RAG | metric=%s | scores=%s",
             metric,
-            [round(float(value), 4) for value in scores[0]],
+            [round(float(value), 4) for value in _[0]],
         )
 
         recipes = []
@@ -639,6 +675,14 @@ class RecipeEngine:
             row = self.rows[
                 int(index)
             ]
+
+            if self.valid_image_keys is not None:
+                image_key = _image_lookup_key(
+                    row.get("Image_Name")
+                )
+
+                if image_key not in self.valid_image_keys:
+                    continue
 
             ingredient_list = (
                 parse_ingredient_list(
@@ -683,27 +727,8 @@ class RecipeEngine:
                 }
             )
 
-        # DEBUG: evaluasi skor kemiripan FAISS
-        metric = (
-            "IP"
-            if self.index.metric_type == self.faiss.METRIC_INNER_PRODUCT
-            else "L2"
-            if self.index.metric_type == self.faiss.METRIC_L2
-            else str(self.index.metric_type)
-        )
-
-        log.warning(
-            "FAISS DEBUG | metric=%s | hasil=%s",
-            metric,
-            [
-                {
-                    "judul": self.rows[int(idx)]["Title"],
-                    "skor": round(float(score), 4),
-                }
-                for score, idx in zip(scores[0], ids[0])
-                if idx >= 0
-            ],
-        )
+            if len(recipes) >= top_k:
+                break
 
         return recipes
 
@@ -739,6 +764,14 @@ class RecipeEngine:
         matches = []
 
         for row in self.rows:
+            if self.valid_image_keys is not None:
+                image_key = _image_lookup_key(
+                    row.get("Image_Name")
+                )
+
+                if image_key not in self.valid_image_keys:
+                    continue
+
             title = (
                 row.get(
                     "Title",
@@ -1125,15 +1158,15 @@ def create_app(
             api.state.engine = (
                 engine_factory()
                 if engine_factory
+                
                 else RecipeEngine(
                     Path(
                         os.getenv(
                             "AI_MODEL_DIR",
-                            str(
-                                DEFAULT_AI_DIR
-                            ),
+                            str(DEFAULT_AI_DIR),
                         )
-                    )
+                    ),
+                    image_index=api.state.image_index,
                 )
             )
 
