@@ -67,3 +67,6 @@ backend/.venv/
 android/key.properties
 **/credentials*.json
 **/service-account*.json
+
+# Cache validasi gambar backend RacikAI
+.recipes-images-validation-cache.json

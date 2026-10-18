@@ -199,17 +199,15 @@ def _contains_catalog_keyword(
         is not None
     )
 
+
 def build_image_index(
     directory: Path,
 ) -> dict[str, str]:
     """
-    Build mapping:
-    Image_Name -> relative image file path.
+    Membuat indeks gambar resep yang valid.
 
-    Example:
-    soy-sauce-chicken
-        ->
-    soy-sauce-chicken.jpg
+    Hasil validasi disimpan dalam cache JSON agar
+    gambar yang belum berubah tidak diperiksa ulang.
     """
 
     image_index: dict[str, str] = {}
@@ -217,91 +215,192 @@ def build_image_index(
     if not directory.is_dir():
         return image_index
 
+    # 1. Konfigurasi cache
+    CACHE_VERSION = 1
+
+    cache_path = (
+        directory.parent
+        / ".recipes-images-validation-cache.json"
+    )
+
+    cached_entries = {}
+    cache_loaded = False
+
+    try:
+        data = json.loads(
+            cache_path.read_text(encoding="utf-8")
+        )
+
+        if (
+            isinstance(data, dict)
+            and data.get("version") == CACHE_VERSION
+            and isinstance(data.get("entries"), dict)
+        ):
+            cached_entries = data["entries"]
+            cache_loaded = True
+
+    except (OSError, ValueError):
+        pass
+
+    updated_entries = {}
+
+    checked_count = 0
+    cached_count = 0
+    invalid_count = 0
+
     for image_path in directory.rglob("*"):
         if not image_path.is_file():
             continue
 
-        if (
-            image_path.suffix.lower()
-            not in IMAGE_EXTENSIONS
-        ):
+        if image_path.suffix.lower() not in IMAGE_EXTENSIONS:
             continue
 
-        
-        try:
-            with Image.open(image_path) as img:
-                img.load()
-
-                if img.width < 32 or img.height < 32:
-                    log.warning(
-                        "Gambar terlalu kecil, dilewati: %s",
-                        image_path.name,
-                    )
-                    continue
-
-                preview = img.convert("RGBA")
-                preview.thumbnail((96, 96))
-
-                background = Image.new(
-                    "RGBA",
-                    preview.size,
-                    (255, 255, 255, 255),
-                )
-
-                preview = Image.alpha_composite(
-                    background,
-                    preview,
-                ).convert("L")
-
-                stats = ImageStat.Stat(preview)
-
-                brightness = stats.mean[0]
-                variation = stats.stddev[0]
-
-                is_blank = (
-                    brightness >= 235
-                    and variation < 10
-                )
-
-                if is_blank:
-                    log.warning(
-                        "Gambar kosong, dilewati: %s "
-                        "| brightness=%.2f | variation=%.2f",
-                        image_path.name,
-                        brightness,
-                        variation,
-                    )
-                    continue
-
-        except (OSError, ValueError) as error:
-            log.warning(
-                "Gambar rusak, dilewati: %s | %s",
-                image_path.name,
-                error,
-            )
-            continue
-
-        key = (
-            image_path.stem
-            .strip()
-            .lower()
-        )
+        key = image_path.stem.strip().lower()
 
         if not key:
             continue
 
         relative_path = (
-            image_path
-            .relative_to(directory)
-            .as_posix()
+            image_path.relative_to(directory).as_posix()
         )
+
+        try:
+            file_stat = image_path.stat()
+        except OSError:
+            continue
+
+        previous = cached_entries.get(relative_path)
+
+        use_cache = (
+            isinstance(previous, dict)
+            and previous.get("size") == file_stat.st_size
+            and previous.get("mtime_ns") == file_stat.st_mtime_ns
+            and type(previous.get("valid")) is bool
+        )
+
+        if use_cache:
+            is_valid = previous["valid"]
+            cached_count += 1
+
+        else:
+            checked_count += 1
+            is_valid = False
+
+            try:
+                with Image.open(image_path) as img:
+                    img.load()
+
+                    if img.width < 32 or img.height < 32:
+                        log.warning(
+                            "Gambar terlalu kecil: %s",
+                            image_path.name,
+                        )
+
+                    else:
+                        preview = img.convert("RGBA")
+                        preview.thumbnail((96, 96))
+
+                        background = Image.new(
+                            "RGBA",
+                            preview.size,
+                            (255, 255, 255, 255),
+                        )
+
+                        preview = Image.alpha_composite(
+                            background,
+                            preview,
+                        ).convert("L")
+
+                        stats = ImageStat.Stat(preview)
+
+                        brightness = stats.mean[0]
+                        variation = stats.stddev[0]
+
+                        is_blank = (
+                            brightness >= 235
+                            and variation < 10
+                        )
+
+                        if is_blank:
+                            log.warning(
+                                "Gambar kosong, dilewati: %s "
+                                "| brightness=%.2f "
+                                "| variation=%.2f",
+                                image_path.name,
+                                brightness,
+                                variation,
+                            )
+
+                        else:
+                            is_valid = True
+
+            except (OSError, ValueError) as error:
+                log.warning(
+                    "Gambar rusak, dilewati: %s | %s",
+                    image_path.name,
+                    error,
+                )
+
+        updated_entries[relative_path] = {
+            "size": file_stat.st_size,
+            "mtime_ns": file_stat.st_mtime_ns,
+            "valid": is_valid,
+        }
+
+        if not is_valid:
+            invalid_count += 1
+            continue
 
         image_index.setdefault(
             key,
             relative_path,
         )
 
+    if (
+        not cache_loaded
+        or updated_entries != cached_entries
+    ):
+        temp_path = cache_path.with_name(
+            cache_path.name + f".{os.getpid()}.tmp"
+        )
+
+        try:
+            temp_path.write_text(
+                json.dumps(
+                    {
+                        "version": CACHE_VERSION,
+                        "entries": updated_entries,
+                    },
+                    ensure_ascii=False,
+                ),
+                encoding="utf-8",
+            )
+
+            temp_path.replace(cache_path)
+
+        except OSError:
+            log.warning(
+                "Gagal menyimpan cache gambar.",
+                exc_info=True,
+            )
+
+            try:
+                temp_path.unlink(missing_ok=True)
+            except OSError:
+                pass
+
+    log.warning(
+        "IMAGE CACHE | diperiksa=%s | "
+        "dari_cache=%s | tidak_valid=%s | "
+        "gambar_valid=%s",
+        checked_count,
+        cached_count,
+        invalid_count,
+        len(image_index),
+    )
+
     return image_index
+
 
 
 def _image_lookup_key(
