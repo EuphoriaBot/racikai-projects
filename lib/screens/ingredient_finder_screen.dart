@@ -215,6 +215,7 @@ class _MobileLayout extends StatelessWidget {
           ingredients: filteredIngredients,
           selectedIngredients: selectedIngredients,
           onToggle: onToggleIngredient,
+          onClearSearch: onClearSearch,
         ),
 
         const SizedBox(height: 30),
@@ -315,6 +316,7 @@ class _DesktopLayout extends StatelessWidget {
               ingredients: filteredIngredients,
               selectedIngredients: selectedIngredients,
               onToggle: onToggleIngredient,
+              onClearSearch: onClearSearch,
             ),
           ),
         ),
@@ -459,11 +461,13 @@ class _IngredientChoices extends StatelessWidget {
   final List<String> ingredients;
   final Set<String> selectedIngredients;
   final ValueChanged<String> onToggle;
+  final VoidCallback onClearSearch;
 
   const _IngredientChoices({
     required this.ingredients,
     required this.selectedIngredients,
     required this.onToggle,
+    required this.onClearSearch,
   });
 
   @override
@@ -494,11 +498,68 @@ class _IngredientChoices extends StatelessWidget {
 
         if (ingredients.isEmpty)
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 34),
+            padding: const EdgeInsets.symmetric(vertical: 28),
             child: Center(
-              child: Text(
-                'Bahan tidak ditemukan.',
-                style: TextStyle(color: colors.onSurfaceVariant),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Ikon pencarian
+                  Container(
+                    width: 64,
+                    height: 64,
+                    decoration: BoxDecoration(
+                      color: colors.primaryContainer,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.search_off_rounded,
+                      size: 30,
+                      color: colors.primary,
+                    ),
+                  ),
+
+                  const SizedBox(height: 14),
+
+                  // Judul
+                  Text(
+                    'Bahan tidak ditemukan',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      color: colors.onSurface,
+                    ),
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  // Deskripsi
+                  Text(
+                    'Coba gunakan nama bahan yang berbeda.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      height: 1.5,
+                      color: colors.onSurfaceVariant,
+                    ),
+                  ),
+
+                  const SizedBox(height: 18),
+
+                  // Tombol menghapus pencarian
+                  OutlinedButton.icon(
+                    onPressed: onClearSearch,
+                    icon: const Icon(Icons.refresh_rounded, size: 18),
+                    label: const Text('Hapus pencarian'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: colors.primary,
+                      side: BorderSide(color: colors.outlineVariant),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           )
