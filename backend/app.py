@@ -601,7 +601,7 @@ class RecipeEngine:
                 )
             )
 
-            _, ids = (
+            scores, ids = (
                 self.index.search(
                     np.asarray(
                         vector,
@@ -615,6 +615,20 @@ class RecipeEngine:
                     ),
                 )
             )
+
+        metric = (
+            "IP"
+            if self.index.metric_type == self.faiss.METRIC_INNER_PRODUCT
+            else "L2"
+            if self.index.metric_type == self.faiss.METRIC_L2
+            else str(self.index.metric_type)
+        )
+
+        log.warning(
+            "DEBUG RAG | metric=%s | scores=%s",
+            metric,
+            [round(float(value), 4) for value in scores[0]],
+        )
 
         recipes = []
 
@@ -1293,6 +1307,40 @@ def create_app(
                     "di komputer server."
                 ),
             )
+
+        if api.state.generator is not None:
+            try:
+                is_recipe_query = (
+                    api.state.generator.is_recipe_query(
+                        request.message
+                    )
+                )
+
+            except Exception as error:
+                print(
+                    "[DEBUG INTENT] ERROR:",
+                    type(error).__name__,
+                    str(error),
+                    flush=True,
+                )
+                is_recipe_query = None
+
+            if is_recipe_query is False:
+                print(
+                    "[DEBUG INTENT] Pertanyaan ditolak.",
+                    flush=True,
+                )
+
+                return {
+                    "text": (
+                        "RacikAI berfokus pada resep makanan. "
+                        "Coba tanyakan bahan yang kamu punya, "
+                        "ide menu, atau cara memasak makanan."
+                    ),
+                    "recipes": [],
+                    "generation": "retrieval_only",
+                }
+
 
         search_query = (
             request.message
