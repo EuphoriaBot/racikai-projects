@@ -811,8 +811,7 @@ class RecipeEngine:
         self.model.max_seq_length = 384
 
         if (
-            self.model
-            .get_sentence_embedding_dimension()
+            self.model.get_embedding_dimension()
             != self.index.d
         ):
             raise ValueError(
