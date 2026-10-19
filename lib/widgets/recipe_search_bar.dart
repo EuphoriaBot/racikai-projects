@@ -4,6 +4,7 @@ class RecipeSearchBar extends StatelessWidget {
   final TextEditingController? controller;
   final String query;
   final bool readOnly;
+  final bool heroStyle;
   final VoidCallback? onTap;
   final ValueChanged<String>? onChanged;
   final VoidCallback? onClear;
@@ -13,6 +14,7 @@ class RecipeSearchBar extends StatelessWidget {
     this.controller,
     this.query = '',
     this.readOnly = false,
+    this.heroStyle = false,
     this.onTap,
     this.onChanged,
     this.onClear,
@@ -20,18 +22,29 @@ class RecipeSearchBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+
+    final backgroundColor = heroStyle && !isDark
+        ? const Color(0xFFFFFCF6)
+        : colors.surface;
+
+    final borderColor = isDark
+        ? colors.outlineVariant
+        : const Color(0xFFE2E6DC);
 
     return Container(
-      height: 48,
+      height: heroStyle ? 50 : 48,
       padding: const EdgeInsets.symmetric(horizontal: 14),
       decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(14),
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(heroStyle ? 16 : 14),
+        border: heroStyle ? Border.all(color: borderColor, width: 1) : null,
       ),
       child: Row(
         children: [
-          Icon(Icons.search_rounded, size: 20, color: colors.primary),
+          Icon(Icons.search_rounded, size: 21, color: colors.primary),
 
           const SizedBox(width: 10),
 
@@ -78,7 +91,7 @@ class RecipeSearchBar extends StatelessWidget {
             Icon(
               Icons.arrow_forward_rounded,
               size: 18,
-              color: colors.onSurfaceVariant,
+              color: heroStyle ? colors.primary : colors.onSurfaceVariant,
             ),
         ],
       ),

@@ -305,10 +305,10 @@ class _HomeHeroHeader extends StatelessWidget {
             : 188.0;
 
         final headlineSize = isCompact
-            ? 27.0
+            ? 29.0
             : isTablet
-            ? 38.0
-            : 31.0;
+            ? 40.0
+            : 33.0;
 
         final photoUrl = imageUrl?.trim();
         final hasImage = photoUrl != null && photoUrl.isNotEmpty;
@@ -514,7 +514,7 @@ class _HomeHeroHeader extends StatelessWidget {
                                 'Inspirasi masak dimulai '
                                 'dari isi dapurmu',
                                 style: TextStyle(
-                                  fontSize: isCompact ? 14 : 15,
+                                  fontSize: isCompact ? 15 : 16,
                                   height: 1.45,
                                   fontWeight: FontWeight.w400,
                                   color: Colors.white.withValues(alpha: 0.88),
@@ -534,12 +534,16 @@ class _HomeHeroHeader extends StatelessWidget {
                 right: 16,
                 bottom: 0,
                 child: Material(
-                  elevation: 3,
+                  elevation: 1,
                   color: Colors.transparent,
-                  shadowColor: Colors.black.withValues(alpha: 0.10),
-                  borderRadius: BorderRadius.circular(18),
+                  shadowColor: Colors.black.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(16),
                   clipBehavior: Clip.antiAlias,
-                  child: RecipeSearchBar(readOnly: true, onTap: onSearchTap),
+                  child: RecipeSearchBar(
+                    readOnly: true,
+                    heroStyle: true,
+                    onTap: onSearchTap,
+                  ),
                 ),
               ),
             ],
