@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../screens/food_preferences_screen.dart';
 import '../../screens/ingredient_finder_screen.dart';
 import '../../screens/ingredient_result_screen.dart';
 import '../../screens/main_screen.dart';
@@ -39,17 +38,6 @@ final GoRouter appRouter = GoRouter(
       path: '/meal-planner',
       builder: (context, state) {
         return const MealPlannerScreen();
-      },
-    ),
-
-    GoRoute(
-      path: '/preferences',
-      builder: (context, state) {
-        final preference = state.extra is String
-            ? state.extra as String
-            : 'Tidak ada';
-
-        return FoodPreferencesScreen(initialPreference: preference);
       },
     ),
 

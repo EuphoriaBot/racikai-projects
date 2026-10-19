@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../features/ai/presentation/pages/ai_screen.dart';
 import 'home_screen.dart';
-import 'profile_screen.dart';
 import '../features/favorite/presentation/pages/saved_screen.dart';
 import 'search_screen.dart';
 
@@ -33,7 +32,6 @@ class _MainScreenState extends State<MainScreen> {
     const SearchScreen(),
     const AiScreen(),
     const SavedScreen(),
-    const ProfileScreen(),
   ];
 
   @override
@@ -76,11 +74,6 @@ class _MainScreenState extends State<MainScreen> {
             icon: Icon(Icons.favorite_border_rounded),
             selectedIcon: Icon(Icons.favorite_rounded),
             label: 'Saved',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.person_outline_rounded),
-            selectedIcon: Icon(Icons.person_rounded),
-            label: 'Profile',
           ),
         ],
       ),
