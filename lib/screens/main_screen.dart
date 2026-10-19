@@ -50,29 +50,57 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   Widget _buildMobileLayout() {
+    final colors = Theme.of(context).colorScheme;
+
     return Scaffold(
       body: IndexedStack(index: selectedIndex, children: screens),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: selectedIndex,
-        onDestinationSelected: changePage,
-        destinations: const [
-          NavigationDestination(
+
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: selectedIndex,
+        onTap: changePage,
+
+        type: BottomNavigationBarType.fixed,
+
+        backgroundColor: colors.surface,
+        selectedItemColor: colors.primary,
+        unselectedItemColor: colors.onSurfaceVariant,
+
+        elevation: 0,
+
+        iconSize: 25,
+
+        selectedFontSize: 12,
+        unselectedFontSize: 11.5,
+
+        selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w700),
+
+        unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500),
+
+        showSelectedLabels: true,
+        showUnselectedLabels: true,
+
+        items: const [
+          BottomNavigationBarItem(
             icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home_rounded),
+            activeIcon: Icon(Icons.home_rounded),
             label: 'Home',
           ),
-          NavigationDestination(
+
+          BottomNavigationBarItem(
             icon: Icon(Icons.search_rounded),
+            activeIcon: Icon(Icons.search_rounded),
             label: 'Search',
           ),
-          NavigationDestination(
+
+          BottomNavigationBarItem(
             icon: Icon(Icons.auto_awesome_outlined),
-            selectedIcon: Icon(Icons.auto_awesome),
+            activeIcon: Icon(Icons.auto_awesome),
             label: 'AI',
           ),
-          NavigationDestination(
+
+          BottomNavigationBarItem(
             icon: Icon(Icons.favorite_border_rounded),
-            selectedIcon: Icon(Icons.favorite_rounded),
+            activeIcon: Icon(Icons.favorite_rounded),
             label: 'Saved',
           ),
         ],
