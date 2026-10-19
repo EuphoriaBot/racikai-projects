@@ -389,19 +389,7 @@ def build_image_index(
             except OSError:
                 pass
 
-    log.warning(
-        "IMAGE CACHE | diperiksa=%s | "
-        "dari_cache=%s | tidak_valid=%s | "
-        "gambar_valid=%s",
-        checked_count,
-        cached_count,
-        invalid_count,
-        len(image_index),
-    )
-
     return image_index
-
-
 
 def _image_lookup_key(
     image_name: str | None,
@@ -715,6 +703,83 @@ class RecipeEngine:
                 "Jumlah metadata tidak cocok "
                 "dengan jumlah vektor index."
             )
+
+        self.recipe_data_source = "csv"
+
+        requested_source = os.getenv(
+            "RECIPE_DATA_SOURCE",
+            "csv",
+        ).strip().lower()
+
+        if requested_source not in ("csv", "postgres"):
+            raise ValueError(
+                "RECIPE_DATA_SOURCE harus csv atau postgres."
+            )
+
+        if requested_source == "postgres":
+            try:
+                from postgres_recipe_source import (
+                    load_rows_from_postgres,
+                )
+
+                postgres_rows = load_rows_from_postgres()
+
+                if len(postgres_rows) != len(self.rows):
+                    raise ValueError(
+                        "Jumlah resep PostgreSQL "
+                        "tidak cocok dengan metadata CSV."
+                    )
+
+                for position, (csv_row, db_row) in enumerate(
+                    zip(self.rows, postgres_rows)
+                ):
+                    for field in (
+                        "recipe_id",
+                        "Title",
+                        "ingredient_text",
+                        "Instructions",
+                        "Image_Name",
+                    ):
+                        if (
+                            (csv_row.get(field) or "")
+                            != (db_row.get(field) or "")
+                        ):
+                            raise ValueError(
+                                "Metadata PostgreSQL tidak cocok "
+                                f"pada posisi {position}, "
+                                f"kolom {field}."
+                            )
+
+                    if (
+                        parse_ingredient_list(
+                            csv_row.get("ingredient_list", "")
+                        )
+                        != parse_ingredient_list(
+                            db_row.get("ingredient_list", "")
+                        )
+                    ):
+                        raise ValueError(
+                            "Daftar bahan tidak cocok "
+                            f"pada posisi {position}."
+                        )
+
+                self.rows = postgres_rows
+                self.recipe_data_source = "postgres"
+
+                log.warning(
+                    "Sumber resep aktif: PostgreSQL | %s resep",
+                    len(self.rows),
+                )
+
+            except Exception:
+                log.exception(
+                    "PostgreSQL gagal atau tidak cocok. "
+                    "Menggunakan CSV cadangan."
+                )
+
+        else:
+            log.info("Sumber resep aktif: CSV")
+
 
         self.invalid_image_count = (
             sum(
@@ -1378,6 +1443,11 @@ def create_app(
                 "ready"
                 if ready
                 else "not_ready"
+            ),
+            "recipe_source": getattr(
+                api.state.engine,
+                "recipe_data_source",
+                "unknown",
             ),
             "detail": (
                 api.state.load_error

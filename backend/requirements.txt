@@ -2,3 +2,5 @@
 sentence-transformers>=5,<7
 faiss-cpu>=1.9,<2
 numpy>=2,<3
+psycopg[binary]>=3.2,<4
+Pillow>=10,<14
