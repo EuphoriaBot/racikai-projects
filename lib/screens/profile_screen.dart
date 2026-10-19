@@ -9,34 +9,28 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  String name = 'Guest User';
-  String email = 'guest@racikai.app';
   String preference = 'Tidak ada';
 
-  Future<void> _openEditProfile() async {
-    final result = await context.push<Map<String, String>>(
-      '/profile/edit',
-      extra: {'name': name, 'email': email, 'preference': preference},
+  Future<void> _openFoodPreferences() async {
+    final result = await context.push<String>(
+      '/preferences',
+      extra: preference,
     );
 
-    if (result == null) {
+    if (!mounted || result == null) {
       return;
     }
 
     setState(() {
-      name = result['name'] ?? name;
-      email = result['email'] ?? email;
-      preference = result['preference'] ?? preference;
+      preference = result;
     });
-
-    if (!mounted) {
-      return;
-    }
 
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
-        const SnackBar(content: Text('Profil berhasil diperbarui.')),
+        const SnackBar(
+          content: Text('Preferensi makanan berhasil diperbarui.'),
+        ),
       );
   }
 
@@ -89,11 +83,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                       const SizedBox(height: 18),
 
-                      _AccountCard(
-                        name: name,
-                        email: email,
-                        onEdit: _openEditProfile,
-                      ),
+                      const _CookingProfileCard(),
+
                       const SizedBox(height: 24),
 
                       if (isWide)
@@ -106,10 +97,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 child: _SettingsGroup(
                                   children: [
                                     _SettingsItem(
-                                      icon: Icons.restaurant_menu_outlined,
+                                      icon: Icons.tune_rounded,
                                       title: 'Preferensi makanan',
                                       trailingText: preference,
-                                      onTap: _openEditProfile,
+                                      onTap: _openFoodPreferences,
                                     ),
                                     _SettingsItem(
                                       icon: Icons.language_rounded,
@@ -164,7 +155,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 icon: Icons.restaurant_menu_outlined,
                                 title: 'Preferensi makanan',
                                 trailingText: preference,
-                                onTap: _openEditProfile,
+                                onTap: _openFoodPreferences,
                               ),
                               _SettingsItem(
                                 icon: Icons.language_rounded,
@@ -305,88 +296,65 @@ class _ProfilePageHeader extends StatelessWidget {
   }
 }
 
-class _AccountCard extends StatelessWidget {
-  final String name;
-  final String email;
-  final VoidCallback onEdit;
-
-  const _AccountCard({
-    required this.name,
-    required this.email,
-    required this.onEdit,
-  });
+class _CookingProfileCard extends StatelessWidget {
+  const _CookingProfileCard();
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
 
-    return Material(
-      color: colors.primary,
-      borderRadius: BorderRadius.circular(20),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onEdit,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-          child: Row(
-            children: [
-              Container(
-                width: 52,
-                height: 52,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.18),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.person_rounded,
-                  size: 28,
-                  color: colors.onPrimary,
-                ),
-              ),
-
-              const SizedBox(width: 14),
-
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: -0.3,
-                        color: colors.onPrimary,
-                      ),
-                    ),
-
-                    const SizedBox(height: 4),
-
-                    Text(
-                      email,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 12.5,
-                        color: colors.onPrimary.withValues(alpha: 0.85),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(width: 8),
-
-              Icon(
-                Icons.chevron_right_rounded,
-                size: 24,
-                color: colors.onPrimary.withValues(alpha: 0.9),
-              ),
-            ],
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+      decoration: BoxDecoration(
+        color: colors.primary,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 52,
+            height: 52,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.18),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.soup_kitchen_rounded,
+              size: 27,
+              color: colors.onPrimary,
+            ),
           ),
-        ),
+
+          const SizedBox(width: 14),
+
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Profil Memasak',
+                  style: TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.3,
+                    color: colors.onPrimary,
+                  ),
+                ),
+
+                const SizedBox(height: 4),
+
+                Text(
+                  'Sesuaikan resep dengan seleramu',
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    color: colors.onPrimary.withValues(alpha: 0.85),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

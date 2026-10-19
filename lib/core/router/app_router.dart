@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../screens/edit_profile_screen.dart';
+import '../../screens/food_preferences_screen.dart';
 import '../../screens/ingredient_finder_screen.dart';
 import '../../screens/ingredient_result_screen.dart';
 import '../../screens/main_screen.dart';
@@ -43,15 +43,13 @@ final GoRouter appRouter = GoRouter(
     ),
 
     GoRoute(
-      path: '/profile/edit',
+      path: '/preferences',
       builder: (context, state) {
-        final data = state.extra as Map<String, String>? ?? <String, String>{};
+        final preference = state.extra is String
+            ? state.extra as String
+            : 'Tidak ada';
 
-        return EditProfileScreen(
-          initialName: data['name'] ?? 'Guest User',
-          initialEmail: data['email'] ?? 'guest@racikai.app',
-          initialPreference: data['preference'] ?? 'Tidak ada',
-        );
+        return FoodPreferencesScreen(initialPreference: preference);
       },
     ),
 
