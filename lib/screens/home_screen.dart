@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import 'dart:math';
+
 import '../core/router/recipe_detail_route_args.dart';
 import '../features/favorite/data/models/saved_recipe.dart';
 import '../features/favorite/presentation/cubit/favorite_cubit.dart';
@@ -9,6 +11,7 @@ import '../features/favorite/presentation/cubit/favorite_state.dart';
 import '../features/recipe/data/models/catalog_recipe.dart';
 import '../services/recipe_catalog_service.dart';
 import '../widgets/recipe_search_bar.dart';
+import '../widgets/recipe_hero_header.dart';
 
 class HomeScreen extends StatefulWidget {
   final VoidCallback onSearchTap;
@@ -31,6 +34,8 @@ class _HomeScreenState extends State<HomeScreen> {
   ];
 
   List<CatalogRecipe> _featuredRecipes = [];
+
+  String? _homeHeroImageUrl;
 
   bool _isLoading = true;
 
@@ -63,34 +68,81 @@ class _HomeScreenState extends State<HomeScreen> {
         limit: 12,
       );
 
-      if (!mounted) {
-        return;
-      }
+      if (!mounted) return;
 
-      final recipesWithImage = result.recipes
-          .where(
-            (recipe) =>
-                recipe.imageUrl != null && recipe.imageUrl!.trim().isNotEmpty,
-          )
-          .toList();
+      final recipesWithImage = result.recipes.where((recipe) {
+        final image = recipe.imageUrl;
+        return image != null && image.trim().isNotEmpty;
+      }).toList();
 
-      final recipesWithoutImage = result.recipes
-          .where(
-            (recipe) =>
-                recipe.imageUrl == null || recipe.imageUrl!.trim().isEmpty,
-          )
-          .toList();
+      final recipesWithoutImage = result.recipes.where((recipe) {
+        final image = recipe.imageUrl;
+        return image == null || image.trim().isEmpty;
+      }).toList();
 
       final orderedRecipes = [...recipesWithImage, ...recipesWithoutImage];
 
+      var heroCandidates = recipesWithImage.where((recipe) {
+        return !recipe.title.toLowerCase().contains('pasta');
+      }).toList();
+
+      if (heroCandidates.isEmpty) {
+        heroCandidates = recipesWithImage;
+      }
+
+      try {
+        const heroPageSize = 24;
+
+        final totalPages = (result.total + heroPageSize - 1) ~/ heroPageSize;
+
+        final randomPage = totalPages > 0
+            ? 1 + Random().nextInt(totalPages)
+            : 1;
+
+        final randomResult = await _catalogService.getRecipes(
+          category: 'Semua',
+          page: randomPage,
+          limit: heroPageSize,
+        );
+
+        final randomCandidates = randomResult.recipes.where((recipe) {
+          final image = recipe.imageUrl;
+
+          return image != null &&
+              image.trim().isNotEmpty &&
+              !recipe.title.toLowerCase().contains('pasta');
+        }).toList();
+
+        if (randomCandidates.isNotEmpty) {
+          heroCandidates = randomCandidates;
+        }
+      } catch (_) {}
+
+      if (!mounted) return;
+
+      final differentCandidates = heroCandidates.where((recipe) {
+        return recipe.imageUrl != _homeHeroImageUrl;
+      }).toList();
+
+      final imageChoices = differentCandidates.isNotEmpty
+          ? differentCandidates
+          : heroCandidates;
+
+      imageChoices.shuffle();
+
+      final selectedImageUrl = imageChoices.isNotEmpty
+          ? imageChoices.first.imageUrl
+          : _homeHeroImageUrl;
+
       setState(() {
         _featuredRecipes = orderedRecipes.take(6).toList();
+
+        _homeHeroImageUrl = selectedImageUrl;
+
         _errorMessage = null;
       });
     } on RecipeCatalogException catch (error) {
-      if (!mounted) {
-        return;
-      }
+      if (!mounted) return;
 
       setState(() {
         _errorMessage = error.message;
@@ -135,9 +187,7 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               _HomeHeroHeader(
                 onSearchTap: widget.onSearchTap,
-                imageUrl: _featuredRecipes.isNotEmpty
-                    ? _featuredRecipes.first.imageUrl
-                    : null,
+                imageUrl: _homeHeroImageUrl,
               ),
 
               Padding(
@@ -285,271 +335,16 @@ class _HomeHeroHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final width = constraints.maxWidth;
-
-        final isCompact = width < 360;
-        final isTablet = width >= 600;
-
-        final bannerHeight = isCompact
-            ? 244.0
-            : isTablet
-            ? 294.0
-            : 264.0;
-
-        final photoSize = isCompact
-            ? 158.0
-            : isTablet
-            ? 235.0
-            : 188.0;
-
-        final headlineSize = isCompact
-            ? 29.0
-            : isTablet
-            ? 40.0
-            : 33.0;
-
-        final photoUrl = imageUrl?.trim();
-        final hasImage = photoUrl != null && photoUrl.isNotEmpty;
-
-        return SizedBox(
-          height: bannerHeight + 28,
-          child: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Positioned(
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 28,
-                child: Container(
-                  clipBehavior: Clip.antiAlias,
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [Color(0xFF294334), Color(0xFF536F51)],
-                    ),
-                    borderRadius: BorderRadius.only(
-                      bottomLeft: Radius.circular(28),
-                      bottomRight: Radius.circular(28),
-                    ),
-                  ),
-                  child: Stack(
-                    children: [
-                      if (hasImage)
-                        Positioned.fill(
-                          child: IgnorePointer(
-                            child: Opacity(
-                              opacity: 0.17,
-                              child: Image.network(
-                                photoUrl,
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) {
-                                  return const SizedBox.shrink();
-                                },
-                              ),
-                            ),
-                          ),
-                        ),
-
-                      Positioned(
-                        top: -30,
-                        left: -40,
-                        child: Transform.rotate(
-                          angle: -0.35,
-                          child: Icon(
-                            Icons.spa_rounded,
-                            size: 145,
-                            color: Colors.white.withValues(alpha: 0.075),
-                          ),
-                        ),
-                      ),
-
-                      Positioned(
-                        bottom: -24,
-                        left: 90,
-                        child: Transform.rotate(
-                          angle: 0.45,
-                          child: Icon(
-                            Icons.eco_rounded,
-                            size: 115,
-                            color: const Color(0xFFDCE8C9)
-                                .withValues(alpha: 0.12),
-                          ),
-                        ),
-                      ),
-
-                      Positioned(
-                        top: 12,
-                        right: -28,
-                        child: Transform.rotate(
-                          angle: -0.5,
-                          child: Icon(
-                            Icons.spa_outlined,
-                            size: 105,
-                            color: const Color(0xFFE4D5AA)
-                                .withValues(alpha: 0.13),
-                          ),
-                        ),
-                      ),
-
-                      Positioned(
-                        top: isCompact ? 44 : 38,
-                        right: isCompact ? -38 : -30,
-                        width: photoSize,
-                        height: photoSize,
-                        child: Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.33),
-                              width: 1.5,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.20),
-                                blurRadius: 25,
-                                offset: const Offset(-5, 8),
-                              ),
-                            ],
-                          ),
-                          child: ClipOval(
-                            child: hasImage
-                                ? Image.network(
-                                    photoUrl,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (context, error, stackTrace) {
-                                      return const ColoredBox(
-                                        color: Color(0xFF829778),
-                                        child: Center(
-                                          child: Icon(
-                                            Icons.soup_kitchen_rounded,
-                                            size: 52,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                  )
-                                : const ColoredBox(
-                                    color: Color(0xFF829778),
-                                    child: Center(
-                                      child: Icon(
-                                        Icons.soup_kitchen_rounded,
-                                        size: 52,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  ),
-                          ),
-                        ),
-                      ),
-
-                      Positioned.fill(
-                        child: IgnorePointer(
-                          child: DecoratedBox(
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.centerLeft,
-                                end: Alignment.centerRight,
-                                stops: const [0, 0.43, 1],
-                                colors: [
-                                  const Color(0xFF243B2D)
-                                      .withValues(alpha: 0.76),
-                                  const Color(0xFF294334)
-                                      .withValues(alpha: 0.48),
-                                  Colors.transparent,
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-
-                      Positioned(
-                        left: 20,
-                        right: isCompact
-                            ? 120
-                            : isTablet
-                            ? photoSize * 0.65
-                            : 125,
-                        top: 18,
-                        bottom: 32,
-                        child: Align(
-                          alignment: Alignment.centerLeft,
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Bahan biasa',
-                                style: TextStyle(
-                                  fontSize: headlineSize,
-                                  height: 1.12,
-                                  fontWeight: FontWeight.w900,
-                                  letterSpacing: -0.7,
-                                  color: Colors.white,
-                                ),
-                              ),
-
-                              const SizedBox(height: 2),
-
-                              Text(
-                                'Rasa istimewa',
-                                style: TextStyle(
-                                  fontSize: headlineSize,
-                                  height: 1.12,
-                                  fontWeight: FontWeight.w900,
-                                  letterSpacing: -0.7,
-                                  color: const Color(0xFFF0DEAF),
-                                ),
-                              ),
-
-                              const SizedBox(height: 14),
-
-                              Text(
-                                'Inspirasi masak dimulai '
-                                'dari isi dapurmu',
-                                style: TextStyle(
-                                  fontSize: isCompact ? 15 : 16,
-                                  height: 1.45,
-                                  fontWeight: FontWeight.w400,
-                                  color: Colors.white.withValues(alpha: 0.88),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              Positioned(
-                left: 16,
-                right: 16,
-                bottom: 0,
-                child: Material(
-                  elevation: 1,
-                  color: Colors.transparent,
-                  shadowColor: Colors.black.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(16),
-                  clipBehavior: Clip.antiAlias,
-                  child: RecipeSearchBar(
-                    readOnly: true,
-                    heroStyle: true,
-                    onTap: onSearchTap,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
+    return RecipeHeroHeader(
+      firstLine: 'Bahan biasa',
+      secondLine: 'Rasa istimewa',
+      subtitle: 'Inspirasi masak dimulai\ndari isi dapurmu',
+      imageUrl: imageUrl,
+      searchBar: RecipeSearchBar(
+        readOnly: true,
+        heroStyle: true,
+        onTap: onSearchTap,
+      ),
     );
   }
 }
