@@ -6,11 +6,68 @@ $ErrorActionPreference = "Stop"
 
 Set-Location $PSScriptRoot
 
-$ModelDir = "D:\RacikAI\file ai\recovered-kaggle"
-$GeminiModel = "gemini-3.5-flash-lite"
+
+# Membaca konfigurasi dari backend/.env
+$envFile = Join-Path $PSScriptRoot ".env"
+
+if (-not (Test-Path -LiteralPath $envFile)) {
+    throw "File backend/.env tidak ditemukan."
+}
+
+$allowedKeys = @(
+    "GEMINI_API_KEY",
+    "GEMINI_MODEL",
+    "RECIPE_DATA_SOURCE",
+    "AI_MODEL_DIR",
+    "RECIPE_IMAGE_DIR"
+)
+
+foreach ($line in Get-Content -LiteralPath $envFile) {
+    $line = $line.Trim()
+
+    if (-not $line -or $line.StartsWith("#")) {
+        continue
+    }
+
+    $parts = $line.Split('=', 2)
+
+    if ($parts.Count -ne 2) {
+        continue
+    }
+
+    $key = $parts[0].Trim()
+    $value = $parts[1].Trim()
+
+    if ($allowedKeys -notcontains $key) {
+        continue
+    }
+
+    # Menghapus tanda petik pembungkus jika ada
+    if (
+        $value.Length -ge 2 -and
+        (
+            ($value.StartsWith('"') -and $value.EndsWith('"')) -or
+            ($value.StartsWith("'") -and $value.EndsWith("'"))
+        )
+    ) {
+        $value = $value.Substring(1, $value.Length - 2)
+    }
+
+    Set-Item -Path "Env:$key" -Value $value
+}
+
+$ModelDir = $env:AI_MODEL_DIR
+$GeminiModel = $env:GEMINI_MODEL
+
+if ([string]::IsNullOrWhiteSpace($ModelDir)) {
+    throw "AI_MODEL_DIR belum diisi dalam .env."
+}
+
+if ([string]::IsNullOrWhiteSpace($GeminiModel)) {
+    throw "GEMINI_MODEL belum diisi dalam .env."
+}
 
 $env:CORS_ORIGINS = "http://localhost:5000,http://127.0.0.1:5000"
-$env:GEMINI_MODEL = $GeminiModel
 
 try {
     Write-Host ""
@@ -18,41 +75,14 @@ try {
     Write-Host "        RacikAI Backend Development"
     Write-Host "========================================"
     Write-Host ""
-    Write-Host "1. Buka Google AI Studio."
-    Write-Host "2. Klik COPY pada Gemini API key."
-    Write-Host "3. Kembali ke terminal ini."
-    Write-Host "4. Tekan ENTER saja."
-    Write-Host ""
-    Write-Host "JANGAN paste API key ke terminal."
-    Write-Host ""
-
-    Read-Host "Jika API key sudah dicopy, tekan ENTER"
-
-    $clipboardValue = Get-Clipboard
-
-    if ([string]::IsNullOrWhiteSpace($clipboardValue)) {
-        throw "Clipboard kosong. Copy API key terlebih dahulu."
-    }
-
-    $apiKey = $clipboardValue.Trim()
-
-    $apiKey = [regex]::Replace(
-        $apiKey,
-        '[\x00-\x1F\x7F]',
-        ''
-    )
-
-    Set-Clipboard -Value " "
-
     if (
-        [string]::IsNullOrWhiteSpace($apiKey) -or
-        $apiKey.Length -lt 20
+        [string]::IsNullOrWhiteSpace($env:GEMINI_API_KEY) -or
+        $env:GEMINI_API_KEY.Length -lt 20
     ) {
-        throw "API key tampaknya tidak valid atau tidak tercopy dengan benar."
+        throw "GEMINI_API_KEY belum diisi atau tidak valid di backend/.env."
     }
 
-    $env:GEMINI_API_KEY = $apiKey
-
+    Write-Host "Konfigurasi Gemini berhasil dibaca dari .env."
     Write-Host ""
     Write-Host "Memeriksa koneksi Gemini API..."
 
