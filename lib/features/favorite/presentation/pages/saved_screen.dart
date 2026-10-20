@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../widgets/recipe_hero_header.dart';
 import '../../../../core/router/recipe_detail_route_args.dart';
 import '../../../../services/local_storage_service.dart';
 import '../../data/models/saved_recipe.dart';
@@ -27,10 +28,6 @@ class SavedScreen extends StatelessWidget {
             final recipes = LocalStorageService.savedBackendRecipes
                 .where((recipe) => favoriteState.isFavorite(recipe.id))
                 .toList();
-
-            if (recipes.isEmpty) {
-              return const _EmptySavedState();
-            }
 
             return _SavedContent(recipes: recipes);
           },
@@ -67,29 +64,37 @@ class _SavedContent extends StatelessWidget {
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
             SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(
-                  horizontalPadding,
-                  10,
-                  horizontalPadding,
-                  0,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const _SavedBrandHeader(),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _SavedHero(recipes: recipes),
 
-                    const SizedBox(height: 12),
-
-                    _SavedHeader(count: recipes.length),
-                  ],
-                ),
+                  Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 1100),
+                      child: Padding(
+                        padding: EdgeInsets.fromLTRB(
+                          horizontalPadding,
+                          20,
+                          horizontalPadding,
+                          0,
+                        ),
+                        child: _SavedHeader(count: recipes.length),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
 
             const SliverToBoxAdapter(child: SizedBox(height: 16)),
 
-            if (!isGrid)
+            if (recipes.isEmpty)
+              const SliverFillRemaining(
+                hasScrollBody: false,
+                child: _EmptySavedState(),
+              )
+            else if (!isGrid)
               SliverPadding(
                 padding: EdgeInsets.fromLTRB(
                   horizontalPadding,
@@ -144,40 +149,122 @@ class _SavedContent extends StatelessWidget {
   }
 }
 
-class _SavedBrandHeader extends StatelessWidget {
-  const _SavedBrandHeader();
+class _SavedHero extends StatefulWidget {
+  final List<SavedRecipe> recipes;
+
+  const _SavedHero({required this.recipes});
+
+  @override
+  State<_SavedHero> createState() => _SavedHeroState();
+}
+
+class _SavedHeroState extends State<_SavedHero> {
+  String? _heroImageUrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectRandomImage();
+  }
+
+  @override
+  void didUpdateWidget(covariant _SavedHero oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    final imageStillSaved =
+        _heroImageUrl != null &&
+        widget.recipes.any((recipe) => recipe.imageUrl == _heroImageUrl);
+
+    if (!imageStillSaved) {
+      _selectRandomImage();
+    }
+  }
+
+  void _selectRandomImage() {
+    final candidates = widget.recipes.where((recipe) {
+      final image = recipe.imageUrl;
+
+      return image != null && image.trim().isNotEmpty;
+    }).toList();
+
+    if (candidates.isEmpty) {
+      _heroImageUrl = null;
+      return;
+    }
+
+    candidates.shuffle();
+    _heroImageUrl = candidates.first.imageUrl;
+  }
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
+    final previewRecipes = widget.recipes
+        .where((recipe) {
+          final image = recipe.imageUrl;
+
+          return image != null && image.trim().isNotEmpty;
+        })
+        .take(3)
+        .toList();
+
+    return RecipeHeroHeader(
+      firstLine: 'Resep',
+      secondLine: 'Favoritmu.',
+      subtitle: 'Semua rasa yang kamu\nsuka, tersimpan di sini',
+      imageUrl: _heroImageUrl,
+
+      searchBar: Container(
+        width: double.infinity,
+        height: 62,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        decoration: BoxDecoration(
+          color: colors.surface,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
           children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: colors.primaryContainer.withValues(alpha: 0.75),
+                borderRadius: BorderRadius.circular(11),
+              ),
+              child: Icon(
+                Icons.bookmarks_outlined,
+                size: 19,
+                color: colors.primary,
+              ),
+            ),
+
+            const SizedBox(width: 10),
+
             Expanded(
               child: Column(
+                mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'RacikAI',
+                    'Pilihan tersimpan',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      fontSize: 20,
-                      height: 1,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: -0.5,
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w800,
                       color: colors.onSurface,
                     ),
                   ),
 
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 3),
 
                   Text(
-                    'Aplikasi Resep Makanan',
+                    'Resep andalanmu, kapan saja',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      fontSize: 11.5,
+                      fontSize: 10.5,
                       color: colors.onSurfaceVariant,
                     ),
                   ),
@@ -185,33 +272,52 @@ class _SavedBrandHeader extends StatelessWidget {
               ),
             ),
 
-            Container(
-              width: 40,
-              height: 40,
-              padding: const EdgeInsets.all(4),
-              decoration: BoxDecoration(
-                color: colors.primary,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: Image.asset(
-                  'assets/images/racikai_logo.png',
-                  fit: BoxFit.cover,
+            const SizedBox(width: 8),
+
+            if (previewRecipes.isNotEmpty)
+              SizedBox(
+                width: 70,
+                height: 38,
+                child: Stack(
+                  children: [
+                    for (int i = 0; i < previewRecipes.length; i++)
+                      Positioned(
+                        left: i * 18.0,
+                        top: 2,
+                        child: Container(
+                          width: 34,
+                          height: 34,
+                          padding: const EdgeInsets.all(2),
+                          decoration: BoxDecoration(
+                            color: colors.surface,
+                            shape: BoxShape.circle,
+                          ),
+                          child: ClipOval(
+                            child: Image.network(
+                              previewRecipes[i].imageUrl!,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  color: colors.primaryContainer,
+                                  child: Icon(
+                                    Icons.restaurant_rounded,
+                                    size: 16,
+                                    color: colors.primary,
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
-              ),
-            ),
+              )
+            else
+              Icon(Icons.bookmark, size: 23, color: colors.primary),
           ],
         ),
-
-        const SizedBox(height: 12),
-
-        Container(
-          width: double.infinity,
-          height: 1.5,
-          color: colors.outlineVariant,
-        ),
-      ],
+      ),
     );
   }
 }
@@ -451,14 +557,12 @@ class _RemoveFavoriteButton extends StatelessWidget {
           context.read<FavoriteCubit>().toggleBackendFavorite(recipe);
         },
 
-        // Area sentuh tetap nyaman
         constraints: const BoxConstraints.tightFor(width: 44, height: 44),
         padding: EdgeInsets.zero,
         style: IconButton.styleFrom(
           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
         ),
 
-        // Lingkaran visual lebih kecil
         icon: Container(
           width: 34,
           height: 34,

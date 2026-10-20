@@ -5,14 +5,14 @@ class RecipeHeroHeader extends StatelessWidget {
   final String secondLine;
   final String subtitle;
   final String? imageUrl;
-  final Widget searchBar;
+  final Widget? searchBar;
 
   const RecipeHeroHeader({
     super.key,
     required this.firstLine,
     required this.secondLine,
     required this.subtitle,
-    required this.searchBar,
+    this.searchBar,
     this.imageUrl,
   });
 
@@ -59,7 +59,7 @@ class RecipeHeroHeader extends StatelessWidget {
         }
 
         return SizedBox(
-          height: bannerHeight + 28,
+          height: bannerHeight + (searchBar == null ? 0 : 28),
           child: Stack(
             clipBehavior: Clip.none,
             children: [
@@ -67,7 +67,7 @@ class RecipeHeroHeader extends StatelessWidget {
                 top: 0,
                 left: 0,
                 right: 0,
-                bottom: 28,
+                bottom: searchBar == null ? 0 : 28,
                 child: Container(
                   clipBehavior: Clip.antiAlias,
                   decoration: const BoxDecoration(
@@ -274,6 +274,21 @@ class RecipeHeroHeader extends StatelessWidget {
                   child: searchBar,
                 ),
               ),
+
+              if (searchBar != null)
+                Positioned(
+                  left: 16,
+                  right: 16,
+                  bottom: 0,
+                  child: Material(
+                    elevation: 1,
+                    color: Colors.transparent,
+                    shadowColor: Colors.black.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(16),
+                    clipBehavior: Clip.antiAlias,
+                    child: searchBar!,
+                  ),
+                ),
             ],
           ),
         );
