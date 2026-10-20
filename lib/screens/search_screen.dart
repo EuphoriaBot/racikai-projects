@@ -40,6 +40,7 @@ class _SearchScreenState extends State<SearchScreen> {
 
   String _searchQuery = '';
   String _selectedCategory = 'Semua';
+  String? _searchHeroImageUrl;
 
   bool _isLoading = true;
   bool _isLoadingMore = false;
@@ -147,6 +148,10 @@ class _SearchScreenState extends State<SearchScreen> {
       setState(() {
         if (reset) {
           _recipes = result.recipes;
+
+          if (_searchHeroImageUrl == null) {
+            _updateSearchHeroImage();
+          }
         } else {
           _recipes.addAll(result.recipes);
         }
@@ -183,6 +188,24 @@ class _SearchScreenState extends State<SearchScreen> {
         isAiRecommendation: false,
       ),
     );
+  }
+
+  void _updateSearchHeroImage() {
+    final candidates = _recipes.where((recipe) {
+      final image = recipe.imageUrl;
+
+      return image != null &&
+          image.trim().isNotEmpty &&
+          !recipe.title.toLowerCase().contains('pasta');
+    }).toList();
+
+    if (candidates.isEmpty) {
+      return;
+    }
+
+    candidates.shuffle();
+
+    _searchHeroImageUrl = candidates.first.imageUrl;
   }
 
   @override
@@ -223,50 +246,47 @@ class _SearchScreenState extends State<SearchScreen> {
               physics: const AlwaysScrollableScrollPhysics(),
               slivers: [
                 SliverToBoxAdapter(
-                  child: Center(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 1100),
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const _SearchHeader(),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _SearchField(
+                        controller: _searchController,
+                        query: _searchQuery,
+                        onChanged: _onSearchChanged,
+                        onClear: _resetSearchFilters,
+                        imageUrl: _searchHeroImageUrl,
+                      ),
 
-                            const SizedBox(height: 14),
+                      Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 1100),
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 20, 16, 22),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _CategoryChips(
+                                  categories: _categories,
+                                  selectedCategory: _selectedCategory,
+                                  onSelected: _selectCategory,
+                                ),
 
-                            _SearchField(
-                              controller: _searchController,
-                              query: _searchQuery,
-                              onChanged: _onSearchChanged,
-                              onClear: () {
-                                _searchController.clear();
-                                _onSearchChanged('');
-                              },
+                                const SizedBox(height: 28),
+
+                                _ResultHeader(
+                                  heading: _headingText,
+                                  total: _total,
+                                  isLoading: _isLoading,
+                                  hasError: _errorMessage != null,
+                                ),
+
+                                const SizedBox(height: 16),
+                              ],
                             ),
-
-                            const SizedBox(height: 18),
-
-                            _CategoryChips(
-                              categories: _categories,
-                              selectedCategory: _selectedCategory,
-                              onSelected: _selectCategory,
-                            ),
-
-                            const SizedBox(height: 28),
-
-                            _ResultHeader(
-                              heading: _headingText,
-                              total: _total,
-                              isLoading: _isLoading,
-                              hasError: _errorMessage != null,
-                            ),
-
-                            const SizedBox(height: 16),
-                          ],
+                          ),
                         ),
                       ),
-                    ),
+                    ],
                   ),
                 ),
 
@@ -404,135 +424,296 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 }
 
-class _SearchHeader extends StatelessWidget {
-  const _SearchHeader();
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'RacikAI',
-                    style: TextStyle(
-                      fontSize: 20,
-                      height: 1,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: -0.5,
-                      color: colors.onSurface,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Aplikasi Resep Makanan',
-                    style: TextStyle(
-                      fontSize: 11.5,
-                      color: colors.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            Container(
-              width: 40,
-              height: 40,
-              padding: const EdgeInsets.all(4),
-              decoration: BoxDecoration(
-                color: colors.primary,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: Image.asset(
-                  'assets/images/racikai_logo.png',
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
-          ],
-        ),
-
-        const SizedBox(height: 12),
-
-        Container(
-          width: double.infinity,
-          height: 1.5,
-          color: colors.outlineVariant,
-        ),
-      ],
-    );
-  }
-}
-
 class _SearchField extends StatelessWidget {
   final TextEditingController controller;
   final String query;
   final ValueChanged<String> onChanged;
   final VoidCallback onClear;
+  final String? imageUrl;
 
   const _SearchField({
     required this.controller,
     required this.query,
     required this.onChanged,
     required this.onClear,
+    this.imageUrl,
   });
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(18, 20, 18, 18),
-      decoration: BoxDecoration(
-        color: colors.primary,
-        borderRadius: BorderRadius.circular(24),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Jelajahi resep',
-            style: TextStyle(
-              fontSize: 26,
-              height: 1.08,
-              fontWeight: FontWeight.w900,
-              letterSpacing: -0.6,
-              color: colors.onPrimary,
+        final isCompact = width < 360;
+        final isTablet = width >= 600;
+
+        // Ukuran sama seperti Home.
+        final bannerHeight = isCompact
+            ? 244.0
+            : isTablet
+            ? 294.0
+            : 264.0;
+
+        final photoSize = isCompact
+            ? 158.0
+            : isTablet
+            ? 235.0
+            : 188.0;
+
+        final headlineSize = isCompact
+            ? 29.0
+            : isTablet
+            ? 40.0
+            : 33.0;
+
+        final photoUrl = imageUrl?.trim();
+        final hasImage = photoUrl != null && photoUrl.isNotEmpty;
+
+        Widget imageFallback() {
+          return const ColoredBox(
+            color: Color(0xFF829778),
+            child: Center(
+              child: Icon(
+                Icons.soup_kitchen_rounded,
+                size: 52,
+                color: Colors.white,
+              ),
             ),
+          );
+        }
+
+        return SizedBox(
+          height: bannerHeight + 28,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 28,
+                child: Container(
+                  clipBehavior: Clip.antiAlias,
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [Color(0xFF294334), Color(0xFF536F51)],
+                    ),
+                    borderRadius: BorderRadius.only(
+                      bottomLeft: Radius.circular(28),
+                      bottomRight: Radius.circular(28),
+                    ),
+                  ),
+                  child: Stack(
+                    children: [
+                      // Foto transparan sebagai background,
+                      // mengikuti implementasi Home.
+                      if (hasImage)
+                        Positioned.fill(
+                          child: IgnorePointer(
+                            child: Opacity(
+                              opacity: 0.17,
+                              child: Image.network(
+                                photoUrl,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return const SizedBox.shrink();
+                                },
+                              ),
+                            ),
+                          ),
+                        ),
+
+                      // Ornamen kiri atas.
+                      Positioned(
+                        top: -30,
+                        left: -40,
+                        child: Transform.rotate(
+                          angle: -0.35,
+                          child: Icon(
+                            Icons.spa_rounded,
+                            size: 145,
+                            color: Colors.white.withValues(alpha: 0.075),
+                          ),
+                        ),
+                      ),
+
+                      // Ornamen kiri bawah.
+                      Positioned(
+                        bottom: -24,
+                        left: 90,
+                        child: Transform.rotate(
+                          angle: 0.45,
+                          child: Icon(
+                            Icons.eco_rounded,
+                            size: 115,
+                            color: const Color(0xFFDCE8C9)
+                                .withValues(alpha: 0.12),
+                          ),
+                        ),
+                      ),
+
+                      // Ornamen kanan atas.
+                      Positioned(
+                        top: 12,
+                        right: -28,
+                        child: Transform.rotate(
+                          angle: -0.5,
+                          child: Icon(
+                            Icons.spa_outlined,
+                            size: 105,
+                            color: const Color(0xFFE4D5AA)
+                                .withValues(alpha: 0.13),
+                          ),
+                        ),
+                      ),
+
+                      // Foto lingkaran di kanan,
+                      // ukuran dan posisi sama seperti Home.
+                      Positioned(
+                        top: isCompact ? 44 : 38,
+                        right: isCompact ? -38 : -30,
+                        width: photoSize,
+                        height: photoSize,
+                        child: Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.33),
+                              width: 1.5,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.20),
+                                blurRadius: 25,
+                                offset: const Offset(-5, 8),
+                              ),
+                            ],
+                          ),
+                          child: ClipOval(
+                            child: hasImage
+                                ? Image.network(
+                                    photoUrl,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return imageFallback();
+                                    },
+                                  )
+                                : imageFallback(),
+                          ),
+                        ),
+                      ),
+
+                      // Overlay hijau sama seperti Home.
+                      Positioned.fill(
+                        child: IgnorePointer(
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.centerLeft,
+                                end: Alignment.centerRight,
+                                stops: const [0, 0.43, 1],
+                                colors: [
+                                  const Color(0xFF243B2D)
+                                      .withValues(alpha: 0.76),
+                                  const Color(0xFF294334)
+                                      .withValues(alpha: 0.48),
+                                  Colors.transparent,
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      // Tulisan Search.
+                      // Posisinya sama seperti tulisan Home.
+                      Positioned(
+                        left: 20,
+                        right: isCompact
+                            ? 120
+                            : isTablet
+                            ? photoSize * 0.65
+                            : 125,
+                        top: 18,
+                        bottom: 32,
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Jelajahi',
+                                style: TextStyle(
+                                  fontSize: headlineSize,
+                                  height: 1.12,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: -0.7,
+                                  color: Colors.white,
+                                ),
+                              ),
+
+                              const SizedBox(height: 2),
+
+                              Text(
+                                'Rasa baru.',
+                                style: TextStyle(
+                                  fontSize: headlineSize,
+                                  height: 1.12,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: -0.7,
+                                  color: const Color(0xFFF0DEAF),
+                                ),
+                              ),
+
+                              const SizedBox(height: 14),
+
+                              Text(
+                                'Temukan resep favoritmu hari ini.',
+                                style: TextStyle(
+                                  fontSize: isCompact ? 15 : 16,
+                                  height: 1.45,
+                                  fontWeight: FontWeight.w400,
+                                  color: Colors.white.withValues(alpha: 0.88),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              // Posisi dan gaya SearchBar sama seperti Home.
+              Positioned(
+                left: 16,
+                right: 16,
+                bottom: 0,
+                child: Material(
+                  elevation: 1,
+                  color: Colors.transparent,
+                  shadowColor: Colors.black.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(16),
+                  clipBehavior: Clip.antiAlias,
+                  child: RecipeSearchBar(
+                    controller: controller,
+                    query: query,
+                    onChanged: onChanged,
+                    onClear: onClear,
+                    heroStyle: true,
+                  ),
+                ),
+              ),
+            ],
           ),
-
-          const SizedBox(height: 8),
-
-          Text(
-            'Temukan resep yang cocok untuk menu hari ini.',
-            style: TextStyle(
-              fontSize: 13,
-              height: 1.4,
-              color: colors.onPrimary.withValues(alpha: 0.78),
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          RecipeSearchBar(
-            controller: controller,
-            query: query,
-            onChanged: onChanged,
-            onClear: onClear,
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
@@ -904,7 +1085,6 @@ class _EmptySearchResult extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Ikon pencarian kosong
             Container(
               width: 64,
               height: 64,
@@ -921,7 +1101,6 @@ class _EmptySearchResult extends StatelessWidget {
 
             const SizedBox(height: 14),
 
-            // Judul
             Text(
               'Tidak ada resep yang cocok',
               textAlign: TextAlign.center,
@@ -934,7 +1113,6 @@ class _EmptySearchResult extends StatelessWidget {
 
             const SizedBox(height: 8),
 
-            // Deskripsi
             Text(
               searchQuery.trim().isNotEmpty
                   ? 'Coba gunakan nama resep atau bahan '
@@ -950,7 +1128,6 @@ class _EmptySearchResult extends StatelessWidget {
               ),
             ),
 
-            // Tombol reset pencarian dan filter
             if (hasActiveFilters) ...[
               const SizedBox(height: 18),
 
