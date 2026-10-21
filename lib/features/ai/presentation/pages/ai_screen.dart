@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import 'dart:math';
+
+import '../../../../services/recipe_catalog_service.dart';
+import '../../../../widgets/recipe_hero_header.dart';
 import '../../data/models/chat_message.dart';
 import '../../data/datasources/ai_service.dart';
 import '../../../../core/router/recipe_detail_route_args.dart';
@@ -26,6 +30,65 @@ class _AiContentState extends State<_AiContent> {
   final ScrollController scrollController = ScrollController();
   final AiService aiService = AiService();
 
+  final RecipeCatalogService _catalogService = RecipeCatalogService();
+
+  String? _aiHeroImageUrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRandomHeroImage();
+  }
+
+  Future<void> _loadRandomHeroImage() async {
+    try {
+      const pageSize = 24;
+      final random = Random();
+
+      final firstResult = await _catalogService.getRecipes(
+        category: 'Semua',
+        page: 1,
+        limit: pageSize,
+      );
+
+      if (!mounted || firstResult.total <= 0) return;
+
+      final totalPages = (firstResult.total + pageSize - 1) ~/ pageSize;
+
+      for (int attempt = 0; attempt < 4; attempt++) {
+        final randomPage = 1 + random.nextInt(totalPages);
+
+        final result = randomPage == 1
+            ? firstResult
+            : await _catalogService.getRecipes(
+                category: 'Semua',
+                page: randomPage,
+                limit: pageSize,
+              );
+
+        if (!mounted) return;
+
+        final candidates = result.recipes.where((recipe) {
+          final image = recipe.imageUrl;
+
+          return image != null &&
+              image.trim().isNotEmpty &&
+              !recipe.title.toLowerCase().contains('pasta');
+        }).toList();
+
+        if (candidates.isEmpty) continue;
+
+        final selected = candidates[random.nextInt(candidates.length)];
+
+        setState(() {
+          _aiHeroImageUrl = selected.imageUrl;
+        });
+
+        return;
+      }
+    } catch (_) {}
+  }
+
   bool isTyping = false;
 
   final List<ChatMessage> messages = [
@@ -48,6 +111,7 @@ class _AiContentState extends State<_AiContent> {
     messageController.dispose();
     scrollController.dispose();
     aiService.dispose();
+    _catalogService.dispose();
     super.dispose();
   }
 
@@ -125,40 +189,111 @@ class _AiContentState extends State<_AiContent> {
         child: LayoutBuilder(
           builder: (context, constraints) {
             final isWide = constraints.maxWidth >= 800;
+            final horizontalPadding = isWide ? 24.0 : 16.0;
 
             return Column(
               children: [
-                _AiHeader(colors: colors),
-
                 Expanded(
                   child: Center(
                     child: ConstrainedBox(
                       constraints: const BoxConstraints(maxWidth: 880),
                       child: ListView(
                         controller: scrollController,
-                        padding: EdgeInsets.fromLTRB(
-                          isWide ? 24 : 16,
-                          22,
-                          isWide ? 24 : 16,
-                          24,
-                        ),
+                        padding: EdgeInsets.zero,
                         children: [
-                          if (messages.length == 1)
-                            _AiWelcome(
-                              suggestions: suggestions,
-                              onSuggestionTap: (suggestion) {
-                                sendMessage(suggestion: suggestion);
-                              },
-                            )
-                          else
-                            ...messages.map((message) {
-                              return _ChatMessageBubble(message: message);
-                            }),
+                          if (messages.length == 1) ...[
+                            RecipeHeroHeader(
+                              firstLine: 'Masak bareng',
+                              secondLine: 'RacikAI',
+                              subtitle: 'Asisten AI siap bantu\nkamu memasak',
+                              imageUrl: _aiHeroImageUrl,
+                              searchBar: Container(
+                                width: double.infinity,
+                                height: 48,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: colors.surface,
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      width: 32,
+                                      height: 32,
+                                      decoration: BoxDecoration(
+                                        color: colors.primaryContainer,
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      child: Icon(
+                                        Icons.auto_awesome_rounded,
+                                        size: 18,
+                                        color: colors.primary,
+                                      ),
+                                    ),
 
-                          if (isTyping) ...[
-                            const SizedBox(height: 4),
-                            const _TypingBubble(),
-                          ],
+                                    const SizedBox(width: 12),
+
+                                    Expanded(
+                                      child: Text(
+                                        'Asisten resep AI',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          fontSize: 13.5,
+                                          fontWeight: FontWeight.w800,
+                                          color: colors.onSurface,
+                                        ),
+                                      ),
+                                    ),
+
+                                    Icon(
+                                      Icons.restaurant_menu_rounded,
+                                      size: 20,
+                                      color: colors.primary,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+
+                            Padding(
+                              padding: EdgeInsets.fromLTRB(
+                                horizontalPadding,
+                                18,
+                                horizontalPadding,
+                                24,
+                              ),
+                              child: _AiWelcome(
+                                suggestions: suggestions,
+                                onSuggestionTap: (suggestion) {
+                                  sendMessage(suggestion: suggestion);
+                                },
+                              ),
+                            ),
+                          ] else
+                            Padding(
+                              padding: EdgeInsets.fromLTRB(
+                                horizontalPadding,
+                                22,
+                                horizontalPadding,
+                                24,
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  ...messages.map((message) {
+                                    return _ChatMessageBubble(message: message);
+                                  }),
+
+                                  if (isTyping) ...[
+                                    const SizedBox(height: 4),
+                                    const _TypingBubble(),
+                                  ],
+                                ],
+                              ),
+                            ),
                         ],
                       ),
                     ),
@@ -192,87 +327,61 @@ class _AiWelcome extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
 
-    return Padding(
-      padding: const EdgeInsets.only(top: 0, bottom: 18),
-      child: Column(
-        children: [
-          Container(
-            width: 66,
-            height: 66,
-            decoration: BoxDecoration(
-              color: colors.primaryContainer,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.auto_awesome_rounded,
-              size: 30,
-              color: colors.primary,
-            ),
-          ),
-
-          const SizedBox(height: 20),
-
-          Text(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Center(
+          child: Text(
             'Mau masak apa?',
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 26,
-              height: 1.1,
+              fontSize: 22,
+              height: 1.15,
               fontWeight: FontWeight.w900,
               letterSpacing: -0.5,
               color: colors.onSurface,
             ),
           ),
+        ),
 
-          const SizedBox(height: 10),
+        const SizedBox(height: 7),
 
-          ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 480),
-            child: Text(
-              'Ceritakan bahan yang tersedia atau '
-              'jenis makanan yang ingin kamu buat. '
-              'RacikAI akan membantu mencarikan resep yang relevan.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                height: 1.55,
-                color: colors.onSurfaceVariant,
-              ),
+        Center(
+          child: Text(
+            'Pilih pertanyaan atau ceritakan bahan yang kamu punya.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 12.5,
+              height: 1.4,
+              color: colors.onSurfaceVariant,
             ),
           ),
+        ),
 
-          const SizedBox(height: 30),
+        const SizedBox(height: 20),
 
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
-              'Coba tanyakan',
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-                color: colors.primary,
-              ),
-            ),
+        Text(
+          'Coba tanyakan',
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            color: colors.primary,
+          ),
+        ),
+
+        const SizedBox(height: 10),
+
+        for (final suggestion in suggestions) ...[
+          _SuggestionTile(
+            text: suggestion,
+            onTap: () {
+              onSuggestionTap(suggestion);
+            },
           ),
 
-          const SizedBox(height: 10),
-
-          Column(
-            children: [
-              for (final suggestion in suggestions) ...[
-                _SuggestionTile(
-                  text: suggestion,
-                  onTap: () {
-                    onSuggestionTap(suggestion);
-                  },
-                ),
-
-                if (suggestion != suggestions.last) const SizedBox(height: 9),
-              ],
-            ],
-          ),
+          if (suggestion != suggestions.last) const SizedBox(height: 9),
         ],
-      ),
+      ],
     );
   }
 }
@@ -335,80 +444,6 @@ class _SuggestionTile extends StatelessWidget {
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _AiHeader extends StatelessWidget {
-  final ColorScheme colors;
-
-  const _AiHeader({required this.colors});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 10, 16, 14),
-      color: Theme.of(context).scaffoldBackgroundColor,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'RacikAI',
-                      style: TextStyle(
-                        fontSize: 20,
-                        height: 1,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: -0.5,
-                        color: colors.onSurface,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Aplikasi Resep Makanan',
-                      style: TextStyle(
-                        fontSize: 11.5,
-                        color: colors.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              Container(
-                width: 40,
-                height: 40,
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  color: colors.primary,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Image.asset(
-                    'assets/images/racikai_logo.png',
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 12),
-
-          Container(
-            width: double.infinity,
-            height: 1.5,
-            color: colors.outlineVariant,
-          ),
-        ],
       ),
     );
   }
