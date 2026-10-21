@@ -148,11 +148,14 @@ class _SearchScreenState extends State<SearchScreen> {
         return;
       }
 
+      final shuffledRecipes = List<CatalogRecipe>.from(result.recipes)
+        ..shuffle();
+
       setState(() {
         if (reset) {
-          _recipes = result.recipes;
+          _recipes = shuffledRecipes;
         } else {
-          _recipes.addAll(result.recipes);
+          _recipes.addAll(shuffledRecipes);
         }
 
         _page = result.page;
