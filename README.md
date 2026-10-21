@@ -1,834 +1,994 @@
 # 🍳 RacikAI — AI Recipe Assistant
 
-Aplikasi pencarian dan rekomendasi resep berbasis Flutter dengan integrasi Artificial Intelligence menggunakan pendekatan Retrieval-Augmented Generation (RAG)
+**Bahan biasa, rasa istimewa**
 
-## Tim Pengembang
+RacikAI adalah aplikasi pencarian, eksplorasi, dan rekomendasi resep makanan berbasis **Flutter** yang mengintegrasikan teknologi **Artificial Intelligence (AI)** menggunakan pendekatan **Retrieval-Augmented Generation (RAG)**
 
-| **Nama**                  | **NIM**    | **Peran**                      |
-| ------------------------- | ---------- | ------------------------------ |
-| Dimas Firjatullah Islamay | 2409106057 | Flutter / Frontend Application |
-| Richard Dante Gunawan     | 2409106061 | AI / RAG / Backend             |
+RacikAI membantu pengguna menemukan inspirasi masakan, mencari resep berdasarkan nama atau bahan, menyimpan resep favorit, menyusun rencana makan mingguan, serta mendapatkan rekomendasi resep melalui AI Assistant dalam Bahasa Indonesia
 
-Mata kuliah **Pemrograman Piranti Bergerak**
+Aplikasi dikembangkan sebagai proyek mata kuliah **Pemrograman Piranti Bergerak**
 
----
-
-## Tentang Aplikasi
-
-**RacikAI** adalah aplikasi pencarian dan rekomendasi resep yang membantu pengguna menemukan makanan berdasarkan resep yang tersedia maupun bahan yang dimiliki
-
-Aplikasi tidak hanya menyediakan katalog resep biasa, tetapi juga memiliki **AI Assistant** yang memungkinkan pengguna bertanya menggunakan bahasa natural seperti:
-
-> "Saya punya ayam dan kecap, bisa masak apa?"
-
-RacikAI kemudian mencari resep yang relevan dari dataset menggunakan sistem Retrieval-Augmented Generation (RAG), lalu AI menyusun jawaban yang lebih mudah dipahami dalam Bahasa Indonesia
-
-RacikAI dikembangkan menggunakan Flutter untuk sisi aplikasi dan FastAPI untuk backend. Sistem AI menggunakan Sentence Transformer sebagai model embedding, FAISS untuk pencarian vector, dan Gemini sebagai Large Language Model untuk menghasilkan jawaban
-
-Dataset yang digunakan berisi sekitar **13 ribu resep** lengkap dengan judul, bahan, langkah memasak, dan metadata gambar
+**Teknologi utama:** Flutter · Dart · FastAPI · Python · Sentence Transformers · FAISS · Gemini · PostgreSQL · SharedPreferences
 
 ---
 
-## Masalah yang Diselesaikan
+## 📖 Tentang RacikAI
 
-RacikAI dikembangkan untuk membantu beberapa permasalahan yang umum dialami pengguna ketika mencari resep makanan:
+Tidak semua orang mengetahui makanan apa yang dapat dibuat dari bahan yang tersedia di rumah. Mencari resep satu per satu juga membutuhkan waktu, terutama ketika pengguna hanya mengetahui bahan yang dimiliki, bukan nama masakannya
 
-1. Pengguna sering memiliki bahan makanan di rumah tetapi tidak mengetahui makanan apa yang dapat dibuat dari bahan tersebut
-2. Pencarian resep secara manual membutuhkan waktu karena pengguna harus membuka dan membandingkan banyak resep
-3. Banyak sumber resep menggunakan Bahasa Inggris sehingga kurang praktis bagi sebagian pengguna Indonesia
-4. Pencarian berbasis kata kunci biasa belum dapat memahami kebutuhan pengguna dalam bentuk kalimat natural
-5. Pengguna membutuhkan satu aplikasi yang dapat digunakan untuk menjelajahi resep, menyimpan resep, mendapatkan rekomendasi AI, dan merencanakan menu makanan
+RacikAI dikembangkan untuk membantu permasalahan tersebut dengan menggabungkan katalog resep dan asisten AI dalam satu aplikasi
 
----
+Pengguna dapat menjelajahi resep secara langsung atau mengajukan pertanyaan seperti:
 
-## Sasaran Pengguna
+> Saya punya telur dan kentang. Masak apa ya?
 
-RacikAI ditujukan untuk pengguna yang membutuhkan bantuan dalam mencari ide masakan, terutama mahasiswa, anak kos, pengguna yang sedang belajar memasak, maupun pengguna yang ingin memanfaatkan bahan makanan yang tersedia di rumah
+> Ada rekomendasi makanan dari ayam dan kecap?
 
-Aplikasi dirancang agar pengguna tetap dapat melakukan pencarian resep biasa tanpa AI, sedangkan AI Assistant digunakan ketika pengguna membutuhkan rekomendasi yang lebih fleksibel berdasarkan pertanyaan atau kondisi tertentu
+> Mau masak apa lagi dari telur?
 
----
+RacikAI akan mencari resep yang relevan dari dataset, memeriksa kecocokannya, kemudian menyusun jawaban yang mudah dipahami
 
-# Fitur dan Status
+Untuk permintaan lanjutan, aplikasi juga dapat menghindari resep yang baru saja direkomendasikan sehingga pengguna mendapatkan alternatif menu yang lebih bervariasi
 
-Pengembangan RacikAI dilakukan secara bertahap. Beberapa fitur telah terintegrasi dengan backend dan dataset asli, sedangkan beberapa fitur lainnya masih berada dalam tahap pengembangan
+## ✨ Fitur Utama
 
-## 1. Home
+### 1. Home — Inspirasi Memasak
 
-Home merupakan halaman utama aplikasi RacikAI yang menyediakan akses cepat ke berbagai fitur aplikasi
+Halaman Home menjadi titik awal untuk menjelajahi RacikAI
 
-Fitur pada Home meliputi:
+Fitur yang tersedia:
 
-- Akses ke pencarian resep
-- Akses ke pencarian berdasarkan bahan
-- Kategori makanan
-- AI Assistant
-- Meal Planner
-- Navigasi menuju fitur utama RacikAI
+- Hero header dengan gambar makanan yang dipilih secara acak.
+- Akses cepat menuju pencarian resep.
+- Kategori makanan untuk mempermudah eksplorasi.
+- Carousel **Inspirasi Hari Ini** yang berpindah otomatis.
+- Pilihan resep acak yang dapat berubah ketika data dimuat ulang.
+- Bagian resep lainnya untuk menemukan inspirasi tambahan.
+- Tombol favorit untuk menyimpan resep.
+- Akses menuju fitur **Dari Bahan** dan **Rencana Makan**
 
----
+Home dirancang menggunakan antarmuka yang sederhana, hangat, dan mudah digunakan
 
-## 2. Recipe Search
+### 2. Search — Jelajahi Resep
 
-Fitur Search memungkinkan pengguna mencari resep secara langsung dari dataset RacikAI
+Halaman Search terhubung dengan katalog resep melalui backend FastAPI.
 
-Pencarian dapat dilakukan berdasarkan:
+Pengguna dapat mencari resep berdasarkan:
 
-- Nama resep
-- Bahan makanan
-- Kategori makanan
+- Nama makanan
+- Bahan masakan
+- Kategori resep
 
-Kategori yang tersedia antara lain:
+Kategori yang tersedia:
 
-- Semua
-- Ayam
-- Daging
-- Nasi
-- Pasta
-- Sayur
-- Dessert
+| Kategori | Deskripsi                           |
+| -------- | ----------------------------------- |
+| Semua    | Menampilkan seluruh kategori resep  |
+| Ayam     | Resep yang berkaitan dengan ayam    |
+| Daging   | Resep berbahan daging               |
+| Nasi     | Resep berbahan nasi                 |
+| Pasta    | Berbagai resep pasta                |
+| Sayur    | Resep yang berkaitan dengan sayuran |
+| Dessert  | Aneka hidangan penutup              |
 
-Search telah terhubung dengan backend FastAPI dan menggunakan resep asli dari dataset, bukan data dummy
+Search memiliki beberapa kemampuan tambahan:
 
-RacikAI juga memiliki normalisasi sederhana untuk beberapa kata Bahasa Indonesia agar tetap dapat mencari dataset yang sebagian besar menggunakan Bahasa Inggris
+- Pencarian otomatis setelah pengguna berhenti mengetik sejenak
+- Filter kategori yang tetap berlaku ketika melakukan pencarian
+- Normalisasi beberapa istilah Bahasa Indonesia ke Bahasa Inggris
+- Pagination agar tidak memuat seluruh dataset sekaligus
+- Pengacakan urutan resep pada halaman hasil yang diterima
+- Tampilan gambar, judul, dan informasi resep
+- Navigasi ke halaman detail resep
+
+Contoh normalisasi pencarian:
+
+| Kata Indonesia | Istilah dataset |
+| -------------- | --------------- |
+| Ayam           | chicken         |
+| Telur          | egg             |
+| Kentang        | potato          |
+| Daging sapi    | beef            |
+| Kecap          | soy sauce       |
+| Kecap manis    | sweet soy sauce |
+| Bawang putih   | garlic          |
+| Sayur          | vegetable       |
+
+Fitur Search bekerja melalui endpoint `/recipes` tanpa menggunakan Gemini
+
+### 3. RacikAI Assistant — Rekomendasi Berbasis AI
+
+RacikAI Assistant merupakan fitur utama yang menggabungkan pencarian resep berbasis embedding dengan kemampuan generatif Gemini
+
+Pengguna dapat bertanya menggunakan bahasa natural, misalnya:
+
+> Saya punya ayam dan kecap. Bisa masak apa?
+
+AI Assistant kemudian menjalankan beberapa proses:
+
+1. Memeriksa apakah pertanyaan masih berkaitan dengan makanan atau resep
+2. Menulis ulang pertanyaan apabila diperlukan agar lebih sesuai dengan dataset
+3. Mengubah query menjadi embedding menggunakan Sentence Transformers
+4. Mengambil kandidat resep melalui pencarian FAISS
+5. Memeriksa relevansi kandidat terhadap pertanyaan pengguna
+6. Memilih resep yang sesuai dan belum termasuk dalam riwayat rekomendasi terbaru
+7. Menyusun jawaban menggunakan Gemini berdasarkan resep yang ditemukan
+8. Menampilkan jawaban beserta kartu resep yang dapat dibuka
+
+Secara default, chatbot menampilkan **maksimal tiga rekomendasi resep** dalam satu respons
+
+#### Smart Recipe Rotation
+
+RacikAI memiliki mekanisme untuk mengurangi pengulangan rekomendasi
 
 Contoh:
 
-```text
-ayam          → chicken
-kecap         → soy sauce
-kecap manis   → sweet soy sauce
-kentang       → potato
-telur         → egg
-keju          → cheese
-nasi          → rice
-sayur         → vegetable
-```
+**Pertanyaan pertama:**
 
-Hasil pencarian menggunakan sistem pagination sehingga aplikasi tidak perlu memuat seluruh ribuan resep sekaligus
+> Masak apa dari telur?
 
----
+RacikAI memberikan tiga resep telur
 
-## 3. RacikAI Assistant
+**Pertanyaan kedua:**
 
-RacikAI Assistant merupakan fitur utama berbasis Artificial Intelligence
+> Masak apa lagi dari telur?
 
-Pengguna dapat memberikan pertanyaan dalam Bahasa Indonesia seperti:
+RacikAI mengirim ID resep sebelumnya ke backend, sehingga backend dapat mencari alternatif resep relevan yang berbeda
 
-```text
-Saya punya ayam dan kecap
-```
+Riwayat rekomendasi disimpan menggunakan **SharedPreferences** pada perangkat pengguna
 
-atau:
+Sistem menyimpan hingga **60 ID resep terbaru**, sehingga riwayat tetap tersedia meskipun aplikasi ditutup dan dibuka kembali
 
-```text
-Saya ingin resep sederhana tanpa oven
-```
+Ketika kandidat relevan yang belum pernah ditampilkan sudah terbatas, jumlah rekomendasi dapat lebih sedikit daripada tiga
 
-RacikAI kemudian akan mencari beberapa resep yang paling relevan dari dataset dan menyusun jawaban berdasarkan resep tersebut
+### 4. Recipe Detail
 
-AI Assistant menggunakan pendekatan **Retrieval-Augmented Generation (RAG)** agar jawaban AI tetap menggunakan resep yang terdapat pada dataset sebagai sumber utama
+Pengguna dapat membuka detail resep dari berbagai bagian aplikasi, termasuk Home, Search, hasil pencarian bahan, dan AI Assistant
 
----
+Informasi yang ditampilkan meliputi:
 
-## 4. Recipe Detail
-
-Setiap resep dapat dibuka pada halaman detail
-
-Informasi yang tersedia meliputi:
-
+- Gambar makanan
 - Nama resep
-- Jumlah bahan
 - Daftar bahan
-- Langkah memasak
-- Informasi asal rekomendasi
-- Area gambar resep
+- Jumlah bahan
+- Langkah-langkah memasak
+- Tombol untuk menyimpan atau menghapus favorit
 
-Halaman Recipe Detail digunakan oleh hasil Search maupun hasil rekomendasi AI
+Resep yang berasal dari katalog dan rekomendasi AI menggunakan model data yang terintegrasi dengan backend
+
+### 5. Saved — Resep Favorit
+
+Saved memungkinkan pengguna mengumpulkan resep yang ingin dibuka kembali
+
+Fitur ini meliputi:
+
+- Menambahkan dan menghapus resep favorit
+- Menampilkan daftar resep yang telah disimpan
+- Membuka kembali detail resep favorit
+- Menampilkan gambar dan informasi resep
+- Menampilkan preview koleksi favorit pada bagian header
+
+ID favorit beserta data resep backend yang disimpan dikelola secara lokal menggunakan SharedPreferences
+
+Dengan demikian, koleksi favorit dapat dipertahankan ketika aplikasi ditutup dan dibuka kembali
+
+### 6. Ingredient Finder — Pencarian dari Bahan
+
+Ingredient Finder membantu pengguna mencari resep berdasarkan bahan makanan yang tersedia
+
+Pengguna dapat memilih beberapa bahan, misalnya:
+
+- Ayam
+- Telur
+- Kentang
+- Bawang putih
+- Bawang merah
+- Kecap
+- Keju
+- Sayuran
+
+Bahan yang dipilih diterjemahkan menjadi istilah pencarian yang digunakan oleh backend
+
+Setelah pengguna menekan tombol pencarian, RacikAI menampilkan hasil resep berdasarkan kombinasi bahan tersebut
+
+Hasil pencarian menggunakan katalog resep yang sama dengan fitur Search
+
+### 7. Meal Planner — Rencana Makan Mingguan
+
+Meal Planner digunakan untuk mengatur menu makanan selama satu minggu
+
+Fitur ini menyediakan:
+
+- Daftar rencana makan berdasarkan hari
+- Pemilihan resep dari katalog backend
+- Tampilan resep yang telah dijadwalkan
+- Indikator jumlah hari yang sudah memiliki menu
+- Penggantian resep pada hari tertentu
+- Penghapusan seluruh rencana makan
+
+Data rencana makan disimpan secara lokal menggunakan SharedPreferences agar tetap tersedia setelah aplikasi ditutup
 
 ---
 
-## 5. Saved / Favorite
+## 🎨 Desain Antarmuka
 
-Fitur Saved memungkinkan pengguna menyimpan resep yang disukai agar dapat dibuka kembali dengan lebih mudah
+RacikAI menggunakan konsep desain **Fresh & Warm**, dengan pendekatan visual yang bersih, hangat, dan nyaman dilihat
 
-Versi awal sistem Favorite menggunakan data recipe lokal. Sistem ini sedang dikembangkan agar dapat menggunakan resep yang berasal langsung dari backend dan dataset asli
+Palet warna utama:
 
-Untuk akun Free, konsep pembatasan yang digunakan adalah maksimal 10 resep favorit
+| Warna      | Kode      | Penggunaan               |
+| ---------- | --------- | ------------------------ |
+| Sage Green | `#66775A` | Identitas utama aplikasi |
+| Dark Sage  | `#4F6046` | Aksen hijau lebih gelap  |
+| Ivory      | `#F7F5F0` | Latar belakang           |
+| Warm White | `#FFFDF9` | Permukaan dan kartu      |
+| Peach      | `#D9895B` | Aksen visual             |
+| Dark Text  | `#252722` | Teks utama               |
+
+Karakteristik UI:
+
+- Hero header dengan visual makanan
+- Kartu resep dengan sudut membulat
+- Penggunaan gambar untuk memperkuat identitas kuliner
+- Navigasi utama yang sederhana
+- Desain yang menyesuaikan lebar layar
+- Konsistensi warna pada Home, Search, AI Chat, dan Saved
+
+Navigasi utama terdiri dari empat halaman:
+
+**Home · Search · AI · Saved**
+
+Ingredient Finder dan Meal Planner dapat diakses melalui navigasi tambahan dari Home
 
 ---
 
-## 6. Ingredient Finder
+## 🏗️ Arsitektur Sistem
 
-Ingredient Finder memungkinkan pengguna memilih bahan makanan yang sedang tersedia
-
-Contoh bahan:
+RacikAI menggunakan Flutter sebagai antarmuka pengguna dan FastAPI sebagai backend untuk menyediakan katalog resep serta pemrosesan AI
 
 ```text
-Ayam
-Daging sapi
-Telur
-Nasi
-Pasta
-Bawang putih
-Bawang merah
-Kecap
-Kentang
-Keju
-Sayuran
+                    ┌─────────────────────┐
+                    │    Flutter App      │
+                    │                     │
+                    │  Home / Search      │
+                    │  AI Chat / Saved    │
+                    │  Ingredient Finder  │
+                    │  Meal Planner       │
+                    └──────────┬──────────┘
+                               │
+                         HTTP / JSON
+                               │
+                    ┌──────────▼──────────┐
+                    │   FastAPI Backend   │
+                    │                     │
+                    │  GET /health        │
+                    │  GET /recipes       │
+                    │  POST /chat         │
+                    │  /recipe-images     │
+                    └──────────┬──────────┘
+                               │
+              ┌────────────────┼─────────────────┐
+              │                │                 │
+       ┌──────▼──────┐  ┌──────▼──────┐  ┌───────▼───────┐
+       │ Recipe Data │  │ E5 + FAISS  │  │  Gemini API   │
+       │             │  │             │  │               │
+       │ CSV /       │  │ Retrieval   │  │ Query Rewrite │
+       │ PostgreSQL  │  │ Embedding   │  │ Relevance     │
+       └─────────────┘  └─────────────┘  │ Generation    │
+                                         └───────────────┘
 ```
 
-Tujuan fitur ini adalah membantu pengguna menemukan resep berdasarkan kombinasi bahan yang dimiliki
+### Frontend — Flutter
+
+Flutter menangani:
+
+- Tampilan dan navigasi aplikasi
+- Input pencarian pengguna
+- Penyajian hasil katalog dan AI Chat
+- Interaksi favorit
+- Rencana makan mingguan
+- Penyimpanan preferensi dan riwayat rekomendasi
+- Komunikasi HTTP dengan backend
+
+### Backend — FastAPI
+
+FastAPI menangani:
+
+- Pencarian dan pagination katalog resep
+- Pemfilteran berdasarkan kategori
+- Normalisasi query pencarian
+- Pembacaan metadata resep
+- Pencarian vektor menggunakan FAISS
+- Integrasi dengan model embedding
+- Komunikasi dengan Gemini
+- Pemeriksaan relevansi rekomendasi
+- Pengecualian ID resep yang sudah direkomendasikan
+- Penyediaan URL gambar resep
+- Pemeriksaan kesiapan layanan
 
 ---
 
-## 7. Meal Planner
+## 🧠 Arsitektur RAG
 
-Meal Planner digunakan untuk membantu pengguna membuat rencana menu makanan
+RacikAI menggunakan pendekatan **Retrieval-Augmented Generation (RAG)** untuk menghubungkan model bahasa dengan informasi resep yang berasal dari dataset
 
-Data Meal Planner disimpan secara lokal sehingga perencanaan pengguna dapat tetap tersedia setelah aplikasi ditutup
-
-Dalam konsep RacikAI, Meal Planner menjadi salah satu fitur yang dapat digunakan pada paket Premium
-
----
-
-## 8. Sistem Free dan Premium
-
-RacikAI memiliki konsep sistem berlangganan dengan dua jenis pengguna.
-
-### Free
-
-Pengguna Free memiliki beberapa batasan, seperti:
-
-- Maksimal 5 pertanyaan AI per hari
-- Maksimal 10 resep favorit
-
-### Premium
-
-Konsep Premium menyediakan:
-
-- Penggunaan AI tanpa batas
-- Akses Meal Planner
-- Batas fitur yang lebih tinggi dibandingkan pengguna Free
-
-> Sistem subscription saat ini masih berupa simulasi/prototype dan belum menggunakan sistem pembayaran Google Play secara nyata
-
----
-
-## 9. Light Mode dan Dark Mode
-
-RacikAI mendukung beberapa pilihan tampilan:
-
-- Light Mode
-- Dark Mode
-- Mengikuti tema sistem perangkat
-
-Pengaturan tema disimpan secara lokal agar pilihan pengguna tetap digunakan ketika aplikasi dibuka kembali
-
----
-
-# Arsitektur Sistem
-
-Secara umum RacikAI terdiri dari dua bagian utama:
+Alur pemrosesan AI:
 
 ```text
-┌───────────────────────────────┐
-│          Flutter App          │
-│                               │
-│ Home                          │
-│ Search                        │
-│ AI Assistant                  │
-│ Saved                         │
-│ Meal Planner                  │
-│ Profile                       │
-└──────────────┬────────────────┘
-               │
-               │ HTTP Request
-               ▼
-┌───────────────────────────────┐
-│        FastAPI Backend        │
-│                               │
-│ Recipe Catalog API            │
-│ RAG Retrieval                 │
-│ Gemini Integration            │
-└──────────────┬────────────────┘
-               │
-        ┌──────┴───────┐
-        ▼              ▼
-┌───────────────┐  ┌───────────────┐
-│ Recipe Dataset│  │ Gemini API    │
-│ + FAISS Index │  │               │
-└───────────────┘  └───────────────┘
+Pertanyaan pengguna
+        │
+        ▼
+Intent Checking
+        │
+        ▼
+Gemini Query Rewriting
+        │
+        ▼
+Sentence Transformer (E5)
+        │
+        ▼
+Query Embedding
+        │
+        ▼
+FAISS Similarity Search
+        │
+        ▼
+Candidate Recipes
+        │
+        ▼
+Exclude Previously Recommended IDs
+        │
+        ▼
+Relevance Filtering
+        │
+        ▼
+Maximum 3 Recipes
+        │
+        ▼
+Gemini Answer Generation
+        │
+        ▼
+JSON Response
+        │
+        ▼
+Flutter AI Chat
 ```
 
-Flutter bertugas sebagai antarmuka pengguna, sedangkan FastAPI menangani katalog resep, pencarian data, proses RAG, serta komunikasi dengan Gemini
+### Model Embedding
+
+Model Sentence Transformer berbasis E5 digunakan untuk mengubah pertanyaan pengguna menjadi representasi vektor
+
+### FAISS
+
+FAISS digunakan untuk melakukan pencarian berdasarkan kemiripan antara embedding pertanyaan dan embedding resep
+
+### Gemini
+
+Gemini digunakan untuk mendukung pemahaman pertanyaan, query rewriting, pemeriksaan relevansi, dan penyusunan jawaban berdasarkan resep yang berhasil ditemukan
+
+### Recommendation History
+
+Riwayat ID resep dikirim dari Flutter melalui parameter `exclude_recipe_ids`
+
+Backend kemudian mencoba memilih alternatif resep yang relevan tanpa mengulang ID dalam daftar tersebut
+
+Pendekatan ini membantu mengurangi rekomendasi berulang tanpa perlu melakukan pelatihan ulang model atau pembangunan ulang FAISS index
 
 ---
 
-# Alur AI / Retrieval-Augmented Generation
+## 📊 Dataset dan Penyimpanan Data
 
-RacikAI menggunakan pendekatan **Retrieval-Augmented Generation (RAG)**
-
-Alur AI secara sederhana adalah sebagai berikut:
-
-```text
-Pertanyaan Pengguna
-        │
-        ▼
-Gemini Query Rewriter
-        │
-        ▼
-Query Retrieval
-        │
-        ▼
-Sentence Transformer
-        │
-        ▼
-Embedding Query
-        │
-        ▼
-FAISS Vector Search
-        │
-        ▼
-Top-K Recipe
-        │
-        ▼
-Recipe Metadata
-        │
-        ▼
-Gemini
-        │
-        ▼
-Jawaban Bahasa Indonesia
-        │
-        ▼
-Flutter Application
-```
-
-Sebagai contoh, pengguna memasukkan:
-
-```text
-Saya punya ayam dan kecap
-```
-
-Sebelum melakukan pencarian ke FAISS, query dapat ditulis ulang menjadi bentuk yang lebih sesuai dengan dataset:
-
-```text
-chicken soy sauce
-```
-
-Sentence Transformer kemudian mengubah query tersebut menjadi vector embedding
-
-FAISS melakukan pencarian berdasarkan kemiripan vector dan mengambil beberapa resep yang paling relevan
-
-Contoh resep yang dapat ditemukan:
-
-```text
-Soy Sauce Chicken
-Spicy Asian Chicken Soup
-Soy-Glazed Chicken with Broccoli
-```
-
-Resep hasil retrieval selanjutnya diberikan kepada Gemini sebagai context
-
-Gemini kemudian menyusun jawaban dalam Bahasa Indonesia berdasarkan resep yang ditemukan
-
-Dengan metode ini, Gemini tidak hanya menghasilkan jawaban berdasarkan pengetahuan umum, tetapi diarahkan menggunakan resep yang terdapat pada dataset RacikAI sebagai sumber utama
-
----
-
-# Alur Recipe Search
-
-Fitur Search biasa dipisahkan dari fitur AI
-
-Search tidak menggunakan Gemini dan tidak mengurangi batas penggunaan AI harian
-
-Alurnya adalah:
-
-```text
-Pengguna
-   │
-   ▼
-Flutter Search Screen
-   │
-   ▼
-GET /recipes
-   │
-   ▼
-FastAPI
-   │
-   ▼
-recipe_metadata.csv
-   │
-   ▼
-Search / Category Filter
-   │
-   ▼
-Pagination
-   │
-   ▼
-Recipe Grid
-   │
-   ▼
-Recipe Detail
-```
-
-Dengan pemisahan ini, pencarian resep biasa tetap ringan, sedangkan AI digunakan ketika pengguna membutuhkan rekomendasi berbasis bahasa natural
-
----
-
-# Dataset
-
-RacikAI menggunakan dataset resep dari Kaggle:
+RacikAI menggunakan dataset Kaggle:
 
 **Food Ingredients and Recipes Dataset with Images**
 
-Dataset berisi informasi resep seperti:
+Dataset berisi sekitar **13 ribu resep**, termasuk informasi:
 
-```text
-Title
-Ingredients
-Instructions
-Image_Name
-Cleaned_Ingredients
-```
+- Judul resep
+- Bahan makanan
+- Daftar bahan terstruktur
+- Langkah memasak
+- Nama atau metadata gambar
 
-Setelah melalui proses preprocessing untuk kebutuhan RAG, metadata yang digunakan backend antara lain:
+Metadata yang digunakan dalam pipeline RAG antara lain:
 
 ```text
 recipe_id
 Title
-Image_Name
 ingredient_text
+ingredient_list
 Instructions
-rag_document
-retrieval_document
+Image_Name
 ```
 
-Pada pengujian backend saat ini, katalog RacikAI dapat membaca sekitar **13 ribu resep** dari metadata hasil preprocessing
+### Sumber Data Backend
 
-Data tersebut digunakan oleh:
+Backend dapat menggunakan dua sumber metadata resep:
 
-- Recipe Search
-- AI retrieval
-- Recommendation source
-- Recipe Detail
+**CSV**
 
-File gambar resep belum dimasukkan langsung ke repository karena ukuran dataset yang cukup besar. Sistem telah dipersiapkan agar gambar nantinya dapat dilayani melalui backend.
+Metadata dibaca dari `recipe_metadata.csv` dan disesuaikan dengan urutan vektor pada FAISS index
 
----
+**PostgreSQL**
 
-# Teknologi
+Backend juga mendukung pembacaan data dari PostgreSQL menggunakan konfigurasi `RECIPE_DATA_SOURCE=postgres`
 
-RacikAI dibangun menggunakan teknologi berikut:
+Ketika mode PostgreSQL digunakan, backend memeriksa kesesuaian metadata dan urutan data terhadap indeks FAISS. Jika pembacaan atau validasi gagal, backend dapat menggunakan CSV sebagai sumber cadangan
 
-| **Bagian**               | **Teknologi**         | **Keterangan**                         |
-| ------------------------ | --------------------- | -------------------------------------- |
-| Frontend                 | Flutter               | Framework utama aplikasi               |
-| Bahasa Frontend          | Dart                  | Bahasa pemrograman Flutter             |
-| Backend                  | FastAPI               | REST API RacikAI                       |
-| Bahasa Backend           | Python                | Backend dan AI                         |
-| State Management         | Flutter BLoC / Cubit  | Pengelolaan state aplikasi             |
-| Dependency Injection     | get_it                | Service locator                        |
-| Routing                  | go_router             | Navigasi halaman                       |
-| HTTP Client              | http                  | Komunikasi Flutter dengan backend      |
-| Vector Database / Search | FAISS                 | Pencarian vector resep                 |
-| Embedding                | Sentence Transformers | Mengubah query menjadi embedding       |
-| AI Architecture          | RAG                   | Retrieval-Augmented Generation         |
-| LLM                      | Gemini                | Query rewriting dan penyusunan jawaban |
-| Gemini API               | Interactions API      | Komunikasi backend dengan Gemini       |
-| Dataset                  | Kaggle Recipe Dataset | Sumber data resep                      |
-| Local Storage            | Local Storage         | Preferensi dan data lokal aplikasi     |
-| Version Control          | Git dan GitHub        | Kolaborasi dan version control         |
+### Pengelolaan Gambar
+
+Gambar resep disediakan melalui backend menggunakan endpoint:
+
+```text
+/recipe-images/{filename}
+```
+
+Sistem melakukan pemeriksaan gambar dan menggunakan cache validasi untuk mengurangi pemeriksaan ulang file yang tidak berubah
+
+Resep dengan referensi gambar yang tidak valid dapat dilewati dalam pencarian agar gambar rusak tidak ditampilkan kepada pengguna
+
+Berkas model, FAISS index, metadata berukuran besar, dan koleksi gambar tidak disertakan langsung dalam repository GitHub
 
 ---
 
-# Backend API
+## 🧰 Teknologi yang Digunakan
 
-Backend RacikAI menggunakan FastAPI
+| Komponen                 | Teknologi                      |
+| ------------------------ | ------------------------------ |
+| Frontend                 | Flutter                        |
+| Bahasa frontend          | Dart                           |
+| Backend                  | FastAPI                        |
+| Bahasa backend           | Python                         |
+| State management         | Flutter BLoC / Cubit           |
+| Routing                  | go_router                      |
+| Dependency injection     | get_it                         |
+| HTTP client              | http                           |
+| Penyimpanan lokal        | shared_preferences             |
+| Model embedding          | Sentence Transformers / E5     |
+| Vector similarity search | FAISS                          |
+| Arsitektur AI            | Retrieval-Augmented Generation |
+| Large Language Model     | Gemini                         |
+| Metadata resep           | CSV / PostgreSQL               |
+| Database PostgreSQL      | psycopg                        |
+| Pengolahan gambar        | Pillow                         |
+| Pengujian backend        | pytest                         |
+| Version control          | Git / GitHub                   |
 
-Endpoint utama yang tersedia adalah sebagai berikut
+---
 
-## Health Check
+## 🔌 Backend API
+
+### 1. Health Check
 
 ```http
 GET /health
 ```
 
-Digunakan untuk mengecek apakah backend, model embedding, FAISS index, dan konfigurasi generation berhasil dimuat
+Digunakan untuk melihat kesiapan backend, sumber data resep, konfigurasi AI, dan status gambar
 
----
-
-## Recipe Catalog
+### 2. Recipe Catalog
 
 ```http
 GET /recipes
 ```
 
-Digunakan oleh halaman Search.
+Parameter utama:
+
+| Parameter  | Deskripsi                |
+| ---------- | ------------------------ |
+| `q`        | Kata kunci pencarian     |
+| `category` | Kategori resep           |
+| `page`     | Nomor halaman            |
+| `limit`    | Jumlah resep per halaman |
 
 Contoh:
 
-```text
-/recipes?page=1&limit=24
-/recipes?q=ayam
-/recipes?q=kecap
-/recipes?category=Pasta
+```http
+GET /recipes?page=1&limit=24
+GET /recipes?q=telur
+GET /recipes?category=Ayam
+GET /recipes?q=kentang&category=Sayur
 ```
 
-Endpoint ini melakukan pencarian katalog tanpa menggunakan Gemini
+Respons berisi daftar resep beserta informasi pagination seperti `page`, `limit`, `total`, dan `has_more`
 
-Response berisi informasi seperti:
-
-```json
-{
-  "recipes": [
-    {
-      "id": "2261",
-      "title": "Soy Sauce Chicken",
-      "ingredients": "...",
-      "instructions": "...",
-      "image_name": "soy-sauce-chicken",
-      "image_url": null,
-      "ingredient_count": 10
-    }
-  ],
-  "page": 1,
-  "limit": 24,
-  "total": 100,
-  "has_more": true
-}
-```
-
----
-
-## AI Chat
+### 3. AI Chat
 
 ```http
 POST /chat
+Content-Type: application/json
 ```
 
 Contoh request:
 
 ```json
 {
-  "message": "Saya punya ayam dan kecap",
-  "top_k": 3
+  "message": "Masak apa dari telur?",
+  "top_k": 3,
+  "exclude_recipe_ids": []
 }
 ```
 
-Proses pada endpoint ini:
+Contoh request lanjutan:
 
-```text
-User Question
-→ Query Rewrite
-→ Sentence Transformer
-→ FAISS Retrieval
-→ Top-K Recipe
-→ Gemini Generation
-→ Response
+```json
+{
+  "message": "Masak apa lagi dari telur?",
+  "top_k": 3,
+  "exclude_recipe_ids": ["5645", "10575", "2089"]
+}
 ```
+
+Respons berisi:
+
+- `text` — Jawaban chatbot
+- `recipes` — Rekomendasi resep yang terpilih
+- `generation` — Status generation
+
+Field `exclude_recipe_ids` bersifat opsional dan digunakan untuk menghindari rekomendasi berulang
+
+### 4. Recipe Images
+
+```http
+GET /recipe-images/{filename}
+```
+
+Endpoint ini melayani gambar resep yang sudah tersedia di direktori gambar backend
 
 ---
 
-# Cara Menjalankan Project
+## 📁 Struktur Proyek
 
-## Persyaratan
-
-Project membutuhkan:
+Struktur utama repository:
 
 ```text
-Flutter SDK
-Dart SDK
-Python 3
-Google Chrome / Android Emulator / Android Device
-Model Sentence Transformer
-FAISS Index
-Recipe Metadata
-Gemini API Key
+racikai-projects/
+│
+├── android/
+│   └── ...
+│
+├── assets/
+│   ├── icons/
+│   └── images/
+│
+├── backend/
+│   ├── app.py
+│   ├── generation.py
+│   ├── postgres_recipe_source.py
+│   ├── requirements.txt
+│   ├── requirements-api.txt
+│   ├── start.ps1
+│   ├── start-dev.ps1
+│   └── test_app.py
+│
+├── lib/
+│   ├── controllers/
+│   ├── core/
+│   ├── features/
+│   │   ├── ai/
+│   │   ├── favorite/
+│   │   └── recipe/
+│   ├── screens/
+│   ├── services/
+│   ├── widgets/
+│   └── main.dart
+│
+├── web/
+├── pubspec.yaml
+└── README.md
 ```
+
+Pada bagian Flutter, proyek memanfaatkan organisasi berbasis fitur untuk AI, Favorite, dan Recipe
+
+Backend ditempatkan terpisah agar pengolahan dataset, kredensial Gemini, serta proses retrieval tidak dijalankan langsung pada aplikasi pengguna
 
 ---
 
-## 1. Clone Repository
+## 🚀 Cara Menjalankan Proyek
+
+### Persyaratan
+
+Pastikan lingkungan pengembangan menyediakan:
+
+- Flutter SDK dan Dart SDK
+- Python 3 dengan versi yang kompatibel dengan dependency backend
+- Android SDK atau Google Chrome
+- Model embedding dan FAISS index RacikAI
+- Metadata resep
+- Direktori gambar resep
+- Gemini API Key yang valid
+- PostgreSQL jika ingin menggunakan mode sumber data PostgreSQL
+
+### 1. Clone Repository
 
 ```bash
 git clone https://github.com/EuphoriaBot/racikai-projects.git
-```
-
-Masuk ke folder project:
-
-```bash
 cd racikai-projects
 ```
 
----
-
-## 2. Install Dependency Flutter
-
-Jalankan:
+### 2. Instal Dependency Flutter
 
 ```bash
 flutter pub get
-```
-
-Periksa Flutter environment:
-
-```bash
 flutter doctor
 ```
 
----
+### 3. Siapkan Python Environment
 
-## 3. Buat Python Virtual Environment
-
-Masuk ke folder backend:
-
-```bash
-cd backend
-```
-
-Buat virtual environment:
-
-```bash
-python -m venv .venv
-```
-
-Aktifkan pada Windows PowerShell:
+Contoh menggunakan Windows PowerShell dari root proyek:
 
 ```powershell
-.\.venv\Scripts\Activate.ps1
+python -m venv backend/.venv
+.\backend\.venv\Scripts\Activate.ps1
+python -m pip install -r backend/requirements.txt
 ```
 
-Install dependency backend:
+### 4. Siapkan Model dan Dataset
 
-```bash
-pip install -r requirements-api.txt
-pip install -r requirements.txt
-```
+Model dan dataset AI tidak disertakan langsung dalam repository karena ukuran file yang besar
 
----
-
-## 4. Siapkan Model RAG
-
-File model dan dataset AI tidak disimpan langsung di GitHub karena ukurannya cukup besar
-
-Backend membutuhkan beberapa artifact seperti:
-
-```text
-config.json
-tokenizer.json
-modules.json
-model.safetensors
-recipe_faiss.index
-recipe_metadata.csv
-```
-
-Struktur umumnya:
+Backend membutuhkan artefak seperti:
 
 ```text
 AI_MODEL_DIR/
-│
 ├── model/
 │   ├── config.json
 │   ├── tokenizer.json
 │   ├── modules.json
 │   └── model.safetensors
-│
 ├── recipe_faiss.index
 └── recipe_metadata.csv
 ```
 
-Lokasi model dapat diarahkan menggunakan environment variable:
+Model embedding dan indeks FAISS harus kompatibel dengan metadata resep yang digunakan
+
+### 5. Konfigurasi Backend
+
+Buat file berikut:
 
 ```text
-AI_MODEL_DIR
+backend/.env
 ```
 
----
+Contoh struktur konfigurasi untuk pengembangan lokal di Windows:
 
-## 5. Siapkan Gemini API Key
+```dotenv
+GEMINI_API_KEY=YOUR_GEMINI_API_KEY
+GEMINI_MODEL=YOUR_SUPPORTED_GEMINI_MODEL
 
-AI Assistant membutuhkan Gemini API Key
+AI_MODEL_DIR="D:\RacikAI\file ai\recovered-kaggle"
+RECIPE_IMAGE_DIR="D:\RacikAI\file ai\recipes-images"
 
-API key harus disimpan sebagai environment variable:
-
-```text
-GEMINI_API_KEY
+RECIPE_DATA_SOURCE=csv
 ```
 
-Model Gemini yang digunakan selama pengembangan:
+Ganti seluruh contoh nilai dengan lokasi dan konfigurasi sebenarnya
 
-```text
-gemini-3.5-flash-lite
-```
+Jika menggunakan PostgreSQL, ubah `RECIPE_DATA_SOURCE` menjadi `postgres` dan siapkan variabel lingkungan koneksi PostgreSQL seperti `PGHOST`, `PGPORT`, `PGDATABASE`, `PGUSER`, dan `PGPASSWORD`
 
-ID model juga dapat diatur menggunakan:
+### 6. Jalankan Backend
 
-```text
-GEMINI_MODEL
-```
-
----
-
-## 6. Jalankan Backend
-
-Dari root project pada environment pengembangan yang sudah dikonfigurasi:
+Dari root proyek pada Windows PowerShell:
 
 ```powershell
 .\backend\start-dev.ps1
 ```
 
-Backend secara default berjalan pada:
+Script ini membaca konfigurasi `.env`, memvalidasi akses Gemini, lalu menjalankan backend
+
+Backend lokal secara default dapat diakses melalui:
 
 ```text
 http://localhost:8000
 ```
 
-Untuk mengecek backend:
+Periksa statusnya:
 
 ```text
 http://localhost:8000/health
 ```
 
-Jika backend berhasil dijalankan, status akan menunjukkan bahwa model siap digunakan
+Backend harus berhasil memuat model, FAISS index, dan metadata resep agar layanan AI siap digunakan
 
----
+### 7. Jalankan Flutter Web
 
-## 7. Jalankan Flutter Web
-
-Buka terminal baru dan jalankan:
+Buka terminal baru:
 
 ```bash
 flutter run -d chrome --web-port 5000
 ```
 
-Flutter Web kemudian dapat berkomunikasi dengan backend pada:
+Untuk menentukan alamat backend secara eksplisit:
 
-```text
-http://localhost:8000
+```bash
+flutter run -d chrome --web-port 5000 --dart-define=AI_BASE_URL=http://localhost:8000
 ```
 
----
+### 8. Menjalankan di Android Emulator
 
-## 8. Menjalankan pada Android Emulator
-
-Pada Android Emulator, localhost komputer tidak dapat langsung diakses menggunakan `localhost`
-
-RacikAI menggunakan alamat:
+Jika backend berjalan pada komputer yang sama, Android Emulator dapat mengakses host melalui alamat
 
 ```text
 http://10.0.2.2:8000
 ```
 
-untuk mengakses backend dari Android Emulator
-
----
-
-## 9. Menjalankan pada HP Android Fisik
-
-Untuk HP fisik, gunakan alamat IP lokal komputer
-
 Contoh:
 
 ```bash
-flutter run --dart-define=AI_BASE_URL=http://192.168.1.10:8000
+flutter run --dart-define=AI_BASE_URL=http://10.0.2.2:8000
 ```
 
-Alamat IP harus disesuaikan dengan IP komputer yang menjalankan backend
+### 9. Menjalankan di HP Android Fisik
 
-Komputer dan HP harus berada pada jaringan yang sama
+Gunakan URL backend yang dapat dijangkau oleh perangkat Android
+
+Untuk pengembangan dalam jaringan lokal, alamat IP komputer dapat digunakan apabila server dan HP saling terhubung
+
+Untuk distribusi APK ke perangkat lain, gunakan alamat backend yang dapat diakses secara publik melalui HTTPS
 
 ---
 
-# Penyimpanan Data
+## 📱 Build APK Android
 
-RacikAI menggunakan penyimpanan lokal untuk beberapa data aplikasi, seperti:
+Untuk membuat APK release, jalankan:
 
-```text
-Theme Preference
-Subscription Prototype
-AI Daily Usage
-Meal Planner
-Favorite / Saved Data
-Profile Preference
+```bash
+flutter build apk --release --dart-define=AI_BASE_URL=https://YOUR-BACKEND-URL
 ```
 
-Sementara itu, katalog resep dan data yang digunakan AI diperoleh melalui FastAPI backend
+Ganti `https://YOUR-BACKEND-URL` dengan alamat backend yang sebenarnya dan dapat diakses oleh HP pengguna
+
+Nama aplikasi Android yang ditampilkan kepada pengguna adalah **RacikAI**
+
+### Hal Penting untuk APK Release
+
+- Jangan menggunakan `localhost` sebagai backend URL untuk APK yang dibagikan
+- Jangan menggunakan alamat `10.0.2.2` pada HP fisik
+- Pastikan layanan backend tetap aktif ketika aplikasi digunakan
+- Pastikan endpoint katalog, AI Chat, dan gambar dapat diakses
+- Simpan Gemini API Key hanya di backend
 
 ---
 
-# Keamanan
+## 💾 Penyimpanan Lokal
 
-Pada pengembangan RacikAI, credential AI tidak diletakkan di dalam aplikasi Flutter
+RacikAI menggunakan SharedPreferences untuk menyimpan beberapa data di perangkat
 
-Arsitektur yang digunakan:
+| Data                                  | Penyimpanan       |
+| ------------------------------------- | ----------------- |
+| ID resep favorit                      | SharedPreferences |
+| Informasi resep favorit yang disimpan | SharedPreferences |
+| Rencana makan mingguan                | SharedPreferences |
+| Riwayat ID rekomendasi AI             | SharedPreferences |
 
-```text
-Flutter
-   │
-   ▼
-FastAPI
-   │
-   ▼
-Gemini API
-```
+Riwayat rekomendasi AI dibatasi hingga 60 ID terbaru agar penyimpanan tetap terkendali
 
-Dengan desain ini:
-
-- Gemini API Key hanya digunakan oleh backend
-- API Key tidak dikirim ke aplikasi Flutter
-- API Key tidak disimpan di repository
-- File model berukuran besar tidak dimasukkan ke Git
-- Flutter hanya menerima hasil yang telah diproses backend
+Katalog utama dan pemrosesan AI tetap membutuhkan koneksi ke backend
 
 ---
 
-# Pengujian
+## 🧪 Pengujian
 
-Sebelum perubahan kode dianggap selesai, project diperiksa menggunakan:
+### Pemeriksaan Flutter
 
 ```bash
 flutter analyze
 ```
 
-Backend juga memiliki file pengujian untuk memastikan endpoint dan proses Gemini dapat berjalan dengan benar:
+### Pengujian Backend
 
-```text
-backend/test_app.py
-backend/test_generation.py
+Dari root proyek dengan Python environment backend yang telah aktif:
+
+```bash
+python -m pytest backend/test_app.py -q
 ```
 
-Contoh menjalankan test backend:
+### Pemeriksaan Sintaks Python
 
-```powershell
-cd backend
-.\.venv\Scripts\python.exe -m unittest test_generation.py -v
+```bash
+python -m py_compile backend/app.py
 ```
+
+### Pemeriksaan Git
+
+```bash
+git diff --check
+```
+
+Pengujian pengembangan terakhir berhasil dijalankan dengan:
+
+- Flutter analyzer tanpa masalah
+- Delapan pengujian backend berhasil
+- Pengujian endpoint AI dengan resep sebelumnya yang dikecualikan
+- Pengujian rekomendasi alternatif dengan ID yang berbeda
+- Pengujian aplikasi Flutter pada perangkat
+
+Hasil pengujian dapat berubah ketika kode diperbarui
 
 ---
 
-# Version Control
+## 🔐 Keamanan dan Batasan
 
-Project RacikAI menggunakan Git dan GitHub sebagai version control
+RacikAI menggunakan pemisahan antara frontend dan backend
 
-Repository:
+Prinsip keamanan utama:
 
-```text
-https://github.com/EuphoriaBot/racikai-projects
+- **Gemini API Key hanya disimpan di backend**, bukan di dalam aplikasi Flutter atau APK
+- File `.env` dan kredensial database tidak dimasukkan ke repository GitHub
+- Komunikasi antara aplikasi Android dan backend publik menggunakan HTTPS
+- Aplikasi tidak mengakses Gemini secara langsung; seluruh permintaan AI diproses melalui FastAPI
+- File model embedding, FAISS index, dan dataset berukuran besar disimpan terpisah dari repository
+- Backend melakukan validasi data resep dan gambar sebelum menampilkan hasil kepada pengguna
+
+### Batasan Sistem
+
+Meskipun fitur utama RacikAI sudah terintegrasi, terdapat beberapa batasan:
+
+1. **Koneksi internet diperlukan** untuk mengakses katalog resep dan rekomendasi AI dari backend
+2. **Backend harus aktif** agar layanan pencarian, gambar, dan AI Chat dapat digunakan
+3. **Rekomendasi AI tidak selalu sempurna.** Kualitas hasil bergantung pada ketersediaan dan relevansi resep dalam dataset
+4. **Smart Recipe Rotation** menghindari ID resep yang tersimpan dalam riwayat terbaru, tetapi tidak menjamin bahwa resep tidak akan pernah berulang
+5. **Penyimpanan lokal** tidak otomatis tersinkronisasi ke perangkat lain
+6. Jika kandidat resep relevan yang belum pernah direkomendasikan tidak mencukupi, AI dapat menghasilkan kurang dari tiga rekomendasi
+
+---
+
+## 🧪 Pengujian dan Validasi
+
+RacikAI melalui pengujian frontend, backend, dan integrasi untuk memastikan fitur utama berjalan dengan baik
+
+### 1. Flutter Static Analysis
+
+Pemeriksaan dilakukan menggunakan:
+
+```bash
+flutter analyze
 ```
 
-Pengembangan dilakukan secara bertahap menggunakan commit agar setiap perubahan fitur dapat dilacak
-
-Beberapa bagian pengembangan utama meliputi:
+Hasil pengujian terakhir:
 
 ```text
-Flutter UI
-Recipe Architecture
-AI Backend Integration
-Gemini Integration
-Query Rewrite
-AI Recommendation UI
-Backend Recipe Catalog
-Real Dataset Search
+No issues found!
 ```
+
+### 2. Backend Testing
+
+Pengujian backend menggunakan pytest:
+
+```bash
+python -m pytest backend/test_app.py -q
+```
+
+Hasil pengujian terakhir:
+
+```text
+8 passed, 1 warning
+```
+
+Peringatan berasal dari penggunaan API lama pada dependency Starlette/httpx dan tidak menyebabkan pengujian gagal
+
+### 3. Python Syntax Validation
+
+```bash
+python -m py_compile backend/app.py
+```
+
+### 4. Pengujian Rekomendasi AI
+
+Salah satu skenario pengujian adalah meminta rekomendasi resep menggunakan bahan yang sama secara berulang
+
+**Pertanyaan pertama:**
+
+> Masak apa dari telur?
+
+Contoh hasil:
+
+- Egg in the Middle
+- Easy Egg Custard
+- Hard-Boiled Eggs
+
+**Pertanyaan kedua:**
+
+> Masak apa lagi dari telur?
+
+Contoh hasil:
+
+- Avocado Egg-in-a-Hole
+- Egg Foo Yung
+- Eggs Caviar
+
+Hasil pengujian:
+
+```text
+Jumlah resep berulang: 0
+Jumlah rekomendasi kedua: 3
+```
+
+Pengujian ini menunjukkan bahwa backend dapat memberikan rekomendasi berbeda ketika menerima daftar ID resep yang telah ditampilkan
+
+### 5. Pengujian APK Android
+
+Pengujian aplikasi Android mencakup:
+
+- Menjalankan APK release pada perangkat Android
+- Memastikan navigasi utama berjalan
+- Mengakses katalog dan detail resep
+- Menampilkan gambar makanan dari backend
+- Menggunakan AI Chat untuk meminta rekomendasi
+- Meminta rekomendasi alternatif dari bahan yang sama
+- Menutup dan membuka kembali aplikasi untuk memeriksa penyimpanan riwayat
+- Menguji penyimpanan favorit dan rencana makan mingguan
+
+---
+
+## 📱 Distribusi Aplikasi
+
+RacikAI dapat dibangun menjadi APK Android menggunakan Flutter
+
+```bash
+flutter build apk --release --dart-define=AI_BASE_URL=https://YOUR-BACKEND-URL
+```
+
+APK hasil build dapat ditemukan pada:
+
+```text
+build/app/outputs/flutter-apk/app-release.apk
+```
+
+Untuk kebutuhan demonstrasi atau pameran, file APK dapat dibagikan melalui layanan penyimpanan berkas seperti Google Drive
+
+Alamat backend pada APK harus dapat dijangkau dari perangkat pengguna
+
+**Catatan:** Repository ini berisi source code aplikasi. APK release, file model AI, metadata dataset, dan gambar resep dapat didistribusikan secara terpisah
+
+---
+
+## 🔄 Pengembangan Selanjutnya
+
+RacikAI masih dapat dikembangkan lebih lanjut melalui sejumlah peningkatan
+
+Beberapa pengembangan yang memungkinkan:
+
+- **Autentikasi pengguna:** Menambahkan sistem akun untuk menyimpan informasi pengguna
+- **Cloud synchronization:** Menyinkronkan favorit dan rencana makan antarperangkat
+- **Peningkatan pencarian semantik:** Mengoptimalkan retrieval untuk kombinasi bahan yang lebih kompleks
+- **Rekomendasi personal:** Mempertimbangkan preferensi makanan pengguna
+- **Deployment dan monitoring:** Mengembangkan pengelolaan backend agar lebih stabil untuk penggunaan dalam skala besar
+- **Peningkatan kualitas dataset:** Menambahkan kurasi data, kategori, dan evaluasi relevansi resep
+
+Fitur-fitur tersebut merupakan rencana atau kemungkinan pengembangan, bukan bagian dari fitur yang diklaim sudah tersedia pada versi saat ini
+
+---
+
+## 👨‍💻 Tim Pengembang
+
+RacikAI dikembangkan oleh dua mahasiswa untuk memenuhi proyek mata kuliah **Pemrograman Piranti Bergerak**.
+
+| Nama                      | NIM        | Fokus Pengembangan             |
+| ------------------------- | ---------- | ------------------------------ |
+| Dimas Firjatullah Islamay | 2409106057 | Flutter / Frontend Application |
+| Richard Dante Gunawan     | 2409106061 | AI / RAG / Backend             |
+
+Pengembangan dilakukan secara kolaboratif menggunakan Git dan GitHub untuk pengelolaan source code, integrasi fitur, serta pemeliharaan proyek
+
+---
+
+## 🔗 Repository
+
+**GitHub:** https://github.com/EuphoriaBot/racikai-projects
+
+Repository ini digunakan untuk dokumentasi dan pengembangan aplikasi RacikAI
+
+---
+
+## 📌 Kesimpulan
+
+RacikAI menggabungkan katalog resep digital dan Artificial Intelligence untuk membantu pengguna menemukan inspirasi makanan dengan lebih mudah
+
+Melalui integrasi **Flutter, FastAPI, E5 Sentence Transformers, FAISS, Gemini, dan penyimpanan lokal**, RacikAI dapat menyediakan pencarian resep, rekomendasi berbasis bahasa natural, koleksi favorit, serta perencanaan menu mingguan dalam satu aplikasi
+
+Fitur **Smart Recipe Rotation** juga membantu pengguna menemukan alternatif masakan tanpa terus mendapatkan rekomendasi yang sama
+
+RacikAI diharapkan dapat menjadi contoh penerapan teknologi mobile dan Retrieval-Augmented Generation untuk menyelesaikan permasalahan sehari-hari secara praktis
+
+---
