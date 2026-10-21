@@ -203,7 +203,6 @@ class _SavedHeroState extends State<_SavedHero> {
     final previewRecipes = widget.recipes
         .where((recipe) {
           final image = recipe.imageUrl;
-
           return image != null && image.trim().isNotEmpty;
         })
         .take(3)
@@ -212,12 +211,12 @@ class _SavedHeroState extends State<_SavedHero> {
     return RecipeHeroHeader(
       firstLine: 'Resep',
       secondLine: 'Favoritmu.',
-      subtitle: 'Semua rasa yang kamu\nsuka, tersimpan di sini',
+      subtitle: 'Semua rasa yang kamu suka,\ntersimpan di sini.',
       imageUrl: _heroImageUrl,
 
       searchBar: Container(
         width: double.infinity,
-        height: 62,
+        height: 50,
         padding: const EdgeInsets.symmetric(horizontal: 12),
         decoration: BoxDecoration(
           color: colors.surface,
@@ -226,15 +225,15 @@ class _SavedHeroState extends State<_SavedHero> {
         child: Row(
           children: [
             Container(
-              width: 36,
-              height: 36,
+              width: 32,
+              height: 32,
               decoration: BoxDecoration(
                 color: colors.primaryContainer.withValues(alpha: 0.75),
-                borderRadius: BorderRadius.circular(11),
+                borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(
                 Icons.bookmarks_outlined,
-                size: 19,
+                size: 18,
                 color: colors.primary,
               ),
             ),
@@ -242,33 +241,15 @@ class _SavedHeroState extends State<_SavedHero> {
             const SizedBox(width: 10),
 
             Expanded(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Pilihan tersimpan',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.w800,
-                      color: colors.onSurface,
-                    ),
-                  ),
-
-                  const SizedBox(height: 3),
-
-                  Text(
-                    'Resep andalanmu, kapan saja',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 10.5,
-                      color: colors.onSurfaceVariant,
-                    ),
-                  ),
-                ],
+              child: Text(
+                'Pilihan tersimpan',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w800,
+                  color: colors.onSurface,
+                ),
               ),
             ),
 
@@ -276,17 +257,17 @@ class _SavedHeroState extends State<_SavedHero> {
 
             if (previewRecipes.isNotEmpty)
               SizedBox(
-                width: 70,
-                height: 38,
+                width: 66,
+                height: 34,
                 child: Stack(
                   children: [
                     for (int i = 0; i < previewRecipes.length; i++)
                       Positioned(
-                        left: i * 18.0,
-                        top: 2,
+                        left: i * 16.0,
+                        top: 1,
                         child: Container(
-                          width: 34,
-                          height: 34,
+                          width: 32,
+                          height: 32,
                           padding: const EdgeInsets.all(2),
                           decoration: BoxDecoration(
                             color: colors.surface,
@@ -301,7 +282,7 @@ class _SavedHeroState extends State<_SavedHero> {
                                   color: colors.primaryContainer,
                                   child: Icon(
                                     Icons.restaurant_rounded,
-                                    size: 16,
+                                    size: 15,
                                     color: colors.primary,
                                   ),
                                 );
@@ -314,7 +295,11 @@ class _SavedHeroState extends State<_SavedHero> {
                 ),
               )
             else
-              Icon(Icons.bookmark, size: 23, color: colors.primary),
+              Icon(
+                Icons.bookmark_border_outlined,
+                size: 21,
+                color: colors.primary,
+              ),
           ],
         ),
       ),
@@ -332,7 +317,6 @@ class _SavedHeader extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
 
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         Expanded(
           child: Text(
