@@ -38,6 +38,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   List<CatalogRecipe> _carouselRecipes = [];
 
+  List<CatalogRecipe> _randomOtherRecipes = [];
+
   String? _homeHeroImageUrl;
 
   bool _isLoading = true;
@@ -181,7 +183,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
       for (
         int attempt = 0;
-        attempt < 5 && selectedRecipes.length < 5;
+        attempt < 12 && selectedRecipes.length < 11;
         attempt++
       ) {
         final page = 1 + random.nextInt(totalPages);
@@ -216,7 +218,7 @@ class _HomeScreenState extends State<HomeScreen> {
             addedFromPage++;
           }
 
-          if (selectedRecipes.length == 5 || addedFromPage == 2) {
+          if (selectedRecipes.length == 11 || addedFromPage == 4) {
             break;
           }
         }
@@ -224,9 +226,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
       if (!mounted) return;
 
-      if (selectedRecipes.length == 5) {
+      if (selectedRecipes.length == 11) {
         setState(() {
-          _carouselRecipes = selectedRecipes;
+          _carouselRecipes = selectedRecipes.take(5).toList();
+
+          _randomOtherRecipes = selectedRecipes.skip(5).take(6).toList();
         });
       }
     } catch (_) {}
@@ -345,7 +349,9 @@ class _HomeScreenState extends State<HomeScreen> {
         ? _carouselRecipes
         : _featuredRecipes.take(5).toList();
 
-    final otherRecipes = hasRandomCarousel
+    final otherRecipes = _randomOtherRecipes.isNotEmpty
+        ? _randomOtherRecipes
+        : hasRandomCarousel
         ? _featuredRecipes
         : _featuredRecipes.skip(5).toList();
 
@@ -1061,9 +1067,8 @@ class _CompactRecipeCard extends StatelessWidget {
 
 class _FavoriteRecipeButton extends StatelessWidget {
   final CatalogRecipe recipe;
-  final bool large;
 
-  const _FavoriteRecipeButton({required this.recipe, this.large = false});
+  const _FavoriteRecipeButton({required this.recipe});
 
   @override
   Widget build(BuildContext context) {
@@ -1088,13 +1093,13 @@ class _FavoriteRecipeButton extends StatelessWidget {
               );
             },
             child: SizedBox(
-              width: large ? 42 : 36,
-              height: large ? 42 : 36,
+              width: 36,
+              height: 36,
               child: Icon(
                 isFavorite
                     ? Icons.favorite_rounded
                     : Icons.favorite_border_rounded,
-                size: large ? 21 : 19,
+                size: 19,
                 color: isFavorite ? colors.secondary : colors.onSurfaceVariant,
               ),
             ),
