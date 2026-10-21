@@ -215,7 +215,6 @@ def build_image_index(
     if not directory.is_dir():
         return image_index
 
-    # 1. Konfigurasi cache
     CACHE_VERSION = 1
 
     cache_path = (
@@ -1078,7 +1077,6 @@ class RecipeEngine:
                 )
             )
 
-            # Hitung dari list asli, BUKAN split(",")
             ingredient_count = len(
                 ingredient_list
             )
@@ -1167,6 +1165,10 @@ class ChatRequest(
         default=3,
         ge=1,
         le=5,
+    )
+    exclude_recipe_ids: list[str] = Field(
+        default_factory=list,
+        max_length=60,
     )
 
     @field_validator(
@@ -1363,7 +1365,7 @@ def create_app(
             api.state.engine = (
                 engine_factory()
                 if engine_factory
-                
+
                 else RecipeEngine(
                     Path(
                         os.getenv(
@@ -1638,14 +1640,45 @@ def create_app(
                 )
 
         try:
-            recipes = (
+            excluded_ids = set(request.exclude_recipe_ids)
+
+            candidate_count = request.top_k
+
+            if excluded_ids:
+                candidate_count = min(
+                    100,
+                    max(
+                        18,
+                        request.top_k + len(excluded_ids) + 12,
+                    ),
+                )
+
+            candidates = (
                 api.state
                 .engine
                 .search(
                     search_query,
-                    request.top_k,
+                    candidate_count,
                 )
             )
+
+            recipes = [
+                recipe
+                for recipe in candidates
+                if str(recipe["id"]) not in excluded_ids
+            ]
+
+            if excluded_ids:
+                recipes = recipes[:12]
+
+        except Exception:
+            log.exception("Pencarian resep gagal")
+
+            raise HTTPException(
+                500,
+                "Pencarian resep gagal. Silakan coba lagi.",
+            ) from None
+
 
         except Exception:
             log.exception(
@@ -1688,6 +1721,8 @@ def create_app(
                     "recipes": [],
                     "generation": "unavailable",
                 }
+
+        recipes = recipes[:request.top_k]
 
         text = (
             (

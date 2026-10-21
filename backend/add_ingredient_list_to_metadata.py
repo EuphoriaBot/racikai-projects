@@ -120,7 +120,6 @@ def rebuild_clean_dataset() -> list[dict]:
                 raw_row.get("Instructions")
             )
 
-            # Sama seperti filter notebook.
             if (
                 not title
                 or not ingredients_text
@@ -130,9 +129,6 @@ def rebuild_clean_dataset() -> list[dict]:
 
             title_key = title.lower().strip()
 
-            # Sama seperti:
-            # drop_duplicates(subset=["title_key"])
-            # default-nya keep="first".
             if title_key in seen_titles:
                 continue
 
@@ -149,7 +145,6 @@ def rebuild_clean_dataset() -> list[dict]:
                 ingredient_source
             )
 
-            # Sama seperti fallback notebook.
             if not ingredient_list:
                 ingredient_list = parse_list_like(
                     ingredients_text

@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/chat_message.dart';
 
@@ -28,13 +29,25 @@ class AiService {
     return 'http://localhost:8000';
   }
 
+  static const String _recommendationHistoryKey =
+      'racikai_ai_recommendation_history_v1';
+
   Future<ChatMessage> ask(String question) async {
     try {
+      final prefs = await SharedPreferences.getInstance();
+
+      final excludedIds =
+          prefs.getStringList(_recommendationHistoryKey) ?? <String>[];
+
       final response = await _client
           .post(
             Uri.parse('${_baseUrl.replaceAll(RegExp(r'/+$'), '')}/chat'),
             headers: {'Content-Type': 'application/json'},
-            body: jsonEncode({'message': question, 'top_k': 3}),
+            body: jsonEncode({
+              'message': question,
+              'top_k': 3,
+              'exclude_recipe_ids': excludedIds,
+            }),
           )
           .timeout(const Duration(seconds: 60));
       if (response.statusCode != 200) {
@@ -46,12 +59,33 @@ class AiService {
       }
       final data =
           jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
+
+      final recipes = (data['recipes'] as List<dynamic>)
+          .map((item) => AiRecipe.fromJson(item as Map<String, dynamic>))
+          .toList();
+
+      if (recipes.isNotEmpty) {
+        final combinedIds = [
+          ...excludedIds,
+          ...recipes.map((recipe) => recipe.id),
+        ];
+
+        final seenIds = <String>{};
+
+        final recentIds = combinedIds.reversed
+            .where(seenIds.add)
+            .take(60)
+            .toList()
+            .reversed
+            .toList();
+
+        await prefs.setStringList(_recommendationHistoryKey, recentIds);
+      }
+
       return ChatMessage(
         role: ChatRole.assistant,
         text: data['text'] as String,
-        recipes: (data['recipes'] as List<dynamic>)
-            .map((item) => AiRecipe.fromJson(item as Map<String, dynamic>))
-            .toList(),
+        recipes: recipes,
       );
     } on AiServiceException {
       rethrow;

@@ -6,8 +6,6 @@ $ErrorActionPreference = "Stop"
 
 Set-Location $PSScriptRoot
 
-
-# Membaca konfigurasi dari backend/.env
 $envFile = Join-Path $PSScriptRoot ".env"
 
 if (-not (Test-Path -LiteralPath $envFile)) {
@@ -42,7 +40,6 @@ foreach ($line in Get-Content -LiteralPath $envFile) {
         continue
     }
 
-    # Menghapus tanda petik pembungkus jika ada
     if (
         $value.Length -ge 2 -and
         (
