@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import 'dart:async';
 import 'dart:math';
 
 import '../core/router/recipe_detail_route_args.dart';
@@ -35,6 +36,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   List<CatalogRecipe> _featuredRecipes = [];
 
+  List<CatalogRecipe> _carouselRecipes = [];
+
   String? _homeHeroImageUrl;
 
   bool _isLoading = true;
@@ -46,6 +49,7 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
 
     _loadFeaturedRecipes();
+    _loadRandomCarouselRecipes();
   }
 
   @override
@@ -156,6 +160,78 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Future<void> _loadRandomCarouselRecipes() async {
+    try {
+      const pageSize = 24;
+      final random = Random();
+
+      final firstResult = await _catalogService.getRecipes(
+        category: 'Semua',
+        page: 1,
+        limit: pageSize,
+      );
+
+      if (!mounted || firstResult.total <= 0) return;
+
+      final totalPages = (firstResult.total + pageSize - 1) ~/ pageSize;
+
+      final selectedRecipes = <CatalogRecipe>[];
+      final selectedIds = <Object>{};
+      final usedPages = <int>{};
+
+      for (
+        int attempt = 0;
+        attempt < 5 && selectedRecipes.length < 5;
+        attempt++
+      ) {
+        final page = 1 + random.nextInt(totalPages);
+
+        if (!usedPages.add(page)) {
+          continue;
+        }
+
+        final result = page == 1
+            ? firstResult
+            : await _catalogService.getRecipes(
+                category: 'Semua',
+                page: page,
+                limit: pageSize,
+              );
+
+        if (!mounted) return;
+
+        final candidates = result.recipes.where((recipe) {
+          final image = recipe.imageUrl;
+
+          return image != null && image.trim().isNotEmpty;
+        }).toList();
+
+        candidates.shuffle(random);
+
+        var addedFromPage = 0;
+
+        for (final recipe in candidates) {
+          if (selectedIds.add(recipe.id)) {
+            selectedRecipes.add(recipe);
+            addedFromPage++;
+          }
+
+          if (selectedRecipes.length == 5 || addedFromPage == 2) {
+            break;
+          }
+        }
+      }
+
+      if (!mounted) return;
+
+      if (selectedRecipes.length == 5) {
+        setState(() {
+          _carouselRecipes = selectedRecipes;
+        });
+      }
+    } catch (_) {}
+  }
+
   void _openRecipe(CatalogRecipe recipe) {
     context.push(
       '/catalog-recipe/${recipe.id}',
@@ -178,7 +254,12 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return SafeArea(
       child: RefreshIndicator(
-        onRefresh: _loadFeaturedRecipes,
+        onRefresh: () async {
+          await Future.wait([
+            _loadFeaturedRecipes(),
+            _loadRandomCarouselRecipes(),
+          ]);
+        },
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
 
@@ -258,9 +339,15 @@ class _HomeScreenState extends State<HomeScreen> {
       return _EmptyRecipes(onRetry: _loadFeaturedRecipes);
     }
 
-    final featuredRecipe = _featuredRecipes.first;
+    final hasRandomCarousel = _carouselRecipes.length == 5;
 
-    final otherRecipes = _featuredRecipes.skip(1).toList();
+    final carouselRecipes = hasRandomCarousel
+        ? _carouselRecipes
+        : _featuredRecipes.take(5).toList();
+
+    final otherRecipes = hasRandomCarousel
+        ? _featuredRecipes
+        : _featuredRecipes.skip(5).toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -285,11 +372,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
         const SizedBox(height: 16),
 
-        _FeaturedRecipeCard(
-          recipe: featuredRecipe,
-          onTap: () {
-            _openRecipe(featuredRecipe);
-          },
+        _FeaturedRecipeCarousel(
+          recipes: carouselRecipes,
+          onRecipeTap: _openRecipe,
         ),
 
         if (otherRecipes.isNotEmpty) ...[
@@ -634,6 +719,133 @@ class _CategoryList extends StatelessWidget {
   }
 }
 
+class _FeaturedRecipeCarousel extends StatefulWidget {
+  final List<CatalogRecipe> recipes;
+  final ValueChanged<CatalogRecipe> onRecipeTap;
+
+  const _FeaturedRecipeCarousel({
+    required this.recipes,
+    required this.onRecipeTap,
+  });
+
+  @override
+  State<_FeaturedRecipeCarousel> createState() =>
+      _FeaturedRecipeCarouselState();
+}
+
+class _FeaturedRecipeCarouselState extends State<_FeaturedRecipeCarousel> {
+  late final PageController _pageController;
+
+  Timer? _slideTimer;
+  int _activeIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _pageController = PageController(initialPage: widget.recipes.length * 1000);
+
+    _scheduleNextSlide();
+  }
+
+  void _scheduleNextSlide() {
+    _slideTimer?.cancel();
+
+    if (widget.recipes.length <= 1) return;
+
+    _slideTimer = Timer(const Duration(seconds: 5), () {
+      if (!mounted || !_pageController.hasClients) {
+        return;
+      }
+
+      _pageController.nextPage(
+        duration: const Duration(milliseconds: 450),
+        curve: Curves.easeInOutCubic,
+      );
+    });
+  }
+
+  @override
+  void didUpdateWidget(covariant _FeaturedRecipeCarousel oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (oldWidget.recipes.length != widget.recipes.length) {
+      _activeIndex = 0;
+      _scheduleNextSlide();
+    }
+  }
+
+  @override
+  void dispose() {
+    _slideTimer?.cancel();
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    if (widget.recipes.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      children: [
+        SizedBox(
+          height: 180,
+          child: PageView.builder(
+            controller: _pageController,
+            physics: widget.recipes.length > 1
+                ? const BouncingScrollPhysics()
+                : const NeverScrollableScrollPhysics(),
+            itemCount: widget.recipes.length > 1 ? null : 1,
+            onPageChanged: (page) {
+              setState(() {
+                _activeIndex = page % widget.recipes.length;
+              });
+
+              _scheduleNextSlide();
+            },
+            itemBuilder: (context, index) {
+              final recipe = widget.recipes[index % widget.recipes.length];
+
+              return _FeaturedRecipeCard(
+                recipe: recipe,
+                onTap: () {
+                  widget.onRecipeTap(recipe);
+                },
+              );
+            },
+          ),
+        ),
+
+        const SizedBox(height: 12),
+
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: List.generate(widget.recipes.length, (index) {
+            final isActive = index == _activeIndex;
+
+            return AnimatedContainer(
+              duration: const Duration(milliseconds: 250),
+              margin: const EdgeInsets.symmetric(horizontal: 3),
+              width: isActive ? 20 : 6,
+              height: 6,
+              decoration: BoxDecoration(
+                color: isActive
+                    ? colors.primary
+                    : colors.primary.withValues(alpha: 0.22),
+                borderRadius: BorderRadius.circular(100),
+              ),
+            );
+          }),
+        ),
+      ],
+    );
+  }
+}
+
 class _FeaturedRecipeCard extends StatelessWidget {
   final CatalogRecipe recipe;
   final VoidCallback onTap;
@@ -644,102 +856,111 @@ class _FeaturedRecipeCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
 
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: colors.shadow.withValues(alpha: 0.055),
-            blurRadius: 25,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: Material(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(24),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: onTap,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+    final isWide = MediaQuery.sizeOf(context).width >= 600;
+
+    return Material(
+      color: colors.primaryContainer.withValues(alpha: 0.58),
+      borderRadius: BorderRadius.circular(20),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Row(
             children: [
-              SizedBox(
-                width: double.infinity,
-                height: 225,
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    _RecipeImage(imageUrl: recipe.imageUrl),
-
-                    Positioned(
-                      top: 14,
-                      right: 14,
-                      child: _FavoriteRecipeButton(recipe: recipe, large: true),
-                    ),
-                  ],
-                ),
-              ),
-
-              Padding(
-                padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
+                      'RESEP PILIHAN',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1,
+                        color: colors.primary,
+                      ),
+                    ),
+
+                    const SizedBox(height: 9),
+
+                    Text(
                       recipe.title,
-                      maxLines: 2,
+                      maxLines: 3,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        fontSize: 19,
-                        height: 1.25,
+                        fontSize: 16,
+                        height: 1.2,
                         fontWeight: FontWeight.w800,
+                        letterSpacing: -0.3,
                         color: colors.onSurface,
                       ),
                     ),
 
-                    const SizedBox(height: 10),
+                    const Spacer(),
 
                     Row(
                       children: [
                         Icon(
                           Icons.restaurant_menu_outlined,
-                          size: 16,
+                          size: 14,
                           color: colors.primary,
                         ),
-
-                        const SizedBox(width: 6),
-
+                        const SizedBox(width: 5),
                         Text(
                           '${recipe.ingredientCount} bahan',
                           style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
+                            fontSize: 11.5,
                             color: colors.onSurfaceVariant,
                           ),
                         ),
+                      ],
+                    ),
 
-                        const Spacer(),
+                    const SizedBox(height: 9),
 
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
                         Text(
                           'Lihat resep',
                           style: TextStyle(
                             fontSize: 12,
-                            fontWeight: FontWeight.w700,
+                            fontWeight: FontWeight.w800,
                             color: colors.primary,
                           ),
                         ),
-
-                        const SizedBox(width: 4),
-
+                        const SizedBox(width: 5),
                         Icon(
                           Icons.arrow_forward_rounded,
-                          size: 17,
+                          size: 16,
                           color: colors.primary,
                         ),
                       ],
                     ),
                   ],
+                ),
+              ),
+
+              const SizedBox(width: 12),
+
+              SizedBox(
+                width: isWide ? 170 : 108,
+                height: 152,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      _RecipeImage(imageUrl: recipe.imageUrl),
+
+                      Positioned(
+                        top: 7,
+                        right: 7,
+                        child: _FavoriteRecipeButton(recipe: recipe),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],

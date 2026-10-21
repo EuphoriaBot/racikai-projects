@@ -210,8 +210,8 @@ class _SavedHeroState extends State<_SavedHero> {
 
     return RecipeHeroHeader(
       firstLine: 'Resep',
-      secondLine: 'Favoritmu.',
-      subtitle: 'Semua rasa yang kamu suka,\ntersimpan di sini.',
+      secondLine: 'Favoritmu',
+      subtitle: 'Semua rasa yang kamu\nsuka, tersimpan di sini',
       imageUrl: _heroImageUrl,
 
       searchBar: Container(
